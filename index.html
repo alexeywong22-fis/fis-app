@@ -497,12 +497,13 @@ async function runFisStep3() {
   var lines = (p && p.fascialLines) ? p.fascialLines : {};
   var recs = (p && p.recommendations) ? p.recommendations : {};
 
+  // 根據截圖微調：每行減4%
   var linePositions = [
-    { key: 'deepFrontLine',        top: '23%' },
-    { key: 'lateralLine',          top: '31%' },
-    { key: 'spiralLine',           top: '39%' },
-    { key: 'superficialBackLine',  top: '47%' },
-    { key: 'superficialFrontLine', top: '55%' }
+    { key: 'deepFrontLine',        top: '19%' },
+    { key: 'lateralLine',          top: '27%' },
+    { key: 'spiralLine',           top: '35%' },
+    { key: 'superficialBackLine',  top: '43%' },
+    { key: 'superficialFrontLine', top: '51%' }
   ];
 
   var reportCard = document.createElement('div');
@@ -517,7 +518,6 @@ async function runFisStep3() {
   var overlay = document.createElement('div');
   overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none';
 
-  // 五大筋膜線（只顯示5行，唔多唔少）
   linePositions.forEach(function(lp) {
     var lineData = lines[lp.key] || {};
     var status = lineData.status || '—';
@@ -540,11 +540,11 @@ async function runFisStep3() {
     overlay.appendChild(stageEl);
   });
 
-  // 三個建議框（圖標右側文字區域）
+  // 三個建議框（調高，入返框入面）
   var recItems = [
-    { text: recs.breathing || '—',     top: '64%' },
-    { text: recs.trainingPlan || '—',  top: '74%' },
-    { text: recs.startingPoint || '—', top: '84%' }
+    { text: recs.breathing || '—',     top: '60%' },
+    { text: recs.trainingPlan || '—',  top: '70%' },
+    { text: recs.startingPoint || '—', top: '80%' }
   ];
 
   recItems.forEach(function(item) {
