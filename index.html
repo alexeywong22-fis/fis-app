@@ -489,94 +489,89 @@ async function runFisStep3() {
 
   var imageResult = document.getElementById('fisImageResult');
   imageResult.style.display = 'block';
+  var old = document.getElementById('fis-report-card');
+  if (old) old.remove();
 
-  var oldReport = document.getElementById('fis-report-card');
-  if (oldReport) { oldReport.remove(); }
+  var p     = fisParsedData || {};
+  var lines = p.fascialLines    || {};
+  var recs  = p.recommendations || {};
 
-  var p = fisParsedData;
-  var lines = (p && p.fascialLines) ? p.fascialLines : {};
-  var recs  = (p && p.recommendations) ? p.recommendations : {};
-
-  // Markdown parser
-  function md(text) {
-    if (!text) return '—';
-    return text
-      .replace(/\*\*(.*?)\*\*/g, '<strong style="color:#4af;font-weight:700">$1</strong>')
-      .replace(/\*(.*?)\*/g, '$1');
+  function md(t) {
+    if (!t) return '—';
+    return t.replace(/\*\*(.*?)\*\*/g,'<strong style="color:#44aaff;font-weight:700">$1</strong>')
+             .replace(/\*(.*?)\*/g,'$1');
   }
 
   var lineKeys = [
-    { key:'deepFrontLine',        name:'深前線',  en:'Deep Front Line' },
-    { key:'lateralLine',          name:'側線',    en:'Lateral Line' },
-    { key:'spiralLine',           name:'螺旋線',  en:'Spiral Line' },
-    { key:'superficialBackLine',  name:'淺背線',  en:'Superficial Back Line' },
-    { key:'superficialFrontLine', name:'淺前線',  en:'Superficial Front Line' }
+    {key:'deepFrontLine',        name:'深前線',  en:'Deep Front Line'},
+    {key:'lateralLine',          name:'側線',    en:'Lateral Line'},
+    {key:'spiralLine',           name:'螺旋線',  en:'Spiral Line'},
+    {key:'superficialBackLine',  name:'淺背線',  en:'Superficial Back Line'},
+    {key:'superficialFrontLine', name:'淺前線',  en:'Superficial Front Line'}
   ];
-
   var recKeys = [
-    { icon:'🫁', label:'90/90版本建議',  key:'breathing' },
-    { icon:'💪', label:'訓練計劃建議',   key:'trainingPlan' },
-    { icon:'🎯', label:'訓練起點建議',   key:'startingPoint' }
+    {icon:'🫁', label:'90/90版本建議', key:'breathing'},
+    {icon:'💪', label:'訓練計劃建議',  key:'trainingPlan'},
+    {icon:'🎯', label:'訓練起點建議',  key:'startingPoint'}
   ];
 
-  /* ── 外層卡片 ─────────────────────────────────────── */
+  /* ── 外層卡片 ── */
   var card = document.createElement('div');
   card.id = 'fis-report-card';
   card.style.cssText =
     'margin-top:12px;border-radius:14px;overflow:hidden;' +
-    'border:1px solid rgba(0,150,255,0.35);background:#050d1a;' +
+    'border:1px solid rgba(0,150,255,0.35);' +
     'font-family:"Noto Sans HK",sans-serif';
 
-  /* ── 標題 ──────────────────────────────────────────── */
-  var titleBar = document.createElement('div');
-  titleBar.style.cssText =
+  /* ── 標題 ── */
+  var title = document.createElement('div');
+  title.style.cssText =
     'background:linear-gradient(90deg,#0a1830,#0d2545);' +
-    'padding:12px 20px;text-align:center;' +
+    'padding:11px 20px;text-align:center;' +
     'border-bottom:1px solid rgba(0,180,255,0.3);' +
-    'font-size:15px;font-weight:900;letter-spacing:3px;' +
-    'color:#ffc845;text-shadow:0 0 12px rgba(255,200,69,0.6)';
-  titleBar.textContent = 'FIS 體態特徵訓練優先次序參考';
-  card.appendChild(titleBar);
+    'font-size:14px;font-weight:900;letter-spacing:3px;' +
+    'color:#ffc845;text-shadow:0 0 10px rgba(255,200,69,0.5)';
+  title.textContent = 'FIS 體態特徵訓練優先次序參考';
+  card.appendChild(title);
 
-  /* ── 主體：左圖 + 右表格 ───────────────────────────── */
-  var mainRow = document.createElement('div');
-  mainRow.style.cssText = 'display:flex;align-items:stretch;min-height:340px';
+  /* ── 主體：左圖 1/3 + 右欄 2/3，固定高度 ── */
+  var body = document.createElement('div');
+  body.style.cssText = 'display:flex;height:460px';
 
-  /* 左欄：純人體圖 */
+  /* 左：人體圖，頂天立地 */
   var imgCol = document.createElement('div');
   imgCol.style.cssText =
-    'flex:0 0 33%;max-width:33%;' +
-    'background:#030a14;' +
-    'border-right:1px solid rgba(0,150,255,0.25);' +
-    'overflow:hidden';
-  var bodyImg = document.createElement('img');
-  bodyImg.src = 'https://alexeywong22-fis.github.io/fis-app/body.png';
-  bodyImg.style.cssText =
-    'width:100%;height:100%;object-fit:cover;object-position:center top;display:block';
-  imgCol.appendChild(bodyImg);
-  mainRow.appendChild(imgCol);
+    'flex:0 0 33.333%;width:33.333%;height:100%;overflow:hidden;' +
+    'border-right:1px solid rgba(0,150,255,0.25)';
+  var img = document.createElement('img');
+  img.src = 'https://alexeywong22-fis.github.io/fis-app/body.png';
+  img.style.cssText = 'width:100%;height:100%;object-fit:cover;object-position:center top;display:block';
+  imgCol.appendChild(img);
+  body.appendChild(imgCol);
 
-  /* 右欄：表格 */
-  var tableCol = document.createElement('div');
-  tableCol.style.cssText =
-    'flex:1;background:rgba(5,15,35,0.97);' +
-    'display:flex;flex-direction:column;justify-content:center';
+  /* 右：上表 + 下建議框，flex-col */
+  var rightCol = document.createElement('div');
+  rightCol.style.cssText =
+    'flex:1;height:100%;display:flex;flex-direction:column;background:#050d1a;overflow:hidden';
+
+  /* ── 右上：筋膜線表格 ── */
+  var tableWrap = document.createElement('div');
+  tableWrap.style.cssText = 'flex:0 0 auto';
 
   /* 表頭 */
   var thead = document.createElement('div');
   thead.style.cssText =
-    'display:flex;align-items:center;padding:8px 16px;' +
-    'border-bottom:1px solid rgba(0,150,255,0.35);' +
-    'background:rgba(0,80,180,0.18)';
+    'display:flex;align-items:center;padding:7px 14px;' +
+    'background:rgba(0,80,180,0.2);' +
+    'border-bottom:1px solid rgba(0,150,255,0.3)';
   thead.innerHTML =
-    '<div style="flex:2;font-size:11px;color:rgba(180,220,255,0.7);font-weight:600;letter-spacing:1px">五大筋膜線狀態</div>' +
-    '<div style="flex:1.2;font-size:11px;color:rgba(180,220,255,0.7);font-weight:600;text-align:center;letter-spacing:1px">評估結果</div>' +
-    '<div style="flex:0.8;font-size:11px;color:rgba(180,220,255,0.7);font-weight:600;text-align:center;letter-spacing:1px">訓練起點</div>';
-  tableCol.appendChild(thead);
+    '<div style="flex:2;font-size:10px;color:rgba(180,220,255,0.65);font-weight:600;letter-spacing:1px">五大筋膜線狀態</div>' +
+    '<div style="flex:1.2;font-size:10px;color:rgba(180,220,255,0.65);font-weight:600;text-align:center">評估結果</div>' +
+    '<div style="flex:0.8;font-size:10px;color:rgba(180,220,255,0.65);font-weight:600;text-align:center">訓練起點</div>';
+  tableWrap.appendChild(thead);
 
-  /* 表格行 */
   lineKeys.forEach(function(lk, idx) {
-    var d = lines[lk.key] || {};
+    var d      = lines[lk.key] || {};
     var status = d.status || '—';
     var stage  = d.stage  || '—';
     var alert  = status === '優先關注';
@@ -585,96 +580,91 @@ async function runFisStep3() {
 
     var row = document.createElement('div');
     row.style.cssText =
-      'display:flex;align-items:center;padding:10px 16px;' +
-      'background:' + bg + ';border-bottom:1px solid rgba(0,120,200,0.12)';
+      'display:flex;align-items:center;padding:8px 14px;' +
+      'background:' + bg + ';border-bottom:1px solid rgba(0,120,200,0.1)';
 
-    /* 名稱 */
     var nameCell = document.createElement('div');
-    nameCell.style.cssText = 'flex:2;color:#b8d8ff;line-height:1.3';
+    nameCell.style.cssText = 'flex:2;color:#b8d8ff;line-height:1.25';
     nameCell.innerHTML =
-      '<span style="font-weight:700;font-size:13px">' + (idx+1) + '. ' + lk.name + '</span>' +
-      '<br><span style="font-size:10px;color:rgba(150,190,240,0.55)">(' + lk.en + ')</span>';
+      '<span style="font-weight:700;font-size:12px">' + (idx+1) + '. ' + lk.name + '</span>' +
+      '<br><span style="font-size:9px;color:rgba(150,190,240,0.5)">(' + lk.en + ')</span>';
     row.appendChild(nameCell);
 
-    /* 狀態燈 */
     var statusCell = document.createElement('div');
-    statusCell.style.cssText =
-      'flex:1.2;display:flex;align-items:center;justify-content:center;gap:5px';
+    statusCell.style.cssText = 'flex:1.2;display:flex;align-items:center;justify-content:center;gap:4px';
     statusCell.innerHTML =
-      '<span style="width:9px;height:9px;border-radius:50%;flex-shrink:0;display:inline-block;' +
-      'background:' + color + ';box-shadow:0 0 7px ' + color + '"></span>' +
-      '<span style="color:' + color + ';font-size:12px;font-weight:700;' +
-      'text-shadow:0 0 5px ' + color + ';white-space:nowrap">' + status + '</span>';
+      '<span style="width:8px;height:8px;border-radius:50%;flex-shrink:0;display:inline-block;' +
+      'background:' + color + ';box-shadow:0 0 6px ' + color + '"></span>' +
+      '<span style="color:' + color + ';font-size:11px;font-weight:700;' +
+      'text-shadow:0 0 4px ' + color + ';white-space:nowrap">' + status + '</span>';
     row.appendChild(statusCell);
 
-    /* Stage */
     var stageCell = document.createElement('div');
     stageCell.style.cssText =
       'flex:0.8;text-align:center;color:' + color + ';' +
-      'font-size:12px;font-weight:700;text-shadow:0 0 5px ' + color;
+      'font-size:11px;font-weight:700;text-shadow:0 0 4px ' + color;
     stageCell.textContent = stage;
     row.appendChild(stageCell);
 
-    tableCol.appendChild(row);
+    tableWrap.appendChild(row);
   });
+  rightCol.appendChild(tableWrap);
 
-  mainRow.appendChild(tableCol);
-  card.appendChild(mainRow);
-
-  /* ── 三個建議框 ─────────────────────────────────────── */
-  var recsSection = document.createElement('div');
-  recsSection.style.cssText =
-    'padding:12px 16px;background:#040b18;' +
-    'border-top:1px solid rgba(0,150,255,0.25);' +
-    'display:flex;flex-direction:column;gap:8px';
+  /* ── 右下：三個建議框，flex:1 填滿剩餘高度 ── */
+  var recsWrap = document.createElement('div');
+  recsWrap.style.cssText =
+    'flex:1;overflow-y:auto;padding:8px 12px;' +
+    'background:#040b18;border-top:1px solid rgba(0,150,255,0.2);' +
+    'display:flex;flex-direction:column;gap:6px';
 
   recKeys.forEach(function(rk) {
     var box = document.createElement('div');
     box.style.cssText =
       'background:rgba(0,80,180,0.12);' +
-      'border:1px solid rgba(0,150,255,0.22);' +
-      'border-radius:8px;padding:10px 14px;' +
-      'display:flex;gap:10px;align-items:flex-start';
+      'border:1px solid rgba(0,150,255,0.2);' +
+      'border-radius:7px;padding:8px 12px;' +
+      'display:flex;gap:8px;align-items:flex-start;flex:1';
 
     var icon = document.createElement('span');
-    icon.style.cssText = 'font-size:15px;flex-shrink:0;padding-top:2px';
+    icon.style.cssText = 'font-size:14px;flex-shrink:0;padding-top:1px';
     icon.textContent = rk.icon;
 
     var textWrap = document.createElement('div');
-    textWrap.style.cssText = 'flex:1;min-width:0';
+    textWrap.style.cssText = 'flex:1;min-width:0;overflow:hidden';
 
-    var label = document.createElement('div');
-    label.style.cssText =
-      'font-size:10px;color:#4a9eff;font-weight:700;' +
-      'letter-spacing:1.5px;margin-bottom:4px';
-    label.textContent = rk.label;
+    var lbl = document.createElement('div');
+    lbl.style.cssText =
+      'font-size:9px;color:#4a9eff;font-weight:700;letter-spacing:1px;margin-bottom:3px';
+    lbl.textContent = rk.label;
 
-    var body = document.createElement('div');
-    body.style.cssText =
-      'font-size:12px;color:#c8e6ff;line-height:1.6;' +
-      'word-break:break-word;text-shadow:0 0 3px rgba(0,150,255,0.3)';
-    body.innerHTML = md(recs[rk.key] || '—');
+    var bodyEl = document.createElement('div');
+    bodyEl.style.cssText =
+      'font-size:11px;color:#c8e6ff;line-height:1.5;word-break:break-word;' +
+      'text-shadow:0 0 3px rgba(0,150,255,0.25)';
+    bodyEl.innerHTML = md(recs[rk.key] || '—');
 
-    textWrap.appendChild(label);
-    textWrap.appendChild(body);
+    textWrap.appendChild(lbl);
+    textWrap.appendChild(bodyEl);
     box.appendChild(icon);
     box.appendChild(textWrap);
-    recsSection.appendChild(box);
+    recsWrap.appendChild(box);
   });
 
-  card.appendChild(recsSection);
+  rightCol.appendChild(recsWrap);
+  body.appendChild(rightCol);
+  card.appendChild(body);
 
-  /* ── 免責聲明 ───────────────────────────────────────── */
+  /* ── 免責聲明 ── */
   var disc = document.createElement('div');
   disc.style.cssText =
-    'text-align:center;padding:8px;font-size:10px;' +
-    'color:rgba(120,160,210,0.6);background:#040b18;' +
+    'text-align:center;padding:7px;font-size:10px;' +
+    'color:rgba(120,160,210,0.55);background:#040b18;' +
     'border-top:1px solid rgba(0,100,180,0.15)';
   disc.textContent = '🛡️ 本圖為教育性體態參考，並非醫療診斷';
   card.appendChild(disc);
 
   imageResult.appendChild(card);
-  card.scrollIntoView({ behavior:'smooth' });
+  card.scrollIntoView({behavior:'smooth'});
 }
 
 function downloadImage() {
