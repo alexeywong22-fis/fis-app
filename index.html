@@ -114,6 +114,9 @@ textarea.sym { width: 100%; background: var(--bg3); border: 1px solid rgba(255,2
 .wu-name { font-size: 14px; font-weight: 600; margin-bottom: 3px; }
 .wu-detail { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
 .wu-sets { font-size: 11px; color: var(--gold-dim); margin-top: 4px; font-weight: 600; }
+.progress-bar-wrap { background: var(--bg4); border-radius: 20px; height: 6px; margin: 8px 0; overflow: hidden; }
+.progress-bar-fill { height: 100%; background: var(--gold); border-radius: 20px; width: 0%; transition: width 0.3s ease; }
+.progress-text { font-size: 13px; color: var(--gold); text-align: center; margin-top: 6px; font-weight: 700; }
 .dbox { background: rgba(255,200,69,0.05); border: 1px solid rgba(255,200,69,0.2); border-radius: 10px; padding: 12px; margin-bottom: 20px; font-size: 11px; color: var(--gold-dim); line-height: 1.6; }
 .history-item { background: var(--bg3); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; }
 .history-date { font-size: 10px; color: var(--gold-dim); margin-bottom: 6px; }
@@ -601,12 +604,14 @@ async function runFisStep1() {
   var result = document.getElementById('fisStep1Result');
   var resultText = document.getElementById('fisStep1Text');
   result.classList.add('show');
-  resultText.textContent = 'Analyzing posture characteristics, please wait (about 30-60 seconds)...';
+  resultText.innerHTML = '<div class="progress-bar-wrap"><div class="progress-bar-fill" id="pb1"></div></div><div class="progress-text" id="pt1">0%</div>';
+    startProgress('pb1', 'pt1', 55000);
   var formData = new FormData();
   for (var i = 0; i < selectedFiles.length; i++) { formData.append('files', selectedFiles[i]); }
   try {
     var res = await fetch(API_BASE + '/api/fis-step1', { method: 'POST', body: formData });
     var data = await res.json();
+    stopProgress('pb1', 'pt1');
     fisStep1Result = data.result || 'Analysis failed, please try again.';
     resultText.textContent = fisStep1Result;
   } catch(e) { resultText.textContent = 'Analysis failed, please check your network connection.'; }
@@ -617,7 +622,8 @@ async function runFisStep2() {
   var result = document.getElementById('fisStep2Result');
   var resultText = document.getElementById('fisStep2Text');
   result.classList.add('show');
-  resultText.textContent = 'Generating report card...';
+  resultText.innerHTML = '<div class="progress-bar-wrap"><div class="progress-bar-fill" id="pb2"></div></div><div class="progress-text" id="pt2">0%</div>';
+    startProgress('pb2', 'pt2', 30000);
   try {
     var res = await fetch(API_BASE + '/api/fis-step2', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({step1Result: fisStep1Result}) });
     var data = await res.json();
@@ -631,7 +637,10 @@ async function runFisStep3() {
   var imageResult = document.getElementById('fisImageResult');
   var fisImage = document.getElementById('fisImage');
   imageResult.style.display = 'block';
-  fisImage.alt = 'Generating image, please wait (about 30 seconds)...';
+  var imgContainer = document.createElement('div');
+  imgContainer.innerHTML = '<div class="progress-bar-wrap"><div class="progress-bar-fill" id="pb3"></div></div><div class="progress-text" id="pt3">0%</div>';
+  fisImage.parentNode.insertBefore(imgContainer, fisImage);
+  startProgress('pb3', 'pt3', 35000);
   try {
     var res = await fetch(API_BASE + '/api/fis-step3', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({step2Result: fisStep2Result}) });
     var data = await res.json();
@@ -653,10 +662,12 @@ async function analyzeProgress() {
   var result = document.getElementById('progressResult');
   var resultText = document.getElementById('progressResultText');
   result.classList.add('show');
-  resultText.textContent = 'Analyzing...';
+  resultText.innerHTML = '<div class="progress-bar-wrap"><div class="progress-bar-fill" id="pb-prog"></div></div><div class="progress-text" id="pt-prog">0%</div>';
+  startProgress('pb-prog', 'pt-prog', 10000);
   try {
     var res = await fetch(API_BASE + '/api/progress', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({rating: ratings.r1, backPain: ratings.r2, tensionSpeed: ratings.r3}) });
     var data = await res.json();
+    stopProgress('pb-prog', 'pt-prog');
     resultText.textContent = data.result || 'Analysis failed, please try again.';
   } catch(e) { resultText.textContent = 'Service temporarily unavailable, please try again later.'; }
 }
@@ -668,10 +679,12 @@ async function analyzePain() {
   var result = document.getElementById('painResult');
   var resultText = document.getElementById('painResultText');
   result.classList.add('show');
-  resultText.textContent = 'Diagnosing...';
+  resultText.innerHTML = '<div class="progress-bar-wrap"><div class="progress-bar-fill" id="pb-pain"></div></div><div class="progress-text" id="pt-pain">0%</div>';
+  startProgress('pb-pain', 'pt-pain', 10000);
   try {
     var res = await fetch(API_BASE + '/api/pain', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({bodyPart: selectedPart, symptom: symptom}) });
     var data = await res.json();
+    stopProgress('pb-pain', 'pt-pain');
     resultText.textContent = data.result || 'Diagnosis failed, please try again.';
   } catch(e) { resultText.textContent = 'Service temporarily unavailable, please try again later.'; }
 }
@@ -687,6 +700,32 @@ function saveRecord() {
   } catch(e) {}
   loadHistory();
   alert('Record saved');
+}
+
+var progressTimers = {};
+
+function startProgress(barId, textId, duration) {
+  if (progressTimers[barId]) { clearInterval(progressTimers[barId]); }
+  var bar = document.getElementById(barId);
+  var txt = document.getElementById(textId);
+  if (!bar || !txt) return;
+  var start = Date.now();
+  var maxPct = 92;
+  progressTimers[barId] = setInterval(function() {
+    var elapsed = Date.now() - start;
+    var pct = Math.min(maxPct, Math.floor((elapsed / duration) * maxPct));
+    if (bar) { bar.style.width = pct + '%'; }
+    if (txt) { txt.textContent = pct + '%'; }
+    if (pct >= maxPct) { clearInterval(progressTimers[barId]); }
+  }, 300);
+}
+
+function stopProgress(barId, textId) {
+  if (progressTimers[barId]) { clearInterval(progressTimers[barId]); }
+  var bar = document.getElementById(barId);
+  var txt = document.getElementById(textId);
+  if (bar) { bar.style.width = '100%'; }
+  if (txt) { txt.textContent = '100%'; }
 }
 
 function loadHistory() {
