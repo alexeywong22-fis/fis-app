@@ -499,11 +499,25 @@ async function runFisStep3() {
     var res = await fetch(API_BASE + '/api/fis-step3', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({step2Result: fisStep2Result}) });
     var data = await res.json();
     stopProgress('pb3', 'pt3');
+
     if (data.error) {
       barWrap.innerHTML = '<div style="color:#ff6666;font-size:13px;margin-top:8px">生成失敗：' + (data.error || 'Unknown error') + '</div>';
       return;
     }
-    if (data.imageUrl) {
+
+    if (data.svgCode) {
+      // 直接插入 SVG 代碼到頁面
+      var oldSvg = document.getElementById('svg-container');
+      if (oldSvg) { oldSvg.remove(); }
+      var svgContainer = document.createElement('div');
+      svgContainer.id = 'svg-container';
+      svgContainer.style.cssText = 'width:100%;border-radius:12px;overflow:hidden;border:1px solid var(--gold-dim);margin-top:8px';
+      fisImage.parentNode.insertBefore(svgContainer, fisImage);
+      svgContainer.innerHTML = data.svgCode;
+      var svgEl = svgContainer.querySelector('svg');
+      if (svgEl) { svgEl.style.width = '100%'; svgEl.style.height = 'auto'; }
+      barWrap.remove();
+    } else if (data.imageUrl) {
       fisImage.src = data.imageUrl;
       fisImage.style.display = 'block';
       barWrap.remove();
