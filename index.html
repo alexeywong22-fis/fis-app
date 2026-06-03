@@ -22,12 +22,8 @@
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'Noto Sans HK', sans-serif; overflow-x: hidden; }
-
-/* SCREENS - all hidden by default */
 .screen { display: none; min-height: 100vh; flex-direction: column; background: var(--bg); }
 .screen.active { display: flex; }
-
-/* DISCLAIMER */
 #disclaimer { padding: 40px 24px; justify-content: center; }
 .dis-logo { font-family: 'Bebas Neue', sans-serif; font-size: 56px; color: var(--gold); letter-spacing: 4px; margin-bottom: 4px; }
 .dis-sub { font-size: 11px; letter-spacing: 3px; color: var(--text-dim); margin-bottom: 40px; }
@@ -37,8 +33,6 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .dis-text { font-size: 13px; color: var(--text-dim); line-height: 1.6; }
 .dis-text strong { color: var(--text); display: block; margin-bottom: 2px; }
 .dis-divider { height: 1px; background: rgba(255,255,255,0.1); margin: 24px 0; }
-
-/* HOME */
 #home { padding-bottom: 80px; }
 .home-header { padding: 60px 28px 0; }
 .brand-tag { display: inline-block; font-size: 10px; letter-spacing: 4px; color: var(--gold); border: 1px solid var(--gold-dim); padding: 4px 12px; margin-bottom: 20px; }
@@ -52,22 +46,16 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .module-name { font-size: 14px; font-weight: 700; line-height: 1.3; }
 .module-desc { font-size: 11px; color: var(--text-dim); line-height: 1.4; margin-top: auto; }
 .module-icon { font-size: 13px; font-weight: 700; color: var(--gold); }
-
-/* SCREEN HEADER */
 .s-header { padding: 52px 24px 20px; background: var(--bg2); border-bottom: 1px solid rgba(255,255,255,0.05); }
 .back-btn { font-size: 13px; color: var(--gold); cursor: pointer; margin-bottom: 12px; display: inline-block; }
 .s-title { font-family: 'Bebas Neue', sans-serif; font-size: 36px; letter-spacing: 2px; line-height: 1; }
 .s-sub { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
 .s-body { flex: 1; padding: 24px 20px 120px; overflow-y: auto; }
-
-/* BOTTOM NAV */
 .bnav { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(24,37,66,0.97); border-top: 1px solid rgba(255,255,255,0.08); display: flex; padding: 8px 0 20px; z-index: 999; }
 .bnav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 0; cursor: pointer; }
 .bnav-icon { font-size: 11px; font-weight: 700; color: var(--text-dim); }
 .bnav-label { font-size: 9px; color: var(--text-dim); }
 .bnav-item.active .bnav-icon, .bnav-item.active .bnav-label { color: var(--gold); }
-
-/* COMMON */
 .sec-label { font-size: 10px; letter-spacing: 3px; color: var(--gold); text-transform: uppercase; margin-bottom: 12px; margin-top: 28px; }
 .sec-label:first-child { margin-top: 0; }
 .info-card { background: var(--bg3); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
@@ -130,22 +118,10 @@ textarea.sym { width: 100%; background: var(--bg3); border: 1px solid rgba(255,2
   <div class="dis-logo">FIS</div>
   <div class="dis-sub">FASCIAL INTEGRATION SYSTEM - TRAINING TOOLKIT</div>
   <div class="dis-title">使用前請閱讀以下聲明</div>
-  <div class="dis-point">
-    <div class="dis-num">1</div>
-    <div class="dis-text"><strong>教育性參考，非醫療診斷</strong>本工具提供嘅所有分析結果屬教育性體態參考，並非醫療診斷、物理治療建議或運動處方。</div>
-  </div>
-  <div class="dis-point">
-    <div class="dis-num">2</div>
-    <div class="dis-text"><strong>個人差異</strong>每個人身體狀況唔同，AI分析結果僅供個人參考，實際效果因人而異。</div>
-  </div>
-  <div class="dis-point">
-    <div class="dis-num">3</div>
-    <div class="dis-text"><strong>有傷患請先咨詢醫生</strong>如你有任何關節疼痛、舊患或傷患，請先咨詢醫生或物理治療師，再決定是否使用本工具。</div>
-  </div>
-  <div class="dis-point">
-    <div class="dis-num">4</div>
-    <div class="dis-text"><strong>訓練中如有不適請立即停止</strong>訓練過程中如出現任何疼痛或不適，請立即停止並咨詢專業醫療人士。</div>
-  </div>
+  <div class="dis-point"><div class="dis-num">1</div><div class="dis-text"><strong>教育性參考，非醫療診斷</strong>本工具提供嘅所有分析結果屬教育性體態參考，並非醫療診斷、物理治療建議或運動處方。</div></div>
+  <div class="dis-point"><div class="dis-num">2</div><div class="dis-text"><strong>個人差異</strong>每個人身體狀況唔同，AI分析結果僅供個人參考，實際效果因人而異。</div></div>
+  <div class="dis-point"><div class="dis-num">3</div><div class="dis-text"><strong>有傷患請先咨詢醫生</strong>如你有任何關節疼痛、舊患或傷患，請先咨詢醫生或物理治療師，再決定是否使用本工具。</div></div>
+  <div class="dis-point"><div class="dis-num">4</div><div class="dis-text"><strong>訓練中如有不適請立即停止</strong>訓練過程中如出現任何疼痛或不適，請立即停止並咨詢專業醫療人士。</div></div>
   <div class="dis-divider"></div>
   <button class="dis-btn" id="enterBtn">我已閱讀，進入訓練工具</button>
 </div>
@@ -159,32 +135,12 @@ textarea.sym { width: 100%; background: var(--bg3); border: 1px solid rgba(255,2
     <div class="home-line"></div>
   </div>
   <div class="module-grid">
-    <div class="module-card" id="btn-fis">
-      <div class="module-icon">FIS</div>
-      <div class="module-num">01 - FIS</div>
-      <div class="module-name">筋膜線自我檢測</div>
-      <div class="module-desc">上載照片生成個人報告卡</div>
-    </div>
-    <div class="module-card" id="btn-progress">
-      <div class="module-icon">DATA</div>
-      <div class="module-num">02 - 追蹤</div>
-      <div class="module-name">進步追蹤系統</div>
-      <div class="module-desc">AI分析今日訓練數據</div>
-    </div>
-    <div class="module-card" id="btn-pain">
-      <div class="module-icon">RX</div>
-      <div class="module-num">03 - 診斷</div>
-      <div class="module-name">訓練痛點診斷</div>
-      <div class="module-desc">即時搵出筋膜線根源</div>
-    </div>
-    <div class="module-card" id="btn-warmup">
-      <div class="module-icon">GO</div>
-      <div class="module-num">04 - 熱身</div>
-      <div class="module-name">今日熱身激活</div>
-      <div class="module-desc">上下身個人化熱身方案</div>
-    </div>
+    <div class="module-card" id="btn-fis"><div class="module-icon">FIS</div><div class="module-num">01 - FIS</div><div class="module-name">筋膜線自我檢測</div><div class="module-desc">上載照片生成個人報告卡</div></div>
+    <div class="module-card" id="btn-progress"><div class="module-icon">DATA</div><div class="module-num">02 - 追蹤</div><div class="module-name">進步追蹤系統</div><div class="module-desc">AI分析今日訓練數據</div></div>
+    <div class="module-card" id="btn-pain"><div class="module-icon">RX</div><div class="module-num">03 - 診斷</div><div class="module-name">訓練痛點診斷</div><div class="module-desc">即時搵出筋膜線根源</div></div>
+    <div class="module-card" id="btn-warmup"><div class="module-icon">GO</div><div class="module-num">04 - 熱身</div><div class="module-name">今日熱身激活</div><div class="module-desc">上下身個人化熱身方案</div></div>
   </div>
-  <div class="bnav" id="bnav-home">
+  <div class="bnav">
     <div class="bnav-item active" id="bnav-home-btn"><div class="bnav-icon">HOME</div><div class="bnav-label">主頁</div></div>
     <div class="bnav-item" id="bnav-fis-btn"><div class="bnav-icon">FIS</div><div class="bnav-label">檢測</div></div>
     <div class="bnav-item" id="bnav-progress-btn"><div class="bnav-icon">DATA</div><div class="bnav-label">追蹤</div></div>
@@ -258,7 +214,7 @@ textarea.sym { width: 100%; background: var(--bg3); border: 1px solid rgba(255,2
         <div class="step-title">生成視覺化參考圖（可選）</div>
         <button class="btn-outline" id="btn-fis-step3">生成視覺化圖片</button>
         <div id="fisImageResult" style="display:none;margin-top:12px">
-          <img id="fisImage" style="width:100%;border-radius:12px;border:1px solid var(--gold-dim)" alt="">
+          <img id="fisImage" style="width:100%;border-radius:12px;border:1px solid var(--gold-dim);display:none" alt="">
           <button class="btn-outline" id="btn-download">下載圖片</button>
         </div>
       </div>
@@ -409,243 +365,155 @@ var fisStep2Result = '';
 var selectedPart = '';
 var ratings = { r1: null, r2: null, r3: null };
 
-// SCREEN SWITCHING - core function
 function goTo(screenId) {
   var all = document.querySelectorAll('.screen');
-  for (var i = 0; i < all.length; i++) {
-    all[i].classList.remove('active');
-    all[i].style.display = 'none';
-  }
+  for (var i = 0; i < all.length; i++) { all[i].classList.remove('active'); all[i].style.display = 'none'; }
   var target = document.getElementById(screenId);
-  if (target) {
-    target.style.display = 'flex';
-    target.classList.add('active');
-    window.scrollTo(0, 0);
-  }
+  if (target) { target.style.display = 'flex'; target.classList.add('active'); window.scrollTo(0, 0); }
   if (screenId === 'progress') { loadHistory(); }
 }
 
-// BIND ALL BUTTONS using addEventListener - NO onclick attributes
 function bindAll() {
-
-  // Disclaimer enter button
   var enterBtn = document.getElementById('enterBtn');
-  if (enterBtn) {
-    enterBtn.addEventListener('click', function() {
-      try { localStorage.setItem('fis_agreed', '1'); } catch(e) {}
-      goTo('home');
-    });
-  }
+  if (enterBtn) { enterBtn.addEventListener('click', function() { try { localStorage.setItem('fis_agreed', '1'); } catch(e) {} goTo('home'); }); }
 
-  // Home module cards
-  var btnFis = document.getElementById('btn-fis');
-  if (btnFis) { btnFis.addEventListener('click', function() { goTo('fis'); }); }
+  var btnFis = document.getElementById('btn-fis'); if (btnFis) { btnFis.addEventListener('click', function() { goTo('fis'); }); }
+  var btnProgress = document.getElementById('btn-progress'); if (btnProgress) { btnProgress.addEventListener('click', function() { goTo('progress'); }); }
+  var btnPain = document.getElementById('btn-pain'); if (btnPain) { btnPain.addEventListener('click', function() { goTo('pain'); }); }
+  var btnWarmup = document.getElementById('btn-warmup'); if (btnWarmup) { btnWarmup.addEventListener('click', function() { goTo('warmup'); }); }
 
-  var btnProgress = document.getElementById('btn-progress');
-  if (btnProgress) { btnProgress.addEventListener('click', function() { goTo('progress'); }); }
+  var backFis = document.getElementById('back-fis'); if (backFis) { backFis.addEventListener('click', function() { goTo('home'); }); }
+  var backProgress = document.getElementById('back-progress'); if (backProgress) { backProgress.addEventListener('click', function() { goTo('home'); }); }
+  var backPain = document.getElementById('back-pain'); if (backPain) { backPain.addEventListener('click', function() { goTo('home'); }); }
+  var backWarmup = document.getElementById('back-warmup'); if (backWarmup) { backWarmup.addEventListener('click', function() { goTo('home'); }); }
 
-  var btnPain = document.getElementById('btn-pain');
-  if (btnPain) { btnPain.addEventListener('click', function() { goTo('pain'); }); }
+  var bnavFisHome = document.getElementById('bnav-fis-home'); if (bnavFisHome) { bnavFisHome.addEventListener('click', function() { goTo('home'); }); }
+  var bnavFisProgress = document.getElementById('bnav-fis-progress'); if (bnavFisProgress) { bnavFisProgress.addEventListener('click', function() { goTo('progress'); }); }
+  var bnavFisPain = document.getElementById('bnav-fis-pain'); if (bnavFisPain) { bnavFisPain.addEventListener('click', function() { goTo('pain'); }); }
+  var bnavFisWarmup = document.getElementById('bnav-fis-warmup'); if (bnavFisWarmup) { bnavFisWarmup.addEventListener('click', function() { goTo('warmup'); }); }
+  var bnavProgressHome = document.getElementById('bnav-progress-home'); if (bnavProgressHome) { bnavProgressHome.addEventListener('click', function() { goTo('home'); }); }
+  var bnavProgressFis = document.getElementById('bnav-progress-fis'); if (bnavProgressFis) { bnavProgressFis.addEventListener('click', function() { goTo('fis'); }); }
+  var bnavProgressPain = document.getElementById('bnav-progress-pain'); if (bnavProgressPain) { bnavProgressPain.addEventListener('click', function() { goTo('pain'); }); }
+  var bnavProgressWarmup = document.getElementById('bnav-progress-warmup'); if (bnavProgressWarmup) { bnavProgressWarmup.addEventListener('click', function() { goTo('warmup'); }); }
+  var bnavPainHome = document.getElementById('bnav-pain-home'); if (bnavPainHome) { bnavPainHome.addEventListener('click', function() { goTo('home'); }); }
+  var bnavPainFis = document.getElementById('bnav-pain-fis'); if (bnavPainFis) { bnavPainFis.addEventListener('click', function() { goTo('fis'); }); }
+  var bnavPainProgress = document.getElementById('bnav-pain-progress'); if (bnavPainProgress) { bnavPainProgress.addEventListener('click', function() { goTo('progress'); }); }
+  var bnavPainWarmup = document.getElementById('bnav-pain-warmup'); if (bnavPainWarmup) { bnavPainWarmup.addEventListener('click', function() { goTo('warmup'); }); }
+  var bnavWarmupHome = document.getElementById('bnav-warmup-home'); if (bnavWarmupHome) { bnavWarmupHome.addEventListener('click', function() { goTo('home'); }); }
+  var bnavWarmupFis = document.getElementById('bnav-warmup-fis'); if (bnavWarmupFis) { bnavWarmupFis.addEventListener('click', function() { goTo('fis'); }); }
+  var bnavWarmupProgress = document.getElementById('bnav-warmup-progress'); if (bnavWarmupProgress) { bnavWarmupProgress.addEventListener('click', function() { goTo('progress'); }); }
+  var bnavWarmupPain = document.getElementById('bnav-warmup-pain'); if (bnavWarmupPain) { bnavWarmupPain.addEventListener('click', function() { goTo('pain'); }); }
 
-  var btnWarmup = document.getElementById('btn-warmup');
-  if (btnWarmup) { btnWarmup.addEventListener('click', function() { goTo('warmup'); }); }
-
-  // Back buttons
-  var backFis = document.getElementById('back-fis');
-  if (backFis) { backFis.addEventListener('click', function() { goTo('home'); }); }
-
-  var backProgress = document.getElementById('back-progress');
-  if (backProgress) { backProgress.addEventListener('click', function() { goTo('home'); }); }
-
-  var backPain = document.getElementById('back-pain');
-  if (backPain) { backPain.addEventListener('click', function() { goTo('home'); }); }
-
-  var backWarmup = document.getElementById('back-warmup');
-  if (backWarmup) { backWarmup.addEventListener('click', function() { goTo('home'); }); }
-
-  // Bottom nav - FIS screen
-  var bnavFisHome = document.getElementById('bnav-fis-home');
-  if (bnavFisHome) { bnavFisHome.addEventListener('click', function() { goTo('home'); }); }
-  var bnavFisProgress = document.getElementById('bnav-fis-progress');
-  if (bnavFisProgress) { bnavFisProgress.addEventListener('click', function() { goTo('progress'); }); }
-  var bnavFisPain = document.getElementById('bnav-fis-pain');
-  if (bnavFisPain) { bnavFisPain.addEventListener('click', function() { goTo('pain'); }); }
-  var bnavFisWarmup = document.getElementById('bnav-fis-warmup');
-  if (bnavFisWarmup) { bnavFisWarmup.addEventListener('click', function() { goTo('warmup'); }); }
-
-  // Bottom nav - Progress screen
-  var bnavProgressHome = document.getElementById('bnav-progress-home');
-  if (bnavProgressHome) { bnavProgressHome.addEventListener('click', function() { goTo('home'); }); }
-  var bnavProgressFis = document.getElementById('bnav-progress-fis');
-  if (bnavProgressFis) { bnavProgressFis.addEventListener('click', function() { goTo('fis'); }); }
-  var bnavProgressPain = document.getElementById('bnav-progress-pain');
-  if (bnavProgressPain) { bnavProgressPain.addEventListener('click', function() { goTo('pain'); }); }
-  var bnavProgressWarmup = document.getElementById('bnav-progress-warmup');
-  if (bnavProgressWarmup) { bnavProgressWarmup.addEventListener('click', function() { goTo('warmup'); }); }
-
-  // Bottom nav - Pain screen
-  var bnavPainHome = document.getElementById('bnav-pain-home');
-  if (bnavPainHome) { bnavPainHome.addEventListener('click', function() { goTo('home'); }); }
-  var bnavPainFis = document.getElementById('bnav-pain-fis');
-  if (bnavPainFis) { bnavPainFis.addEventListener('click', function() { goTo('fis'); }); }
-  var bnavPainProgress = document.getElementById('bnav-pain-progress');
-  if (bnavPainProgress) { bnavPainProgress.addEventListener('click', function() { goTo('progress'); }); }
-  var bnavPainWarmup = document.getElementById('bnav-pain-warmup');
-  if (bnavPainWarmup) { bnavPainWarmup.addEventListener('click', function() { goTo('warmup'); }); }
-
-  // Bottom nav - Warmup screen
-  var bnavWarmupHome = document.getElementById('bnav-warmup-home');
-  if (bnavWarmupHome) { bnavWarmupHome.addEventListener('click', function() { goTo('home'); }); }
-  var bnavWarmupFis = document.getElementById('bnav-warmup-fis');
-  if (bnavWarmupFis) { bnavWarmupFis.addEventListener('click', function() { goTo('fis'); }); }
-  var bnavWarmupProgress = document.getElementById('bnav-warmup-progress');
-  if (bnavWarmupProgress) { bnavWarmupProgress.addEventListener('click', function() { goTo('progress'); }); }
-  var bnavWarmupPain = document.getElementById('bnav-warmup-pain');
-  if (bnavWarmupPain) { bnavWarmupPain.addEventListener('click', function() { goTo('pain'); }); }
-
-  // Rating buttons
   var ratingBtns = document.querySelectorAll('.rating-btn');
   for (var i = 0; i < ratingBtns.length; i++) {
-    (function(btn) {
-      btn.addEventListener('click', function() {
-        var group = btn.getAttribute('data-group');
-        var val = btn.getAttribute('data-val');
-        var siblings = document.querySelectorAll('.rating-btn[data-group="' + group + '"]');
-        for (var j = 0; j < siblings.length; j++) { siblings[j].classList.remove('sel'); }
-        btn.classList.add('sel');
-        ratings[group] = val;
-      });
-    })(ratingBtns[i]);
+    (function(btn) { btn.addEventListener('click', function() { var group = btn.getAttribute('data-group'); var val = btn.getAttribute('data-val'); var siblings = document.querySelectorAll('.rating-btn[data-group="' + group + '"]'); for (var j = 0; j < siblings.length; j++) { siblings[j].classList.remove('sel'); } btn.classList.add('sel'); ratings[group] = val; }); })(ratingBtns[i]);
   }
-
-  // Toggle buttons
   var toggleBtns = document.querySelectorAll('.toggle-btn');
   for (var i = 0; i < toggleBtns.length; i++) {
-    (function(btn) {
-      btn.addEventListener('click', function() {
-        var group = btn.getAttribute('data-group');
-        var val = btn.getAttribute('data-val');
-        var siblings = document.querySelectorAll('.toggle-btn[data-group="' + group + '"]');
-        for (var j = 0; j < siblings.length; j++) { siblings[j].classList.remove('sel'); }
-        btn.classList.add('sel');
-        ratings[group] = val;
-      });
-    })(toggleBtns[i]);
+    (function(btn) { btn.addEventListener('click', function() { var group = btn.getAttribute('data-group'); var val = btn.getAttribute('data-val'); var siblings = document.querySelectorAll('.toggle-btn[data-group="' + group + '"]'); for (var j = 0; j < siblings.length; j++) { siblings[j].classList.remove('sel'); } btn.classList.add('sel'); ratings[group] = val; }); })(toggleBtns[i]);
   }
-
-  // Body part buttons
   var bodyBtns = document.querySelectorAll('.body-btn');
   for (var i = 0; i < bodyBtns.length; i++) {
-    (function(btn) {
-      btn.addEventListener('click', function() {
-        var all = document.querySelectorAll('.body-btn');
-        for (var j = 0; j < all.length; j++) { all[j].classList.remove('sel'); }
-        btn.classList.add('sel');
-        selectedPart = btn.getAttribute('data-part');
-      });
-    })(bodyBtns[i]);
+    (function(btn) { btn.addEventListener('click', function() { var all = document.querySelectorAll('.body-btn'); for (var j = 0; j < all.length; j++) { all[j].classList.remove('sel'); } btn.classList.add('sel'); selectedPart = btn.getAttribute('data-part'); }); })(bodyBtns[i]);
   }
-
-  // Warmup toggle buttons
   var wuBtns = document.querySelectorAll('.wu-btn');
   for (var i = 0; i < wuBtns.length; i++) {
-    (function(btn) {
-      btn.addEventListener('click', function() {
-        var type = btn.getAttribute('data-wu');
-        var allBtns = document.querySelectorAll('.wu-btn');
-        var allSections = document.querySelectorAll('.wu-section');
-        for (var j = 0; j < allBtns.length; j++) { allBtns[j].classList.remove('active'); }
-        for (var j = 0; j < allSections.length; j++) { allSections[j].classList.remove('active'); }
-        btn.classList.add('active');
-        var section = document.getElementById('wu-' + type);
-        if (section) { section.classList.add('active'); }
-      });
-    })(wuBtns[i]);
+    (function(btn) { btn.addEventListener('click', function() { var type = btn.getAttribute('data-wu'); var allBtns = document.querySelectorAll('.wu-btn'); var allSections = document.querySelectorAll('.wu-section'); for (var j = 0; j < allBtns.length; j++) { allBtns[j].classList.remove('active'); } for (var j = 0; j < allSections.length; j++) { allSections[j].classList.remove('active'); } btn.classList.add('active'); var section = document.getElementById('wu-' + type); if (section) { section.classList.add('active'); } }); })(wuBtns[i]);
   }
 
-  // File input
   var fisFiles = document.getElementById('fisFiles');
-  if (fisFiles) {
-    fisFiles.addEventListener('change', function() {
-      selectedFiles = Array.from(this.files);
-      var el = document.getElementById('fileCount');
-      if (el) { el.textContent = 'Selected ' + selectedFiles.length + ' files (need 8)'; }
-    });
-  }
+  if (fisFiles) { fisFiles.addEventListener('change', function() { selectedFiles = Array.from(this.files); var el = document.getElementById('fileCount'); if (el) { el.textContent = 'Selected ' + selectedFiles.length + ' files (need 8)'; } }); }
 
-  // FIS Step buttons
-  var btnFisStep1 = document.getElementById('btn-fis-step1');
-  if (btnFisStep1) { btnFisStep1.addEventListener('click', runFisStep1); }
-
-  var btnFisStep2 = document.getElementById('btn-fis-step2');
-  if (btnFisStep2) { btnFisStep2.addEventListener('click', runFisStep2); }
-
-  var btnFisStep3 = document.getElementById('btn-fis-step3');
-  if (btnFisStep3) { btnFisStep3.addEventListener('click', runFisStep3); }
-
-  var btnDownload = document.getElementById('btn-download');
-  if (btnDownload) { btnDownload.addEventListener('click', downloadImage); }
-
-  // Progress analyze
-  var btnAnalyzeProgress = document.getElementById('btn-analyze-progress');
-  if (btnAnalyzeProgress) { btnAnalyzeProgress.addEventListener('click', analyzeProgress); }
-
-  var btnSaveRecord = document.getElementById('btn-save-record');
-  if (btnSaveRecord) { btnSaveRecord.addEventListener('click', saveRecord); }
-
-  // Pain analyze
-  var btnAnalyzePain = document.getElementById('btn-analyze-pain');
-  if (btnAnalyzePain) { btnAnalyzePain.addEventListener('click', analyzePain); }
+  var btnFisStep1 = document.getElementById('btn-fis-step1'); if (btnFisStep1) { btnFisStep1.addEventListener('click', runFisStep1); }
+  var btnFisStep2 = document.getElementById('btn-fis-step2'); if (btnFisStep2) { btnFisStep2.addEventListener('click', runFisStep2); }
+  var btnFisStep3 = document.getElementById('btn-fis-step3'); if (btnFisStep3) { btnFisStep3.addEventListener('click', runFisStep3); }
+  var btnDownload = document.getElementById('btn-download'); if (btnDownload) { btnDownload.addEventListener('click', downloadImage); }
+  var btnAnalyzeProgress = document.getElementById('btn-analyze-progress'); if (btnAnalyzeProgress) { btnAnalyzeProgress.addEventListener('click', analyzeProgress); }
+  var btnSaveRecord = document.getElementById('btn-save-record'); if (btnSaveRecord) { btnSaveRecord.addEventListener('click', saveRecord); }
+  var btnAnalyzePain = document.getElementById('btn-analyze-pain'); if (btnAnalyzePain) { btnAnalyzePain.addEventListener('click', analyzePain); }
 }
 
-// AI FUNCTIONS
+// ── FIS STEP 1 ────────────────────────────────────────────────────────────────
 async function runFisStep1() {
   if (selectedFiles.length === 0) { alert('Please upload photos and videos first'); return; }
   var result = document.getElementById('fisStep1Result');
   var resultText = document.getElementById('fisStep1Text');
   result.classList.add('show');
   resultText.innerHTML = '<div class="progress-bar-wrap"><div class="progress-bar-fill" id="pb1"></div></div><div class="progress-text" id="pt1">0%</div>';
-    startProgress('pb1', 'pt1', 55000);
-  var formData = new FormData();
-  for (var i = 0; i < selectedFiles.length; i++) { formData.append('files', selectedFiles[i]); }
+  startProgress('pb1', 'pt1', 55000);
+
+  var imageBase64List = [];
+  for (var i = 0; i < selectedFiles.length; i++) {
+    var file = selectedFiles[i];
+    if (!file.type.startsWith('image/')) continue;
+    try {
+      var b64 = await new Promise(function(resolve, reject) { var reader = new FileReader(); reader.onload = function(e) { resolve(e.target.result); }; reader.onerror = reject; reader.readAsDataURL(file); });
+      imageBase64List.push(b64);
+    } catch(err) { console.warn('跳過檔案:', file.name, err); }
+  }
+
+  if (imageBase64List.length === 0) { stopProgress('pb1', 'pt1'); resultText.textContent = '請上載最少一張圖片進行分析'; return; }
+
   try {
-    var res = await fetch(API_BASE + '/api/fis-step1', { method: 'POST', body: formData });
+    var res = await fetch(API_BASE + '/api/fis-step1', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ images: imageBase64List }) });
     var data = await res.json();
     stopProgress('pb1', 'pt1');
-    fisStep1Result = data.result || 'Analysis failed, please try again.';
-    resultText.textContent = fisStep1Result;
-  } catch(e) { resultText.textContent = 'Analysis failed, please check your network connection.'; }
+    if (data.error) { fisStep1Result = ''; resultText.textContent = '錯誤：' + (data.message || data.error); }
+    else { fisStep1Result = data.result || 'Analysis failed, please try again.'; resultText.textContent = fisStep1Result; }
+  } catch(e) { stopProgress('pb1', 'pt1'); resultText.textContent = 'Network error: ' + e.message; }
 }
 
+// ── FIS STEP 2 ────────────────────────────────────────────────────────────────
 async function runFisStep2() {
   if (!fisStep1Result) { alert('Please complete step 2 posture analysis first'); return; }
   var result = document.getElementById('fisStep2Result');
   var resultText = document.getElementById('fisStep2Text');
   result.classList.add('show');
   resultText.innerHTML = '<div class="progress-bar-wrap"><div class="progress-bar-fill" id="pb2"></div></div><div class="progress-text" id="pt2">0%</div>';
-    startProgress('pb2', 'pt2', 30000);
+  startProgress('pb2', 'pt2', 30000);
   try {
     var res = await fetch(API_BASE + '/api/fis-step2', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({step1Result: fisStep1Result}) });
     var data = await res.json();
+    stopProgress('pb2', 'pt2');
     fisStep2Result = data.result || 'Report card generation failed, please try again.';
     resultText.textContent = fisStep2Result;
-  } catch(e) { resultText.textContent = 'Generation failed, please try again.'; }
+  } catch(e) { stopProgress('pb2', 'pt2'); resultText.textContent = 'Generation failed, please try again.'; }
 }
 
+// ── FIS STEP 3 ────────────────────────────────────────────────────────────────
 async function runFisStep3() {
   if (!fisStep2Result) { alert('Please complete step 3 report card generation first'); return; }
   var imageResult = document.getElementById('fisImageResult');
   var fisImage = document.getElementById('fisImage');
   imageResult.style.display = 'block';
-  var imgContainer = document.createElement('div');
-  imgContainer.innerHTML = '<div class="progress-bar-wrap"><div class="progress-bar-fill" id="pb3"></div></div><div class="progress-text" id="pt3">0%</div>';
-  fisImage.parentNode.insertBefore(imgContainer, fisImage);
-  startProgress('pb3', 'pt3', 35000);
+
+  var oldBar = document.getElementById('pb3-wrap');
+  if (oldBar) { oldBar.remove(); }
+  var barWrap = document.createElement('div');
+  barWrap.id = 'pb3-wrap';
+  barWrap.innerHTML = '<div class="progress-bar-wrap"><div class="progress-bar-fill" id="pb3"></div></div><div class="progress-text" id="pt3">0%</div>';
+  fisImage.parentNode.insertBefore(barWrap, fisImage);
+  startProgress('pb3', 'pt3', 40000);
+
   try {
     var res = await fetch(API_BASE + '/api/fis-step3', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({step2Result: fisStep2Result}) });
     var data = await res.json();
-    if (data.imageUrl) { fisImage.src = data.imageUrl; }
-  } catch(e) { fisImage.alt = 'Image generation failed, please try again.'; }
+    stopProgress('pb3', 'pt3');
+    if (data.error) {
+      barWrap.innerHTML = '<div style="color:#ff6666;font-size:13px;margin-top:8px">生成失敗：' + (data.error || 'Unknown error') + '</div>';
+      return;
+    }
+    if (data.imageUrl) {
+      fisImage.src = data.imageUrl;
+      fisImage.style.display = 'block';
+      barWrap.remove();
+    } else {
+      barWrap.innerHTML = '<div style="color:#ff6666;font-size:13px;margin-top:8px">未收到圖片數據</div>';
+    }
+  } catch(e) {
+    stopProgress('pb3', 'pt3');
+    barWrap.innerHTML = '<div style="color:#ff6666;font-size:13px;margin-top:8px">網絡錯誤：' + e.message + '</div>';
+  }
 }
 
 function downloadImage() {
@@ -653,7 +521,7 @@ function downloadImage() {
   if (!img.src) return;
   var a = document.createElement('a');
   a.href = img.src;
-  a.download = 'FIS-report.png';
+  a.download = 'FIS-report.svg';
   a.click();
 }
 
@@ -669,7 +537,7 @@ async function analyzeProgress() {
     var data = await res.json();
     stopProgress('pb-prog', 'pt-prog');
     resultText.textContent = data.result || 'Analysis failed, please try again.';
-  } catch(e) { resultText.textContent = 'Service temporarily unavailable, please try again later.'; }
+  } catch(e) { stopProgress('pb-prog', 'pt-prog'); resultText.textContent = 'Service temporarily unavailable, please try again later.'; }
 }
 
 async function analyzePain() {
@@ -686,73 +554,52 @@ async function analyzePain() {
     var data = await res.json();
     stopProgress('pb-pain', 'pt-pain');
     resultText.textContent = data.result || 'Diagnosis failed, please try again.';
-  } catch(e) { resultText.textContent = 'Service temporarily unavailable, please try again later.'; }
+  } catch(e) { stopProgress('pb-pain', 'pt-pain'); resultText.textContent = 'Service temporarily unavailable, please try again later.'; }
 }
 
 function saveRecord() {
   if (!ratings.r1 || !ratings.r2 || !ratings.r3) return;
   var record = { date: new Date().toLocaleDateString('zh-HK'), r1: ratings.r1, r2: ratings.r2, r3: ratings.r3 };
-  try {
-    var history = JSON.parse(localStorage.getItem('fis_history') || '[]');
-    history.unshift(record);
-    if (history.length > 20) { history.pop(); }
-    localStorage.setItem('fis_history', JSON.stringify(history));
-  } catch(e) {}
+  try { var history = JSON.parse(localStorage.getItem('fis_history') || '[]'); history.unshift(record); if (history.length > 20) { history.pop(); } localStorage.setItem('fis_history', JSON.stringify(history)); } catch(e) {}
   loadHistory();
   alert('Record saved');
 }
 
 var progressTimers = {};
-
 function startProgress(barId, textId, duration) {
   if (progressTimers[barId]) { clearInterval(progressTimers[barId]); }
-  var bar = document.getElementById(barId);
-  var txt = document.getElementById(textId);
+  var bar = document.getElementById(barId); var txt = document.getElementById(textId);
   if (!bar || !txt) return;
-  var start = Date.now();
-  var maxPct = 92;
+  var start = Date.now(); var maxPct = 92;
   progressTimers[barId] = setInterval(function() {
     var elapsed = Date.now() - start;
     var pct = Math.min(maxPct, Math.floor((elapsed / duration) * maxPct));
-    if (bar) { bar.style.width = pct + '%'; }
-    if (txt) { txt.textContent = pct + '%'; }
+    if (bar) { bar.style.width = pct + '%'; } if (txt) { txt.textContent = pct + '%'; }
     if (pct >= maxPct) { clearInterval(progressTimers[barId]); }
   }, 300);
 }
-
 function stopProgress(barId, textId) {
   if (progressTimers[barId]) { clearInterval(progressTimers[barId]); }
-  var bar = document.getElementById(barId);
-  var txt = document.getElementById(textId);
-  if (bar) { bar.style.width = '100%'; }
-  if (txt) { txt.textContent = '100%'; }
+  var bar = document.getElementById(barId); var txt = document.getElementById(textId);
+  if (bar) { bar.style.width = '100%'; } if (txt) { txt.textContent = '100%'; }
 }
 
 function loadHistory() {
   try {
     var history = JSON.parse(localStorage.getItem('fis_history') || '[]');
-    var section = document.getElementById('historySection');
-    var list = document.getElementById('historyList');
+    var section = document.getElementById('historySection'); var list = document.getElementById('historyList');
     if (!section || !list) return;
     if (history.length === 0) { section.style.display = 'none'; return; }
     section.style.display = 'block';
     var html = '';
-    for (var i = 0; i < history.length; i++) {
-      var r = history[i];
-      html += '<div class="history-item"><div class="history-date">' + r.date + '</div><div class="history-scores"><span>Activation: <strong style="color:var(--gold)">' + r.r1 + '/4</strong></span> <span>Compensation: <strong>' + r.r2 + '</strong></span> <span>Tension: <strong>' + r.r3 + '</strong></span></div></div>';
-    }
+    for (var i = 0; i < history.length; i++) { var r = history[i]; html += '<div class="history-item"><div class="history-date">' + r.date + '</div><div class="history-scores"><span>Activation: <strong style="color:var(--gold)">' + r.r1 + '/4</strong></span> <span>Compensation: <strong>' + r.r2 + '</strong></span> <span>Tension: <strong>' + r.r3 + '</strong></span></div></div>'; }
     list.innerHTML = html;
   } catch(e) {}
 }
 
-// CHECK IF ALREADY AGREED AND INIT
 window.addEventListener('DOMContentLoaded', function() {
   bindAll();
-  try {
-    if (localStorage.getItem('fis_agreed') === '1') {
-      goTo('home');
-    }
-  } catch(e) {}
+  try { if (localStorage.getItem('fis_agreed') === '1') { goTo('home'); } } catch(e) {}
 });
 </script>
 </body>
