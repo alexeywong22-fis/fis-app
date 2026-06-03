@@ -463,7 +463,10 @@ function showScreen(id) {
 
 function enterApp() {
   try { localStorage.setItem('fis_agreed', '1'); } catch(e) {}
-  showScreen('home');
+  var dis = document.getElementById('disclaimer');
+  var home = document.getElementById('home');
+  if (dis) { dis.style.display = 'none'; dis.classList.remove('active'); }
+  if (home) { home.style.display = 'flex'; home.classList.add('active'); }
 }
 
 window.addEventListener('DOMContentLoaded', function() {
