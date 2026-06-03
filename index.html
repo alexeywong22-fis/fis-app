@@ -497,31 +497,27 @@ async function runFisStep3() {
   var lines = (p && p.fascialLines) ? p.fascialLines : {};
   var recs = (p && p.recommendations) ? p.recommendations : {};
 
-  // 五大筋膜線垂直位置（根據底圖格子中心）
   var linePositions = [
-    { key: 'deepFrontLine',        top: '27.5%' },
-    { key: 'lateralLine',          top: '35.5%' },
-    { key: 'spiralLine',           top: '43.5%' },
-    { key: 'superficialBackLine',  top: '51.5%' },
-    { key: 'superficialFrontLine', top: '59.5%' }
+    { key: 'deepFrontLine',        top: '23%' },
+    { key: 'lateralLine',          top: '31%' },
+    { key: 'spiralLine',           top: '39%' },
+    { key: 'superficialBackLine',  top: '47%' },
+    { key: 'superficialFrontLine', top: '55%' }
   ];
 
-  // 建立外層容器
   var reportCard = document.createElement('div');
   reportCard.id = 'fis-report-card';
   reportCard.style.cssText = 'position:relative;width:100%;margin-top:12px;border-radius:12px;overflow:hidden';
 
-  // 底圖
   var img = document.createElement('img');
   img.src = 'https://alexeywong22-fis.github.io/fis-app/fis-bg.png';
   img.style.cssText = 'width:100%;display:block';
   reportCard.appendChild(img);
 
-  // 疊加層
   var overlay = document.createElement('div');
   overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none';
 
-  // 五大筋膜線狀態燈同 Stage
+  // 五大筋膜線（只顯示5行，唔多唔少）
   linePositions.forEach(function(lp) {
     var lineData = lines[lp.key] || {};
     var status = lineData.status || '—';
@@ -529,7 +525,6 @@ async function runFisStep3() {
     var isAlert = status === '優先關注';
     var color = isAlert ? '#ff4444' : '#4499ff';
 
-    // 狀態燈 + 文字（右側表格第一空格，約 left:64%）
     var statusEl = document.createElement('div');
     statusEl.style.cssText = 'position:absolute;top:' + lp.top + ';left:64%;transform:translateY(-50%);' +
       'display:flex;align-items:center;gap:0.3vw';
@@ -538,7 +533,6 @@ async function runFisStep3() {
       '<span style="color:' + color + ';font-size:1.2vw;font-weight:700;text-shadow:0 0 6px ' + color + ';white-space:nowrap">' + status + '</span>';
     overlay.appendChild(statusEl);
 
-    // Stage（右側表格第二空格，約 left:84%）
     var stageEl = document.createElement('div');
     stageEl.style.cssText = 'position:absolute;top:' + lp.top + ';left:84%;transform:translateY(-50%);' +
       'color:' + color + ';font-size:1.2vw;font-weight:700;text-shadow:0 0 6px ' + color + ';white-space:nowrap';
@@ -546,12 +540,11 @@ async function runFisStep3() {
     overlay.appendChild(stageEl);
   });
 
-  // 下方三個長方框（骨盆框、拉筋框、標靶框）
-  // 文字從圖標右側開始，約 left:18%，寬度到右邊框 right:2%
+  // 三個建議框（圖標右側文字區域）
   var recItems = [
-    { text: recs.breathing || '—',     top: '68%' },
-    { text: recs.trainingPlan || '—',  top: '78%' },
-    { text: recs.startingPoint || '—', top: '88%' }
+    { text: recs.breathing || '—',     top: '64%' },
+    { text: recs.trainingPlan || '—',  top: '74%' },
+    { text: recs.startingPoint || '—', top: '84%' }
   ];
 
   recItems.forEach(function(item) {
