@@ -184,7 +184,7 @@ textarea.symptom-input::placeholder { color: var(--text-dim); }
     <div class="dis-text"><strong>訓練中如有不適請立即停止</strong>訓練過程中如出現任何疼痛或不適,請立即停止並咨詢專業醫療人士.</div>
   </div>
   <div class="dis-divider"></div>
-  <button class="dis-btn" onclick="enterApp()">我已閱讀,進入訓練工具 -></button>
+  <button class="dis-btn" id="enterBtn" onclick="enterApp()">我已閱讀,進入訓練工具 -></button>
 </div>
 
 <!-- HOME -->
@@ -463,10 +463,16 @@ function showScreen(id) {
 
 function enterApp() {
   try { localStorage.setItem('fis_agreed', '1'); } catch(e) {}
-  var dis = document.getElementById('disclaimer');
+  var allScreens = document.querySelectorAll('.screen');
+  for (var i = 0; i < allScreens.length; i++) {
+    allScreens[i].style.display = 'none';
+    allScreens[i].classList.remove('active');
+  }
   var home = document.getElementById('home');
-  if (dis) { dis.style.display = 'none'; dis.classList.remove('active'); }
-  if (home) { home.style.display = 'flex'; home.classList.add('active'); }
+  if (home) {
+    home.style.display = 'flex';
+    home.classList.add('active');
+  }
 }
 
 window.addEventListener('DOMContentLoaded', function() {
@@ -641,6 +647,27 @@ function saveRecord() {
   loadHistory();
   alert('記錄已儲存');
 }
+
+function addTouchListeners() {
+  // Handle all onclick elements with touch
+  document.addEventListener('touchend', function(e) {
+    var target = e.target;
+    // Walk up the DOM to find clickable element
+    while (target && target !== document.body) {
+      var onclick = target.getAttribute('onclick');
+      if (onclick) {
+        e.preventDefault();
+        try { eval(onclick); } catch(err) {}
+        return;
+      }
+      target = target.parentElement;
+    }
+  }, {passive: false});
+}
+
+window.addEventListener('load', function() {
+  addTouchListeners();
+});
 
 function loadHistory() {
   try {
