@@ -541,18 +541,18 @@ async function runFisStep3() {
   /* 左：人體圖，頂天立地 */
   var imgCol = document.createElement('div');
   imgCol.style.cssText =
-    'flex:0 0 33.333%;width:33.333%;height:100%;overflow:hidden;' +
-    'border-right:1px solid rgba(0,150,255,0.25)';
+    'flex:0 0 33.333%;width:33.333%;min-width:33.333%;height:100%;overflow:hidden;' +
+    'flex-shrink:0;border-right:1px solid rgba(0,150,255,0.25)';
   var img = document.createElement('img');
   img.src = 'https://alexeywong22-fis.github.io/fis-app/body.png';
-  img.style.cssText = 'width:100%;height:100%;object-fit:cover;object-position:center top;display:block';
+  img.style.cssText = 'width:100%;height:100%;object-fit:contain;object-position:center top;display:block;background:#030a14';
   imgCol.appendChild(img);
   body.appendChild(imgCol);
 
   /* 右：上表 + 下建議框，flex-col */
   var rightCol = document.createElement('div');
   rightCol.style.cssText =
-    'flex:1;height:100%;display:flex;flex-direction:column;background:#050d1a;overflow:hidden';
+    'flex:1;min-width:0;height:100%;display:flex;flex-direction:column;background:#050d1a;overflow:hidden';
 
   /* ── 右上：筋膜線表格 ── */
   var tableWrap = document.createElement('div');
