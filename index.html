@@ -497,24 +497,14 @@ async function runFisStep3() {
   var lines = (p && p.fascialLines) ? p.fascialLines : {};
   var recs = (p && p.recommendations) ? p.recommendations : {};
 
-  // 底圖原始尺寸 1536x1024，比例 3:2
-  // 右側表格格子百分比座標（根據底圖量度）
+  // 五大筋膜線垂直位置（根據底圖格子中心）
   var linePositions = [
-    { key: 'deepFrontLine',         top: '30.5%' },  // 深前線
-    { key: 'lateralLine',           top: '38.5%' },  // 側線
-    { key: 'spiralLine',            top: '46.5%' },  // 螺旋線
-    { key: 'superficialBackLine',   top: '54.5%' },  // 淺背線
-    { key: 'superficialFrontLine',  top: '62.5%' }   // 淺前線
+    { key: 'deepFrontLine',        top: '27.5%' },
+    { key: 'lateralLine',          top: '35.5%' },
+    { key: 'spiralLine',           top: '43.5%' },
+    { key: 'superficialBackLine',  top: '51.5%' },
+    { key: 'superficialFrontLine', top: '59.5%' }
   ];
-
-  function dotHTML(status) {
-    var isAlert = status === '優先關注';
-    var color = isAlert ? '#ff4444' : '#4499ff';
-    var label = status || '—';
-    return '<span style="display:inline-flex;align-items:center;gap:4px;color:' + color + ';font-weight:700;font-size:1.4vw;text-shadow:0 0 8px ' + color + '">' +
-      '<span style="width:1vw;height:1vw;border-radius:50%;background:' + color + ';box-shadow:0 0 6px ' + color + ';display:inline-block"></span>' +
-      label + '</span>';
-  }
 
   // 建立外層容器
   var reportCard = document.createElement('div');
@@ -531,7 +521,7 @@ async function runFisStep3() {
   var overlay = document.createElement('div');
   overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none';
 
-  // 五大筋膜線狀態燈同 Stage（右側表格，左欄約 left:66%，右欄約 left:83%）
+  // 五大筋膜線狀態燈同 Stage
   linePositions.forEach(function(lp) {
     var lineData = lines[lp.key] || {};
     var status = lineData.status || '—';
@@ -539,32 +529,39 @@ async function runFisStep3() {
     var isAlert = status === '優先關注';
     var color = isAlert ? '#ff4444' : '#4499ff';
 
-    // 狀態燈 + 文字
+    // 狀態燈 + 文字（右側表格第一空格，約 left:64%）
     var statusEl = document.createElement('div');
-    statusEl.style.cssText = 'position:absolute;top:' + lp.top + ';left:63%;transform:translateY(-50%);display:flex;align-items:center;gap:0.4vw';
-    statusEl.innerHTML = '<span style="width:0.8vw;height:0.8vw;border-radius:50%;background:' + color + ';box-shadow:0 0 8px ' + color + ';display:inline-block;flex-shrink:0"></span>' +
-      '<span style="color:' + color + ';font-size:1.3vw;font-weight:700;text-shadow:0 0 6px ' + color + ';white-space:nowrap">' + status + '</span>';
+    statusEl.style.cssText = 'position:absolute;top:' + lp.top + ';left:64%;transform:translateY(-50%);' +
+      'display:flex;align-items:center;gap:0.3vw';
+    statusEl.innerHTML =
+      '<span style="width:0.7vw;height:0.7vw;min-width:8px;min-height:8px;border-radius:50%;background:' + color + ';box-shadow:0 0 8px ' + color + ';display:inline-block;flex-shrink:0"></span>' +
+      '<span style="color:' + color + ';font-size:1.2vw;font-weight:700;text-shadow:0 0 6px ' + color + ';white-space:nowrap">' + status + '</span>';
     overlay.appendChild(statusEl);
 
-    // Stage
+    // Stage（右側表格第二空格，約 left:84%）
     var stageEl = document.createElement('div');
-    stageEl.style.cssText = 'position:absolute;top:' + lp.top + ';left:83%;transform:translateY(-50%);color:' + color + ';font-size:1.3vw;font-weight:700;text-shadow:0 0 6px ' + color + ';white-space:nowrap';
+    stageEl.style.cssText = 'position:absolute;top:' + lp.top + ';left:84%;transform:translateY(-50%);' +
+      'color:' + color + ';font-size:1.2vw;font-weight:700;text-shadow:0 0 6px ' + color + ';white-space:nowrap';
     stageEl.textContent = stage;
     overlay.appendChild(stageEl);
   });
 
-  // 下方三個長方框文字（骨盆框、拉筋框、標靶框）
+  // 下方三個長方框（骨盆框、拉筋框、標靶框）
+  // 文字從圖標右側開始，約 left:18%，寬度到右邊框 right:2%
   var recItems = [
-    { text: recs.breathing || '—',    top: '71%' },
-    { text: recs.trainingPlan || '—', top: '80%' },
-    { text: recs.startingPoint || '—',top: '89%' }
+    { text: recs.breathing || '—',     top: '68%' },
+    { text: recs.trainingPlan || '—',  top: '78%' },
+    { text: recs.startingPoint || '—', top: '88%' }
   ];
 
   recItems.forEach(function(item) {
     var el = document.createElement('div');
-    el.style.cssText = 'position:absolute;top:' + item.top + ';left:18%;width:78%;transform:translateY(-50%);' +
-      'color:#ffffff;font-size:1.1vw;line-height:1.4;text-shadow:0 0 5px rgba(0,191,255,0.5);' +
-      'overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical';
+    el.style.cssText =
+      'position:absolute;top:' + item.top + ';left:18%;right:3%;transform:translateY(-50%);' +
+      'color:#e0f4ff;font-size:1.05vw;line-height:1.5;' +
+      'text-shadow:0 0 5px rgba(0,191,255,0.6);' +
+      'overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;' +
+      'word-break:break-all';
     el.textContent = item.text;
     overlay.appendChild(el);
   });
