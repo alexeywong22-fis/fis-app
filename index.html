@@ -464,6 +464,7 @@ async function runFisStep1() {
 }
 
 // ── FIS STEP 2 ────────────────────────────────────────────────────────────────
+var fisParsedData = null;
 async function runFisStep2() {
   if (!fisStep1Result) { alert('Please complete step 2 posture analysis first'); return; }
   var result = document.getElementById('fisStep2Result');
@@ -475,6 +476,7 @@ async function runFisStep2() {
     var res = await fetch(API_BASE + '/api/fis-step2', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({step1Result: fisStep1Result}) });
     var data = await res.json();
     stopProgress('pb2', 'pt2');
+    fisParsedData = data.parsed || null;
     fisStep2Result = data.result || 'Report card generation failed, please try again.';
     resultText.textContent = fisStep2Result;
   } catch(e) { stopProgress('pb2', 'pt2'); resultText.textContent = 'Generation failed, please try again.'; }
