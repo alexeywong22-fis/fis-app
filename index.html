@@ -477,6 +477,7 @@ async function runFisStep2() {
     var data = await res.json();
     stopProgress('pb2', 'pt2');
     fisParsedData = data.parsed || null;
+    fisParsedData = data.parsed || null;
     fisStep2Result = data.result || 'Report card generation failed, please try again.';
     resultText.textContent = fisStep2Result;
   } catch(e) { stopProgress('pb2', 'pt2'); resultText.textContent = 'Generation failed, please try again.'; }
@@ -485,51 +486,83 @@ async function runFisStep2() {
 // ── FIS STEP 3 ────────────────────────────────────────────────────────────────
 async function runFisStep3() {
   if (!fisStep2Result) { alert('Please complete step 3 report card generation first'); return; }
+
   var imageResult = document.getElementById('fisImageResult');
-  var fisImage = document.getElementById('fisImage');
   imageResult.style.display = 'block';
 
-  var oldBar = document.getElementById('pb3-wrap');
-  if (oldBar) { oldBar.remove(); }
-  var barWrap = document.createElement('div');
-  barWrap.id = 'pb3-wrap';
-  barWrap.innerHTML = '<div class="progress-bar-wrap"><div class="progress-bar-fill" id="pb3"></div></div><div class="progress-text" id="pt3">0%</div>';
-  fisImage.parentNode.insertBefore(barWrap, fisImage);
-  startProgress('pb3', 'pt3', 40000);
+  // 移除舊報告卡
+  var oldReport = document.getElementById('fis-report-card');
+  if (oldReport) { oldReport.remove(); }
 
-  try {
-    var res = await fetch(API_BASE + '/api/fis-step3', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({step2Result: fisStep2Result}) });
-    var data = await res.json();
-    stopProgress('pb3', 'pt3');
+  var p = fisParsedData;
+  var lines = (p && p.fascialLines) ? p.fascialLines : {};
+  var recs = (p && p.recommendations) ? p.recommendations : {};
 
-    if (data.error) {
-      barWrap.innerHTML = '<div style="color:#ff6666;font-size:13px;margin-top:8px">生成失敗：' + (data.error || 'Unknown error') + '</div>';
-      return;
-    }
-
-    if (data.svgCode) {
-      // 直接插入 SVG 代碼到頁面
-      var oldSvg = document.getElementById('svg-container');
-      if (oldSvg) { oldSvg.remove(); }
-      var svgContainer = document.createElement('div');
-      svgContainer.id = 'svg-container';
-      svgContainer.style.cssText = 'width:100%;border-radius:12px;overflow:hidden;border:1px solid var(--gold-dim);margin-top:8px';
-      fisImage.parentNode.insertBefore(svgContainer, fisImage);
-      svgContainer.innerHTML = data.svgCode;
-      var svgEl = svgContainer.querySelector('svg');
-      if (svgEl) { svgEl.style.width = '100%'; svgEl.style.height = 'auto'; }
-      barWrap.remove();
-    } else if (data.imageUrl) {
-      fisImage.src = data.imageUrl;
-      fisImage.style.display = 'block';
-      barWrap.remove();
-    } else {
-      barWrap.innerHTML = '<div style="color:#ff6666;font-size:13px;margin-top:8px">未收到圖片數據</div>';
-    }
-  } catch(e) {
-    stopProgress('pb3', 'pt3');
-    barWrap.innerHTML = '<div style="color:#ff6666;font-size:13px;margin-top:8px">網絡錯誤：' + e.message + '</div>';
+  function lineHTML(status, stage) {
+    var isAlert = status === '優先關注';
+    var dot = isAlert
+      ? '<span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:#ff4444;box-shadow:0 0 8px #ff4444;margin-right:6px;vertical-align:middle"></span>'
+      : '<span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:#4499ff;box-shadow:0 0 8px #4499ff;margin-right:6px;vertical-align:middle"></span>';
+    var color = isAlert ? '#ff6666' : '#66aaff';
+    return '<td style="padding:8px 12px;color:' + color + ';font-size:13px;font-weight:700">' + dot + status + '</td>' +
+           '<td style="padding:8px 12px;color:' + color + ';font-size:13px;text-align:center">' + (stage || '') + '</td>';
   }
+
+  var reportCard = document.createElement('div');
+  reportCard.id = 'fis-report-card';
+  reportCard.style.cssText = 'margin-top:12px;border-radius:12px;overflow:hidden;border:1px solid var(--gold-dim);background:#0a1628';
+
+  reportCard.innerHTML =
+    '<img src="https://alexeywong22-fis.github.io/fis-app/fis-bg.png" style="width:100%;display:block" />' +
+    '<div style="padding:16px;background:#0d1f3c">' +
+      '<div style="font-size:13px;font-weight:700;color:var(--gold);letter-spacing:2px;margin-bottom:12px">FIS 體態特徵訓練優先次序</div>' +
+      '<table style="width:100%;border-collapse:collapse">' +
+        '<tr style="border-bottom:1px solid rgba(255,255,255,0.1)">' +
+          '<td style="padding:8px 12px;color:var(--text-dim);font-size:12px">五大筋膜線狀態</td>' +
+          '<td style="padding:8px 12px;color:var(--text-dim);font-size:12px" colspan="2">訓練建議起點</td>' +
+        '</tr>' +
+        '<tr style="border-bottom:1px solid rgba(255,255,255,0.06)">' +
+          '<td style="padding:8px 12px;color:var(--text);font-size:13px">1. 深前線</td>' +
+          lineHTML((lines.deepFrontLine||{}).status||'—', (lines.deepFrontLine||{}).stage||'—') +
+        '</tr>' +
+        '<tr style="border-bottom:1px solid rgba(255,255,255,0.06)">' +
+          '<td style="padding:8px 12px;color:var(--text);font-size:13px">2. 側線</td>' +
+          lineHTML((lines.lateralLine||{}).status||'—', (lines.lateralLine||{}).stage||'—') +
+        '</tr>' +
+        '<tr style="border-bottom:1px solid rgba(255,255,255,0.06)">' +
+          '<td style="padding:8px 12px;color:var(--text);font-size:13px">3. 螺旋線</td>' +
+          lineHTML((lines.spiralLine||{}).status||'—', (lines.spiralLine||{}).stage||'—') +
+        '</tr>' +
+        '<tr style="border-bottom:1px solid rgba(255,255,255,0.06)">' +
+          '<td style="padding:8px 12px;color:var(--text);font-size:13px">4. 淺背線</td>' +
+          lineHTML((lines.superficialBackLine||{}).status||'—', (lines.superficialBackLine||{}).stage||'—') +
+        '</tr>' +
+        '<tr>' +
+          '<td style="padding:8px 12px;color:var(--text);font-size:13px">5. 淺前線</td>' +
+          lineHTML((lines.superficialFrontLine||{}).status||'—', (lines.superficialFrontLine||{}).stage||'—') +
+        '</tr>' +
+      '</table>' +
+      '<div style="margin-top:12px;border-top:1px solid rgba(255,255,255,0.1);padding-top:12px">' +
+        '<div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;padding:10px;background:rgba(255,200,69,0.05);border:1px solid rgba(255,200,69,0.2);border-radius:8px">' +
+          '<span style="font-size:18px">🫁</span>' +
+          '<div><div style="font-size:11px;color:var(--gold);margin-bottom:4px">90/90版本建議</div><div style="font-size:12px;color:var(--text);line-height:1.6">' + (recs.breathing || '請先完成體態分析') + '</div></div>' +
+        '</div>' +
+        '<div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;padding:10px;background:rgba(255,200,69,0.05);border:1px solid rgba(255,200,69,0.2);border-radius:8px">' +
+          '<span style="font-size:18px">💪</span>' +
+          '<div><div style="font-size:11px;color:var(--gold);margin-bottom:4px">訓練計劃建議</div><div style="font-size:12px;color:var(--text);line-height:1.6">' + (recs.trainingPlan || '請先完成體態分析') + '</div></div>' +
+        '</div>' +
+        '<div style="display:flex;align-items:flex-start;gap:10px;padding:10px;background:rgba(255,200,69,0.05);border:1px solid rgba(255,200,69,0.2);border-radius:8px">' +
+          '<span style="font-size:18px">🎯</span>' +
+          '<div><div style="font-size:11px;color:var(--gold);margin-bottom:4px">訓練起點建議</div><div style="font-size:12px;color:var(--text);line-height:1.6">' + (recs.startingPoint || '請先完成體態分析') + '</div></div>' +
+        '</div>' +
+      '</div>' +
+      '<div style="margin-top:10px;text-align:center;font-size:10px;color:var(--text-dim);padding:8px;border-top:1px solid rgba(255,255,255,0.05)">🛡️ 本圖為教育性體態參考，並非醫療診斷</div>' +
+    '</div>';
+
+  imageResult.appendChild(reportCard);
+
+  var fisImage = document.getElementById('fisImage');
+  if (fisImage) { fisImage.style.display = 'none'; }
 }
 
 function downloadImage() {
