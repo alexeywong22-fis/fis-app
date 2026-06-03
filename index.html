@@ -524,24 +524,24 @@ async function runFisStep3() {
     var isAlert = status === '優先關注';
     var color = isAlert ? '#ff4444' : '#4499ff';
 
-    // 狀態燈：left 72%
+    // 狀態燈 + 文字：水平置中喺中間欄（left:64% 到 left:82% 中間，即 left:73%，用 translateX(-50%) 置中）
     var statusEl = document.createElement('div');
-    statusEl.style.cssText = 'position:absolute;top:' + lp.top + ';left:72%;transform:translateY(-50%);' +
-      'display:flex;align-items:center;gap:0.3vw';
+    statusEl.style.cssText = 'position:absolute;top:' + lp.top + ';left:73%;transform:translate(-50%,-50%);' +
+      'display:flex;align-items:center;gap:0.3vw;justify-content:center';
     statusEl.innerHTML =
       '<span style="width:0.65vw;height:0.65vw;min-width:7px;min-height:7px;border-radius:50%;background:' + color + ';box-shadow:0 0 8px ' + color + ';display:inline-block;flex-shrink:0"></span>' +
       '<span style="color:' + color + ';font-size:1.1vw;font-weight:700;text-shadow:0 0 6px ' + color + ';white-space:nowrap">' + status + '</span>';
     overlay.appendChild(statusEl);
 
-    // Stage：left 89%
+    // Stage：置中喺右欄（left:91%，translateX(-50%)）
     var stageEl = document.createElement('div');
-    stageEl.style.cssText = 'position:absolute;top:' + lp.top + ';left:89%;transform:translateY(-50%) translateX(-50%);' +
-      'color:' + color + ';font-size:1.1vw;font-weight:700;text-shadow:0 0 6px ' + color + ';white-space:nowrap';
+    stageEl.style.cssText = 'position:absolute;top:' + lp.top + ';left:91%;transform:translate(-50%,-50%);' +
+      'color:' + color + ';font-size:1.1vw;font-weight:700;text-shadow:0 0 6px ' + color + ';white-space:nowrap;text-align:center';
     stageEl.textContent = stage;
     overlay.appendChild(stageEl);
   });
 
-  // 三個建議框：調高至 57%, 67%, 77%
+  // 三個建議框：中間偏右（left:35%，width:60%）
   var recItems = [
     { text: recs.breathing || '—',     top: '57%' },
     { text: recs.trainingPlan || '—',  top: '67%' },
@@ -551,7 +551,7 @@ async function runFisStep3() {
   recItems.forEach(function(item) {
     var el = document.createElement('div');
     el.style.cssText =
-      'position:absolute;top:' + item.top + ';left:21%;width:74%;transform:translateY(-50%);' +
+      'position:absolute;top:' + item.top + ';left:35%;width:60%;transform:translateY(-50%);' +
       'color:#e0f4ff;font-size:1.0vw;line-height:1.45;' +
       'text-shadow:0 0 5px rgba(0,191,255,0.5);' +
       'overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;' +
