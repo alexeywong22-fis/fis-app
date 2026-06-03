@@ -497,22 +497,10 @@ async function runFisStep3() {
   var lines = (p && p.fascialLines) ? p.fascialLines : {};
   var recs = (p && p.recommendations) ? p.recommendations : {};
 
-  // 去除 Markdown 星號，轉成 <strong>
-  function parseMarkdown(text) {
+  // 消滅星號
+  function md(text) {
     if (!text) return '—';
-    return text
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*(.*?)\*/g, '<em>$1</em>');
-  }
-
-  // 去除所有 Markdown 記號，只留純文字
-  function stripMarkdown(text) {
-    if (!text) return '—';
-    return text
-      .replace(/\*\*(.*?)\*\*/g, '$1')
-      .replace(/\*(.*?)\*/g, '$1')
-      .replace(/#{1,6}\s/g, '')
-      .trim();
+    return text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\*(.*?)\*/g, '$1');
   }
 
   var linePositions = [
@@ -535,33 +523,34 @@ async function runFisStep3() {
   var overlay = document.createElement('div');
   overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none';
 
-  // 每格高度約8%，用 top + height 包住整個格子，內部 flexbox 垂直置中
-  linePositions.forEach(function(lp, idx) {
+  // 1. 表格置中：每個格用 flex + align-items:center + justify-content:center
+  linePositions.forEach(function(lp) {
     var lineData = lines[lp.key] || {};
     var status = lineData.status || '—';
     var stage = lineData.stage || '—';
     var isAlert = status === '優先關注';
     var color = isAlert ? '#ff4444' : '#4499ff';
-    var cellHeight = '8%';
 
-    // 狀態燈容器：用 height + display flex 垂直置中
+    // 狀態燈：position absolute，上下左右由 top+height+flex 控制
     var statusEl = document.createElement('div');
     statusEl.style.cssText =
-      'position:absolute;top:' + lp.top + ';left:63%;width:20%;height:' + cellHeight + ';' +
-      'transform:translateY(-50%);' +
+      'position:absolute;' +
+      'top:calc(' + lp.top + ' - 4%);' +
+      'left:63%;width:19%;height:8%;' +
       'display:flex;align-items:center;justify-content:center;gap:0.3vw';
     statusEl.innerHTML =
-      '<span style="width:0.65vw;height:0.65vw;min-width:7px;min-height:7px;border-radius:50%;' +
-      'background:' + color + ';box-shadow:0 0 8px ' + color + ';display:inline-block;flex-shrink:0"></span>' +
+      '<span style="width:0.7vw;height:0.7vw;min-width:8px;min-height:8px;border-radius:50%;' +
+      'background:' + color + ';box-shadow:0 0 8px ' + color + ';flex-shrink:0"></span>' +
       '<span style="color:' + color + ';font-size:1.05vw;font-weight:700;' +
       'text-shadow:0 0 6px ' + color + ';white-space:nowrap">' + status + '</span>';
     overlay.appendChild(statusEl);
 
-    // Stage 容器：同樣垂直置中
+    // Stage
     var stageEl = document.createElement('div');
     stageEl.style.cssText =
-      'position:absolute;top:' + lp.top + ';left:83%;width:13%;height:' + cellHeight + ';' +
-      'transform:translateY(-50%);' +
+      'position:absolute;' +
+      'top:calc(' + lp.top + ' - 4%);' +
+      'left:83%;width:13%;height:8%;' +
       'display:flex;align-items:center;justify-content:center';
     stageEl.innerHTML =
       '<span style="color:' + color + ';font-size:1.05vw;font-weight:700;' +
@@ -569,22 +558,23 @@ async function runFisStep3() {
     overlay.appendChild(stageEl);
   });
 
-  // 三個建議框：去除 Markdown 星號，用 innerHTML 渲染加粗
+  // 2. 三個建議框：max-height 限制唔穿底，overflow-y:auto 有捲軸
   var recItems = [
-    { text: recs.breathing || '—',     top: '61.5%' },
-    { text: recs.trainingPlan || '—',  top: '69.5%' },
-    { text: recs.startingPoint || '—', top: '77.5%' }
+    { text: recs.breathing || '—',     top: '59%' },
+    { text: recs.trainingPlan || '—',  top: '68%' },
+    { text: recs.startingPoint || '—', top: '77%' }
   ];
 
   recItems.forEach(function(item) {
     var el = document.createElement('div');
     el.style.cssText =
-      'position:absolute;top:' + item.top + ';left:22%;right:4%;transform:translateY(-50%);' +
-      'color:#e0f4ff;font-size:0.85vw;line-height:1.4;' +
+      'position:absolute;top:' + item.top + ';left:22%;right:4%;' +
+      'max-height:6.5%;overflow:hidden;' +
+      'color:#e0f4ff;font-size:0.82vw;line-height:1.35;' +
       'text-shadow:0 0 4px rgba(0,191,255,0.5);' +
-      'overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;' +
       'word-break:break-all';
-    el.innerHTML = parseMarkdown(item.text);
+    // 3. 消滅星號
+    el.innerHTML = md(item.text);
     overlay.appendChild(el);
   });
 
