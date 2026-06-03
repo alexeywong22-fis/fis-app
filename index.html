@@ -497,8 +497,24 @@ async function runFisStep3() {
   var lines = (p && p.fascialLines) ? p.fascialLines : {};
   var recs = (p && p.recommendations) ? p.recommendations : {};
 
-  // 每行格仔高度約 8%，中心點：
-  // 表格頂部約 17%，每格 8%
+  // 去除 Markdown 星號，轉成 <strong>
+  function parseMarkdown(text) {
+    if (!text) return '—';
+    return text
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em>$1</em>');
+  }
+
+  // 去除所有 Markdown 記號，只留純文字
+  function stripMarkdown(text) {
+    if (!text) return '—';
+    return text
+      .replace(/\*\*(.*?)\*\*/g, '$1')
+      .replace(/\*(.*?)\*/g, '$1')
+      .replace(/#{1,6}\s/g, '')
+      .trim();
+  }
+
   var linePositions = [
     { key: 'deepFrontLine',        top: '21%' },
     { key: 'lateralLine',          top: '29%' },
@@ -519,33 +535,41 @@ async function runFisStep3() {
   var overlay = document.createElement('div');
   overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none';
 
-  linePositions.forEach(function(lp) {
+  // 每格高度約8%，用 top + height 包住整個格子，內部 flexbox 垂直置中
+  linePositions.forEach(function(lp, idx) {
     var lineData = lines[lp.key] || {};
     var status = lineData.status || '—';
     var stage = lineData.stage || '—';
     var isAlert = status === '優先關注';
     var color = isAlert ? '#ff4444' : '#4499ff';
+    var cellHeight = '8%';
 
-    // 狀態燈：置中喺中間欄，用 translate(-50%,-50%) 令佢完全垂直+水平置中
+    // 狀態燈容器：用 height + display flex 垂直置中
     var statusEl = document.createElement('div');
-    statusEl.style.cssText = 'position:absolute;top:' + lp.top + ';left:73%;transform:translate(-50%,-50%);' +
+    statusEl.style.cssText =
+      'position:absolute;top:' + lp.top + ';left:63%;width:20%;height:' + cellHeight + ';' +
+      'transform:translateY(-50%);' +
       'display:flex;align-items:center;justify-content:center;gap:0.3vw';
     statusEl.innerHTML =
-      '<span style="width:0.65vw;height:0.65vw;min-width:7px;min-height:7px;border-radius:50%;background:' + color + ';box-shadow:0 0 8px ' + color + ';display:inline-block;flex-shrink:0"></span>' +
-      '<span style="color:' + color + ';font-size:1.05vw;font-weight:700;text-shadow:0 0 6px ' + color + ';white-space:nowrap">' + status + '</span>';
+      '<span style="width:0.65vw;height:0.65vw;min-width:7px;min-height:7px;border-radius:50%;' +
+      'background:' + color + ';box-shadow:0 0 8px ' + color + ';display:inline-block;flex-shrink:0"></span>' +
+      '<span style="color:' + color + ';font-size:1.05vw;font-weight:700;' +
+      'text-shadow:0 0 6px ' + color + ';white-space:nowrap">' + status + '</span>';
     overlay.appendChild(statusEl);
 
-    // Stage：置中喺右欄
+    // Stage 容器：同樣垂直置中
     var stageEl = document.createElement('div');
-    stageEl.style.cssText = 'position:absolute;top:' + lp.top + ';left:91%;transform:translate(-50%,-50%);' +
-      'color:' + color + ';font-size:1.05vw;font-weight:700;text-shadow:0 0 6px ' + color + ';white-space:nowrap;text-align:center';
-    stageEl.textContent = stage;
+    stageEl.style.cssText =
+      'position:absolute;top:' + lp.top + ';left:83%;width:13%;height:' + cellHeight + ';' +
+      'transform:translateY(-50%);' +
+      'display:flex;align-items:center;justify-content:center';
+    stageEl.innerHTML =
+      '<span style="color:' + color + ';font-size:1.05vw;font-weight:700;' +
+      'text-shadow:0 0 6px ' + color + ';white-space:nowrap">' + stage + '</span>';
     overlay.appendChild(stageEl);
   });
 
-  // 三個建議框
-  // 底圖三個框約：第一框 top 58%-65%，第二框 66%-73%，第三框 74%-81%
-  // 文字區域：left:22% 避開圖標，right:4%，字體細啲避免溢出
+  // 三個建議框：去除 Markdown 星號，用 innerHTML 渲染加粗
   var recItems = [
     { text: recs.breathing || '—',     top: '61.5%' },
     { text: recs.trainingPlan || '—',  top: '69.5%' },
@@ -560,7 +584,7 @@ async function runFisStep3() {
       'text-shadow:0 0 4px rgba(0,191,255,0.5);' +
       'overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;' +
       'word-break:break-all';
-    el.textContent = item.text;
+    el.innerHTML = parseMarkdown(item.text);
     overlay.appendChild(el);
   });
 
