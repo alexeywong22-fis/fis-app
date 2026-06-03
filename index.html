@@ -545,15 +545,14 @@ async function runFisStep3() {
   /* 左欄：純人體圖 */
   var imgCol = document.createElement('div');
   imgCol.style.cssText =
-    'flex:0 0 38%;max-width:38%;' +
+    'flex:0 0 33%;max-width:33%;' +
     'background:#030a14;' +
-    'display:flex;align-items:center;justify-content:center;' +
     'border-right:1px solid rgba(0,150,255,0.25);' +
-    'padding:12px 8px';
+    'overflow:hidden';
   var bodyImg = document.createElement('img');
   bodyImg.src = 'https://alexeywong22-fis.github.io/fis-app/body.png';
   bodyImg.style.cssText =
-    'width:100%;max-height:420px;object-fit:contain;display:block';
+    'width:100%;height:100%;object-fit:cover;object-position:center top;display:block';
   imgCol.appendChild(bodyImg);
   mainRow.appendChild(imgCol);
 
