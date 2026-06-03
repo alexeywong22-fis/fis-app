@@ -1,0 +1,1614 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="FIS訓練">
+<meta name="theme-color" content="#1e2d4e">
+<!-- PWA manifest removed for compatibility -->
+<title>FIS 筋膜整合系統</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+HK:wght@300;400;500;700;900&family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #ff8845;
+    --gold-light: #ffaa77;
+    --gold-dim: #cc6633;
+    --bg: #1e2d4e;
+    --bg2: #243457;
+    --bg3: #2a3d63;
+    --bg4: #314873;
+    --text: #fdf5e5;
+    --text-dim: #a8b8d0;
+    --red: #ffc845;
+    --green: #5ce07a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans HK', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── SPLASH / HOME ── */
+  #home {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .home-bg {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 60% 40% at 80% 20%, rgba(200,168,75,0.08) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 60% at 20% 80%, rgba(200,168,75,0.05) 0%, transparent 60%);
+  }
+
+  .home-header {
+    padding: 60px 28px 0;
+    position: relative;
+    z-index: 1;
+  }
+
+  .brand-tag {
+    display: inline-block;
+    font-size: 10px;
+    letter-spacing: 4px;
+    color: var(--gold);
+    border: 1px solid var(--gold-dim);
+    padding: 4px 12px;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+  }
+
+  .home-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 72px;
+    line-height: 0.9;
+    color: var(--text);
+    margin-bottom: 6px;
+    letter-spacing: 2px;
+  }
+
+  .home-title span { color: var(--gold); }
+
+  .home-subtitle {
+    font-size: 13px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+    margin-bottom: 40px;
+  }
+
+  .home-divider {
+    width: 40px;
+    height: 2px;
+    background: var(--gold);
+    margin-bottom: 40px;
+  }
+
+  .module-grid {
+    padding: 0 20px 100px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    position: relative;
+    z-index: 1;
+    flex: 1;
+  }
+
+  .module-card {
+    background: var(--bg3);
+    border: 1px solid #2a2a2a;
+    border-radius: 16px;
+    padding: 20px 16px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 140px;
+  }
+
+  .module-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--gold);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s ease;
+  }
+
+  .module-card:active { transform: scale(0.97); background: var(--bg4); }
+  .module-card:active::before { transform: scaleX(1); }
+
+  .module-icon {
+    font-size: 28px;
+    line-height: 1;
+  }
+
+  .module-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--gold-dim);
+  }
+
+  .module-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.3;
+  }
+
+  .module-desc {
+    font-size: 11px;
+    color: var(--text-dim);
+    line-height: 1.4;
+    margin-top: auto;
+  }
+
+  .module-card.large {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    align-items: center;
+    min-height: 90px;
+    gap: 16px;
+    padding: 20px 20px;
+  }
+
+  .module-card.large .module-icon { font-size: 36px; }
+  .module-card.large .module-text { flex: 1; }
+
+  /* ── SCREENS ── */
+  .screen {
+    display: none;
+    min-height: 100vh;
+    flex-direction: column;
+    background: var(--bg);
+  }
+
+  .screen.active { display: flex; }
+
+  .screen-header {
+    padding: 52px 24px 20px;
+    background: var(--bg2);
+    border-bottom: 1px solid #1e1e1e;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .back-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--gold);
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    cursor: pointer;
+    margin-bottom: 12px;
+    width: fit-content;
+  }
+
+  .back-arrow { font-size: 16px; }
+
+  .screen-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 36px;
+    color: var(--text);
+    letter-spacing: 2px;
+    line-height: 1;
+  }
+
+  .screen-subtitle {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 4px;
+    letter-spacing: 0.5px;
+  }
+
+  .screen-body {
+    flex: 1;
+    padding: 24px 20px 40px;
+    overflow-y: auto;
+  }
+
+  /* ── CARDS & SECTIONS ── */
+  .section-label {
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    margin-top: 28px;
+  }
+
+  .section-label:first-child { margin-top: 0; }
+
+  .info-card {
+    background: var(--bg3);
+    border: 1px solid #252525;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+
+  .info-card-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+
+  .info-card-body {
+    font-size: 13px;
+    color: var(--text-dim);
+    line-height: 1.6;
+  }
+
+  /* ── BUTTONS ── */
+  .btn-gold {
+    background: var(--gold);
+    color: #000;
+    border: none;
+    border-radius: 10px;
+    padding: 14px 24px;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: 'Noto Sans HK', sans-serif;
+    cursor: pointer;
+    width: 100%;
+    letter-spacing: 1px;
+    transition: all 0.2s;
+    margin-top: 8px;
+  }
+
+  .btn-gold:active { transform: scale(0.98); background: var(--gold-light); }
+
+  .btn-outline {
+    background: transparent;
+    color: var(--gold);
+    border: 1px solid var(--gold-dim);
+    border-radius: 10px;
+    padding: 12px 24px;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: 'Noto Sans HK', sans-serif;
+    cursor: pointer;
+    width: 100%;
+    letter-spacing: 1px;
+    transition: all 0.2s;
+    margin-top: 8px;
+  }
+
+  .btn-outline:active { background: rgba(200,168,75,0.1); }
+
+  /* ── MODULE 1: FIS ── */
+  .step-row {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    margin-bottom: 16px;
+  }
+
+  .step-num {
+    width: 28px;
+    height: 28px;
+    background: var(--gold);
+    color: #000;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 900;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .step-content { flex: 1; }
+  .step-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+  .step-desc { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
+
+  .file-list {
+    background: var(--bg4);
+    border-radius: 10px;
+    padding: 12px;
+    margin-top: 8px;
+  }
+
+  .file-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 0;
+    border-bottom: 1px solid #2a2a2a;
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+
+  .file-item:last-child { border-bottom: none; }
+  .file-dot { width: 6px; height: 6px; background: var(--gold); border-radius: 50%; flex-shrink: 0; }
+
+  .prompt-box {
+    background: var(--bg4);
+    border: 1px solid #2a2a2a;
+    border-radius: 10px;
+    padding: 14px;
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--text-dim);
+    line-height: 1.6;
+    position: relative;
+  }
+
+  .copy-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: var(--gold);
+    color: #000;
+    border: none;
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Noto Sans HK', sans-serif;
+  }
+
+  .copy-btn.copied { background: var(--green); color: #000; }
+
+  /* ── MODULE 2: PROGRESS ── */
+  .rating-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+  }
+
+  .rating-btn {
+    flex: 1;
+    min-width: 60px;
+    background: var(--bg4);
+    border: 1px solid #2a2a2a;
+    border-radius: 8px;
+    padding: 10px 6px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Noto Sans HK', sans-serif;
+  }
+
+  .rating-btn .r-num { font-size: 18px; font-weight: 900; color: var(--text-dim); }
+  .rating-btn .r-label { font-size: 9px; color: var(--text-dim); line-height: 1.3; margin-top: 2px; }
+  .rating-btn.selected { border-color: var(--gold); background: rgba(200,168,75,0.1); }
+  .rating-btn.selected .r-num { color: var(--gold); }
+  .rating-btn.selected .r-label { color: var(--gold-dim); }
+
+  .toggle-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .toggle-btn {
+    flex: 1;
+    background: var(--bg4);
+    border: 1px solid #2a2a2a;
+    border-radius: 8px;
+    padding: 10px 8px;
+    text-align: center;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-dim);
+    transition: all 0.2s;
+    font-family: 'Noto Sans HK', sans-serif;
+  }
+
+  .toggle-btn.selected { border-color: var(--gold); color: var(--gold); background: rgba(200,168,75,0.1); }
+
+  .ai-result {
+    display: none;
+    background: var(--bg3);
+    border: 1px solid var(--gold-dim);
+    border-radius: 12px;
+    padding: 16px;
+    margin-top: 16px;
+  }
+
+  .ai-result.show { display: block; }
+
+  .ai-result-title {
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .ai-result-body {
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.7;
+    white-space: pre-line;
+  }
+
+  .loading-dots {
+    display: inline-flex;
+    gap: 4px;
+    align-items: center;
+  }
+
+  .loading-dots span {
+    width: 6px;
+    height: 6px;
+    background: var(--gold);
+    border-radius: 50%;
+    animation: dot-pulse 1.2s infinite;
+  }
+
+  .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes dot-pulse {
+    0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+    40% { transform: scale(1); opacity: 1; }
+  }
+
+  /* ── MODULE 3: PAIN POINT ── */
+  .body-selector {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .body-part-btn {
+    background: var(--bg3);
+    border: 1px solid #2a2a2a;
+    border-radius: 10px;
+    padding: 14px 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Noto Sans HK', sans-serif;
+  }
+
+  .body-part-btn .bp-icon { font-size: 24px; margin-bottom: 4px; }
+  .body-part-btn .bp-name { font-size: 13px; font-weight: 500; color: var(--text-dim); }
+  .body-part-btn.selected { border-color: var(--gold); background: rgba(200,168,75,0.08); }
+  .body-part-btn.selected .bp-name { color: var(--gold); }
+
+  textarea.symptom-input {
+    width: 100%;
+    background: var(--bg3);
+    border: 1px solid #2a2a2a;
+    border-radius: 10px;
+    padding: 14px;
+    color: var(--text);
+    font-size: 14px;
+    font-family: 'Noto Sans HK', sans-serif;
+    resize: none;
+    height: 100px;
+    line-height: 1.6;
+    outline: none;
+    margin-top: 8px;
+  }
+
+  textarea.symptom-input:focus { border-color: var(--gold-dim); }
+  textarea.symptom-input::placeholder { color: var(--text-dim); }
+
+  /* ── MODULE 4: WARMUP ── */
+  .warmup-toggle {
+    display: flex;
+    gap: 0;
+    border: 1px solid #2a2a2a;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+
+  .warmup-toggle-btn {
+    flex: 1;
+    padding: 12px;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    background: var(--bg3);
+    color: var(--text-dim);
+    border: none;
+    font-family: 'Noto Sans HK', sans-serif;
+    transition: all 0.2s;
+  }
+
+  .warmup-toggle-btn.active { background: var(--gold); color: #000; }
+
+  .warmup-section { display: none; }
+  .warmup-section.active { display: block; }
+
+  .warmup-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 0;
+    border-bottom: 1px solid #1e1e1e;
+  }
+
+  .warmup-item:last-child { border-bottom: none; }
+
+  .warmup-num {
+    width: 26px;
+    height: 26px;
+    border: 1px solid var(--gold-dim);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: var(--gold);
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .warmup-info { flex: 1; }
+  .warmup-name { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+  .warmup-detail { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
+  .warmup-sets { font-size: 11px; color: var(--gold-dim); margin-top: 4px; font-weight: 600; letter-spacing: 0.5px; }
+
+  /* ── BOTTOM NAV ── */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(10,10,10,0.95);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid #1e1e1e;
+    display: flex;
+    padding: 8px 0 20px;
+    z-index: 100;
+  }
+
+  .nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    cursor: pointer;
+    padding: 6px 0;
+    transition: all 0.2s;
+  }
+
+  .nav-icon { font-size: 20px; }
+  .nav-label { font-size: 9px; color: var(--text-dim); letter-spacing: 0.5px; text-align: center; }
+  .nav-item.active .nav-label { color: var(--gold); }
+  .nav-item.active .nav-icon { filter: drop-shadow(0 0 4px rgba(200,168,75,0.6)); }
+
+  /* ── DISCLAIMER ── */
+  .disclaimer-box {
+    background: rgba(200,168,75,0.05);
+    border: 1px solid rgba(200,168,75,0.2);
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 20px;
+  }
+
+  .disclaimer-box p {
+    font-size: 11px;
+    color: var(--gold-dim);
+    line-height: 1.6;
+  }
+
+  /* ── BADGE ── */
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+
+  .badge-gold { background: rgba(200,168,75,0.15); color: var(--gold); }
+  .badge-green { background: rgba(92,224,122,0.15); color: var(--green); }
+  .badge-red { background: rgba(255,200,69,0.15); color: var(--gold); }
+
+  /* ── DISCLAIMER SCREEN ── */
+  #disclaimer {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 40px 24px;
+    background: var(--bg);
+    position: relative;
+    overflow: hidden;
+  }
+
+  #disclaimer::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 60% 40% at 80% 20%, rgba(200,168,75,0.06) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 60% at 20% 80%, rgba(200,168,75,0.04) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  .disclaimer-screen-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 56px;
+    color: var(--gold);
+    letter-spacing: 4px;
+    margin-bottom: 4px;
+  }
+
+  .disclaimer-screen-sub {
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--text-dim);
+    margin-bottom: 40px;
+    text-transform: uppercase;
+  }
+
+  .disclaimer-screen-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 20px;
+  }
+
+  .disclaimer-point {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+    align-items: flex-start;
+  }
+
+  .disclaimer-point-num {
+    width: 22px;
+    height: 22px;
+    background: rgba(200,168,75,0.15);
+    border: 1px solid var(--gold-dim);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: var(--gold);
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .disclaimer-point-text {
+    font-size: 13px;
+    color: var(--text-dim);
+    line-height: 1.6;
+  }
+
+  .disclaimer-point-text strong {
+    color: var(--text);
+    display: block;
+    margin-bottom: 2px;
+  }
+
+  .disclaimer-divider {
+    height: 1px;
+    background: #1e1e1e;
+    margin: 24px 0;
+  }
+
+  .disclaimer-agree {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    margin-bottom: 20px;
+    cursor: pointer;
+    padding: 16px;
+    background: rgba(200,168,75,0.05);
+    border: 1px solid rgba(200,168,75,0.2);
+    border-radius: 12px;
+    -webkit-tap-highlight-color: rgba(200,168,75,0.1);
+  }
+
+  .disclaimer-checkbox {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    border: 2px solid var(--gold);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+    transition: all 0.2s;
+    cursor: pointer;
+  }
+
+  .disclaimer-checkbox.checked {
+    background: var(--gold);
+    border-color: var(--gold);
+  }
+
+  .disclaimer-checkbox.checked::after {
+    content: '✓';
+    font-size: 12px;
+    color: #000;
+    font-weight: 900;
+  }
+
+  .disclaimer-agree-text {
+    font-size: 14px;
+    color: var(--text);
+    line-height: 1.6;
+    flex: 1;
+  }
+
+  .btn-gold:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+
+  #agreeBtn {
+    padding: 18px 24px;
+    font-size: 16px;
+    border-radius: 14px;
+    margin-top: 16px;
+  }
+
+  /* ── HISTORY ── */
+  .history-item {
+    background: var(--bg3);
+    border: 1px solid #252525;
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+  }
+  .history-date { font-size: 10px; color: var(--gold-dim); letter-spacing: 1px; margin-bottom: 6px; }
+  .history-scores { display: flex; gap: 8px; flex-wrap: wrap; }
+  .history-score { font-size: 12px; color: var(--text-dim); }
+
+  /* ── INSTALL BANNER ── */
+  .install-banner {
+    display: none;
+    background: linear-gradient(135deg, rgba(200,168,75,0.15), rgba(200,168,75,0.05));
+    border: 1px solid var(--gold-dim);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin: 16px 20px;
+    align-items: center;
+    gap: 12px;
+  }
+  .install-banner.show { display: flex; }
+  .install-banner-text { flex: 1; font-size: 12px; color: var(--text-dim); line-height: 1.5; }
+  .install-banner-text strong { color: var(--gold); display: block; margin-bottom: 2px; font-size: 13px; }
+  .install-btn-small {
+    background: var(--gold);
+    color: #000;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Noto Sans HK', sans-serif;
+    white-space: nowrap;
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══ DISCLAIMER ═══ -->
+<div id="disclaimer" class="screen active">
+  <div class="disclaimer-screen-logo">FIS</div>
+  <div class="disclaimer-screen-sub">筋膜整合系統 · 訓練工具</div>
+
+  <div class="disclaimer-screen-title">使用前請閱讀以下聲明</div>
+
+  <div class="disclaimer-point">
+    <div class="disclaimer-point-num">1</div>
+    <div class="disclaimer-point-text">
+      <strong>教育性參考，非醫療診斷</strong>
+      本工具提供嘅所有分析結果屬教育性體態參考，並非醫療診斷、物理治療建議或運動處方。
+    </div>
+  </div>
+
+  <div class="disclaimer-point">
+    <div class="disclaimer-point-num">2</div>
+    <div class="disclaimer-point-text">
+      <strong>個人差異</strong>
+      每個人身體狀況唔同，AI分析結果僅供個人參考，實際效果因人而異。
+    </div>
+  </div>
+
+  <div class="disclaimer-point">
+    <div class="disclaimer-point-num">3</div>
+    <div class="disclaimer-point-text">
+      <strong>有傷患請先咨詢醫生</strong>
+      如你有任何關節疼痛、舊患或傷患，請先咨詢醫生或物理治療師，再決定是否使用本工具。
+    </div>
+  </div>
+
+  <div class="disclaimer-point">
+    <div class="disclaimer-point-num">4</div>
+    <div class="disclaimer-point-text">
+      <strong>訓練中如有不適請立即停止</strong>
+      訓練過程中如出現任何疼痛或不適，請立即停止並咨詢專業醫療人士。
+    </div>
+  </div>
+
+  <div class="disclaimer-divider"></div>
+
+  <button onclick="enterApp()" style="
+    background: #ffc845;
+    color: #2a3d63;
+    border: none;
+    border-radius: 16px;
+    padding: 20px 24px;
+    font-size: 16px;
+    font-weight: 900;
+    font-family: 'Noto Sans HK', sans-serif;
+    cursor: pointer;
+    width: 100%;
+    letter-spacing: 1px;
+    margin-top: 16px;
+    -webkit-tap-highlight-color: rgba(255,200,69,0.3);
+    touch-action: manipulation;
+  ">我已閱讀，進入訓練工具 →</button>
+</div>
+
+<!-- ═══ HOME ═══ -->
+<div id="home" class="screen">
+  <div class="home-bg"></div>
+  <div class="home-header">
+    <div class="brand-tag">FIS · 筋膜整合系統</div>
+    <div class="home-title">訓練<span>工具</span></div>
+    <div class="home-subtitle">TRAINING TOOLKIT · ALEXEY WONG</div>
+    <div class="home-divider"></div>
+  </div>
+
+  <div class="install-banner" id="installBanner">
+    <div class="install-banner-text">
+      <strong>📱 加入主畫面</strong>
+      點擊安裝，令FIS訓練工具變成你手機嘅App
+    </div>
+    <button class="install-btn-small" onclick="installApp()">安裝</button>
+  </div>
+  <div class="module-grid">
+    <div class="module-card" onclick="showScreen('fis')">
+      <div class="module-icon">🧬</div>
+      <div class="module-num">01 · FIS</div>
+      <div class="module-name">筋膜線自我檢測</div>
+      <div class="module-desc">上載照片生成個人報告卡</div>
+    </div>
+
+    <div class="module-card" onclick="showScreen('progress')">
+      <div class="module-icon">📊</div>
+      <div class="module-num">02 · 追蹤</div>
+      <div class="module-name">進步追蹤系統</div>
+      <div class="module-desc">AI分析今日訓練數據</div>
+    </div>
+
+    <div class="module-card" onclick="showScreen('pain')">
+      <div class="module-icon">⚡</div>
+      <div class="module-num">03 · 診斷</div>
+      <div class="module-name">訓練痛點診斷</div>
+      <div class="module-desc">即時搵出筋膜線根源</div>
+    </div>
+
+    <div class="module-card" onclick="showScreen('warmup')">
+      <div class="module-icon">🔥</div>
+      <div class="module-num">04 · 熱身</div>
+      <div class="module-name">今日熱身激活</div>
+      <div class="module-desc">上下身個人化熱身方案</div>
+    </div>
+  </div>
+
+  <div class="bottom-nav">
+    <div class="nav-item active" onclick="showScreen('home')">
+      <div class="nav-icon">🏠</div>
+      <div class="nav-label">主頁</div>
+    </div>
+    <div class="nav-item" onclick="showScreen('fis')">
+      <div class="nav-icon">🧬</div>
+      <div class="nav-label">檢測</div>
+    </div>
+    <div class="nav-item" onclick="showScreen('progress')">
+      <div class="nav-icon">📊</div>
+      <div class="nav-label">追蹤</div>
+    </div>
+    <div class="nav-item" onclick="showScreen('pain')">
+      <div class="nav-icon">⚡</div>
+      <div class="nav-label">診斷</div>
+    </div>
+    <div class="nav-item" onclick="showScreen('warmup')">
+      <div class="nav-icon">🔥</div>
+      <div class="nav-label">熱身</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODULE 1: FIS ═══ -->
+<div id="fis" class="screen">
+  <div class="screen-header">
+    <div class="back-btn" onclick="showScreen('home')"><span class="back-arrow">←</span> 返回</div>
+    <div class="screen-title">筋膜線檢測</div>
+    <div class="screen-subtitle">FIS SELF-ASSESSMENT · 3步完成</div>
+  </div>
+  <div class="screen-body">
+    <div class="disclaimer-box">
+      <p>⚠️ 以下資訊屬教育性體態參考，並非醫療診斷。如有任何疼痛或傷患，請先咨詢醫生。</p>
+    </div>
+
+    <div class="section-label">第一步 · 準備檔案</div>
+    <div class="info-card">
+      <div class="info-card-title">需要準備以下八個檔案</div>
+      <div class="file-list">
+        <div class="file-item"><div class="file-dot"></div>照片一：正面站立</div>
+        <div class="file-item"><div class="file-dot"></div>照片二：側面站立</div>
+        <div class="file-item"><div class="file-dot"></div>照片三：背面站立</div>
+        <div class="file-item"><div class="file-dot"></div>影片一：左腳單腳站立30秒</div>
+        <div class="file-item"><div class="file-dot"></div>影片二：右腳單腳站立30秒</div>
+        <div class="file-item"><div class="file-dot"></div>影片三：Jefferson Curl側面</div>
+        <div class="file-item"><div class="file-dot"></div>影片四：原地行走10步正面</div>
+        <div class="file-item"><div class="file-dot"></div>影片五：雙手舉高呼吸5下側面</div>
+      </div>
+    </div>
+
+    <div class="section-label">第二步 · 使用AI平台</div>
+    <div class="step-row">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <div class="step-title">上載你嘅照片同影片</div>
+        <div class="step-desc">三張照片（正面、側面、背面）+ 五條影片</div>
+        <div class="file-list" style="margin-top:8px">
+          <div class="file-item"><div class="file-dot"></div>照片一：正面站立</div>
+          <div class="file-item"><div class="file-dot"></div>照片二：側面站立</div>
+          <div class="file-item"><div class="file-dot"></div>照片三：背面站立</div>
+          <div class="file-item"><div class="file-dot"></div>影片一至五：單腳站立、Jefferson Curl、行走、呼吸</div>
+        </div>
+        <label style="display:block;margin-top:12px;background:var(--bg4);border:1px dashed var(--gold-dim);border-radius:10px;padding:16px;text-align:center;cursor:pointer;">
+          <input type="file" id="fisFiles" multiple accept="image/*,video/*" style="display:none" onchange="handleFileSelect(this)">
+          <div style="font-size:24px;margin-bottom:4px">📁</div>
+          <div style="font-size:13px;color:var(--gold)">撳此上載檔案</div>
+          <div style="font-size:11px;color:var(--text-dim);margin-top:2px">支援圖片同影片</div>
+        </label>
+        <div id="fileCount" style="font-size:12px;color:var(--text-dim);margin-top:8px;text-align:center"></div>
+      </div>
+    </div>
+
+    <div class="step-row">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <div class="step-title">AI分析體態特徵</div>
+        <div class="step-desc">上載完成後，撳以下按鈕開始分析</div>
+        <button class="btn-gold" onclick="runFisStep1()" style="margin-top:8px">開始體態分析 →</button>
+        <div class="ai-result" id="fisStep1Result" style="margin-top:12px">
+          <div class="ai-result-title">體態觀察結果</div>
+          <div class="ai-result-body" id="fisStep1Text"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-row">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <div class="step-title">生成筋膜線報告卡</div>
+        <div class="step-desc">收到體態分析後，撳以下按鈕生成個人化報告卡</div>
+        <button class="btn-outline" onclick="runFisStep2()" style="margin-top:8px">生成報告卡 →</button>
+        <div class="ai-result" id="fisStep2Result" style="margin-top:12px">
+          <div class="ai-result-title">FIS 個人化報告卡</div>
+          <div class="ai-result-body" id="fisStep2Text"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-row">
+      <div class="step-num">4</div>
+      <div class="step-content">
+        <div class="step-title">生成視覺化參考圖（可選）</div>
+        <div class="step-desc">收到報告卡後，撳以下按鈕生成視覺化圖片</div>
+        <button class="btn-outline" onclick="runFisStep3()" style="margin-top:8px">生成視覺化圖片 →</button>
+        <div id="fisImageResult" style="display:none;margin-top:12px">
+          <img id="fisImage" style="width:100%;border-radius:12px;border:1px solid var(--gold-dim)" />
+          <button class="btn-outline" onclick="downloadImage()" style="margin-top:8px">下載圖片</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <div class="bottom-nav">
+    <div class="nav-item" onclick="showScreen('home')"><div class="nav-icon">🏠</div><div class="nav-label">主頁</div></div>
+    <div class="nav-item active" onclick="showScreen('fis')"><div class="nav-icon">🧬</div><div class="nav-label">檢測</div></div>
+    <div class="nav-item" onclick="showScreen('progress')"><div class="nav-icon">📊</div><div class="nav-label">追蹤</div></div>
+    <div class="nav-item" onclick="showScreen('pain')"><div class="nav-icon">⚡</div><div class="nav-label">診斷</div></div>
+    <div class="nav-item" onclick="showScreen('warmup')"><div class="nav-icon">🔥</div><div class="nav-label">熱身</div></div>
+  </div>
+</div>
+
+<!-- ═══ MODULE 2: PROGRESS ═══ -->
+<div id="progress" class="screen">
+  <div class="screen-header">
+    <div class="back-btn" onclick="showScreen('home')"><span class="back-arrow">←</span> 返回</div>
+    <div class="screen-title">進步追蹤</div>
+    <div class="screen-subtitle">POST-WORKOUT · AI即時分析</div>
+  </div>
+  <div class="screen-body">
+    <div class="section-label">指標一 · 目標肌肉發力感</div>
+    <div class="rating-row" id="rating1">
+      <div class="rating-btn" onclick="selectRating('rating1', this, 1)"><div class="r-num">1</div><div class="r-label">完全感受唔到</div></div>
+      <div class="rating-btn" onclick="selectRating('rating1', this, 2)"><div class="r-num">2</div><div class="r-label">偶爾感受到</div></div>
+      <div class="rating-btn" onclick="selectRating('rating1', this, 3)"><div class="r-num">3</div><div class="r-label">大部分時間</div></div>
+      <div class="rating-btn" onclick="selectRating('rating1', this, 4)"><div class="r-num">4</div><div class="r-label">每一下都感受到</div></div>
+    </div>
+
+    <div class="section-label">指標二 · 腰部代償感</div>
+    <div class="toggle-row" id="back1">
+      <div class="toggle-btn" onclick="selectToggle('back1', this, '有')">有</div>
+      <div class="toggle-btn" onclick="selectToggle('back1', this, '輕微')">輕微</div>
+      <div class="toggle-btn" onclick="selectToggle('back1', this, '無')">無</div>
+    </div>
+
+    <div class="section-label">指標三 · 90/90張力出現速度</div>
+    <div class="toggle-row" id="tension1">
+      <div class="toggle-btn" onclick="selectToggle('tension1', this, '5次後')">5次後</div>
+      <div class="toggle-btn" onclick="selectToggle('tension1', this, '3次後')">3次後</div>
+      <div class="toggle-btn" onclick="selectToggle('tension1', this, '1-2次')">1-2次</div>
+    </div>
+
+    <button class="btn-gold" onclick="analyzeProgress()" style="margin-top:24px">AI即時分析 →</button>
+
+    <div class="ai-result" id="progressResult">
+      <div class="ai-result-title">AI 分析結果</div>
+      <div class="ai-result-body" id="progressResultText"></div>
+      <button class="btn-outline" onclick="saveRecord()" style="margin-top:12px">儲存今日記錄</button>
+    </div>
+
+    <div id="historySection" style="display:none">
+      <div class="section-label">過往記錄</div>
+      <div id="historyList"></div>
+    </div>
+  </div>
+  <div class="bottom-nav">
+    <div class="nav-item" onclick="showScreen('home')"><div class="nav-icon">🏠</div><div class="nav-label">主頁</div></div>
+    <div class="nav-item" onclick="showScreen('fis')"><div class="nav-icon">🧬</div><div class="nav-label">檢測</div></div>
+    <div class="nav-item active" onclick="showScreen('progress')"><div class="nav-icon">📊</div><div class="nav-label">追蹤</div></div>
+    <div class="nav-item" onclick="showScreen('pain')"><div class="nav-icon">⚡</div><div class="nav-label">診斷</div></div>
+    <div class="nav-item" onclick="showScreen('warmup')"><div class="nav-icon">🔥</div><div class="nav-label">熱身</div></div>
+  </div>
+</div>
+
+<!-- ═══ MODULE 3: PAIN POINT ═══ -->
+<div id="pain" class="screen">
+  <div class="screen-header">
+    <div class="back-btn" onclick="showScreen('home')"><span class="back-arrow">←</span> 返回</div>
+    <div class="screen-title">痛點診斷</div>
+    <div class="screen-subtitle">PAIN POINT · AI即時分析</div>
+  </div>
+  <div class="screen-body">
+    <div class="disclaimer-box">
+      <p>⚠️ 以下分析屬教育性參考，並非醫療診斷。如有疼痛請先咨詢醫生。</p>
+    </div>
+
+    <div class="section-label">選擇訓練部位</div>
+    <div class="body-selector">
+      <div class="body-part-btn" onclick="selectBodyPart(this, '胸肌')"><div class="bp-icon">💪</div><div class="bp-name">胸肌</div></div>
+      <div class="body-part-btn" onclick="selectBodyPart(this, '背肌')"><div class="bp-icon">🦾</div><div class="bp-name">背肌</div></div>
+      <div class="body-part-btn" onclick="selectBodyPart(this, '膊頭')"><div class="bp-icon">🔝</div><div class="bp-name">膊頭</div></div>
+      <div class="body-part-btn" onclick="selectBodyPart(this, '手臂')"><div class="bp-icon">✊</div><div class="bp-name">手臂</div></div>
+      <div class="body-part-btn" onclick="selectBodyPart(this, '臀部')"><div class="bp-icon">🍑</div><div class="bp-name">臀部</div></div>
+      <div class="body-part-btn" onclick="selectBodyPart(this, '大腿前側')"><div class="bp-icon">🦵</div><div class="bp-name">大腿前側</div></div>
+      <div class="body-part-btn" onclick="selectBodyPart(this, '大腿後側')"><div class="bp-icon">🦿</div><div class="bp-name">大腿後側</div></div>
+      <div class="body-part-btn" onclick="selectBodyPart(this, '全身通用')"><div class="bp-icon">⚡</div><div class="bp-name">全身通用</div></div>
+    </div>
+
+    <div class="section-label">描述你的症狀</div>
+    <textarea class="symptom-input" id="symptomInput" placeholder="例如：推胸時膊頭前方痛，完全感受唔到胸肌發力..."></textarea>
+
+    <button class="btn-gold" onclick="analyzePain()" style="margin-top:16px">AI即時診斷 →</button>
+
+    <div class="ai-result" id="painResult">
+      <div class="ai-result-title">AI 診斷結果</div>
+      <div class="ai-result-body" id="painResultText"></div>
+    </div>
+  </div>
+  <div class="bottom-nav">
+    <div class="nav-item" onclick="showScreen('home')"><div class="nav-icon">🏠</div><div class="nav-label">主頁</div></div>
+    <div class="nav-item" onclick="showScreen('fis')"><div class="nav-icon">🧬</div><div class="nav-label">檢測</div></div>
+    <div class="nav-item" onclick="showScreen('progress')"><div class="nav-icon">📊</div><div class="nav-label">追蹤</div></div>
+    <div class="nav-item active" onclick="showScreen('pain')"><div class="nav-icon">⚡</div><div class="nav-label">診斷</div></div>
+    <div class="nav-item" onclick="showScreen('warmup')"><div class="nav-icon">🔥</div><div class="nav-label">熱身</div></div>
+  </div>
+</div>
+
+<!-- ═══ MODULE 4: WARMUP ═══ -->
+<div id="warmup" class="screen">
+  <div class="screen-header">
+    <div class="back-btn" onclick="showScreen('home')"><span class="back-arrow">←</span> 返回</div>
+    <div class="screen-title">今日熱身</div>
+    <div class="screen-subtitle">PRE-WORKOUT · 五大筋膜線激活</div>
+  </div>
+  <div class="screen-body">
+    <div class="warmup-toggle">
+      <button class="warmup-toggle-btn active" onclick="switchWarmup('upper', this)">上身訓練日</button>
+      <button class="warmup-toggle-btn" onclick="switchWarmup('lower-m', this)">下身（男）</button>
+      <button class="warmup-toggle-btn" onclick="switchWarmup('lower-f', this)">下身（女）</button>
+    </div>
+
+    <!-- Upper Body -->
+    <div class="warmup-section active" id="wu-upper">
+      <div class="warmup-item">
+        <div class="warmup-num">1</div>
+        <div class="warmup-info">
+          <div class="warmup-name">9090 呼吸重置</div>
+          <div class="warmup-detail">仰臥雙腳踩牆，鼻吸鼻呼，呼氣呼盡保持微弱呼吸5下</div>
+          <div class="warmup-sets">× 5次循環 · 深前線</div>
+        </div>
+      </div>
+      <div class="warmup-item">
+        <div class="warmup-num">2</div>
+        <div class="warmup-info">
+          <div class="warmup-name">Cat Cow Pose</div>
+          <div class="warmup-detail">四足跪姿，脊椎由頸椎到腰椎逐節分節活動</div>
+          <div class="warmup-sets">× 10下 · 胸椎活動度</div>
+        </div>
+      </div>
+      <div class="warmup-item">
+        <div class="warmup-num">3</div>
+        <div class="warmup-info">
+          <div class="warmup-name">四足跪姿手肘撐地貓式</div>
+          <div class="warmup-detail">手肘撐地十指緊扣，呼氣肋骨下降臀部退後，感受肩胛骨向外推開</div>
+          <div class="warmup-sets">× 10下 · 螺旋線前鋸肌</div>
+        </div>
+      </div>
+      <div class="warmup-item">
+        <div class="warmup-num">4</div>
+        <div class="warmup-info">
+          <div class="warmup-name">T Raise + 肩胛上下迴旋</div>
+          <div class="warmup-detail">俯臥雙手T字，離地後做肩胛上下迴旋，頸部全程放鬆</div>
+          <div class="warmup-sets">× 10下 · 淺背線中下斜方肌</div>
+        </div>
+      </div>
+      <div class="warmup-item">
+        <div class="warmup-num">5</div>
+        <div class="warmup-info">
+          <div class="warmup-name">半跪姿髖屈肌拉伸</div>
+          <div class="warmup-detail">半跪姿前腳90度，配合呼氣令前側拉長，骨盆保持中立</div>
+          <div class="warmup-sets">× 20秒每側 · 淺前線</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lower Body Male -->
+    <div class="warmup-section" id="wu-lower-m">
+      <div class="warmup-item">
+        <div class="warmup-num">1</div>
+        <div class="warmup-info">
+          <div class="warmup-name">9090 呼吸重置</div>
+          <div class="warmup-detail">仰臥雙腳踩牆，鼻吸鼻呼，呼氣呼盡保持微弱呼吸5下</div>
+          <div class="warmup-sets">× 5次循環 · 深前線</div>
+        </div>
+      </div>
+      <div class="warmup-item">
+        <div class="warmup-num">2</div>
+        <div class="warmup-info">
+          <div class="warmup-name">Cat Cow Pose</div>
+          <div class="warmup-detail">四足跪姿，脊椎逐節分節活動</div>
+          <div class="warmup-sets">× 10下 · 胸椎活動度</div>
+        </div>
+      </div>
+      <div class="warmup-item">
+        <div class="warmup-num">3</div>
+        <div class="warmup-info">
+          <div class="warmup-name">Dorsiflexion 激活</div>
+          <div class="warmup-detail">踎低持3kg啞鈴向前伸，腳跟貼地，感受腳踝背屈發力並維持</div>
+          <div class="warmup-sets">× Hold 10秒 × 3至5次 · 深前線起點</div>
+        </div>
+      </div>
+      <div class="warmup-item">
+        <div class="warmup-num">4</div>
+        <div class="warmup-info">
+          <div class="warmup-name">側臥髖135度臀中肌激活</div>
+          <div class="warmup-detail">Side Plank位置髖關節135度，上面腳向前伸，微微將臀部升起一個拳頭</div>
+          <div class="warmup-sets">× Hold 30秒每側 · 側線</div>
+        </div>
+      </div>
+      <div class="warmup-item">
+        <div class="warmup-num">5</div>
+        <div class="warmup-info">
+          <div class="warmup-name">90/90 腳跟踩凳微橋式</div>
+          <div class="warmup-detail">仰臥腳跟踩凳，呼氣呼盡腰背貼地，腳跟輕踩臀部微抬一個拳頭</div>
+          <div class="warmup-sets">× 10下 · 淺背線</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lower Body Female -->
+    <div class="warmup-section" id="wu-lower-f">
+      <div class="warmup-item">
+        <div class="warmup-num">1</div>
+        <div class="warmup-info">
+          <div class="warmup-name">9090 呼吸重置</div>
+          <div class="warmup-detail">仰臥雙腳踩牆，鼻吸鼻呼，呼氣呼盡保持微弱呼吸5下</div>
+          <div class="warmup-sets">× 5次循環 · 深前線</div>
+        </div>
+      </div>
+      <div class="warmup-item">
+        <div class="warmup-num">2</div>
+        <div class="warmup-info">
+          <div class="warmup-name">Cat Cow Pose</div>
+          <div class="warmup-detail">四足跪姿，脊椎逐節分節活動</div>
+          <div class="warmup-sets">× 10下 · 胸椎活動度</div>
+        </div>
+      </div>
+      <div class="warmup-item">
+        <div class="warmup-num">3</div>
+        <div class="warmup-info">
+          <div class="warmup-name">Dorsiflexion 激活</div>
+          <div class="warmup-detail">踎低持3kg啞鈴向前伸，腳跟貼地，感受腳踝背屈發力並維持</div>
+          <div class="warmup-sets">× Hold 10秒 × 3至5次 · 深前線起點</div>
+        </div>
+      </div>
+      <div class="warmup-item">
+        <div class="warmup-num">4</div>
+        <div class="warmup-info">
+          <div class="warmup-name">側臥髖135度臀中肌激活</div>
+          <div class="warmup-detail">Side Plank位置髖關節135度，上面腳向前伸，微微將臀部升起一個拳頭</div>
+          <div class="warmup-sets">× Hold 30秒每側 · 側線</div>
+        </div>
+      </div>
+      <div class="warmup-item">
+        <div class="warmup-num">5</div>
+        <div class="warmup-info">
+          <div class="warmup-name">半跪姿髖屈肌拉伸</div>
+          <div class="warmup-detail">半跪姿前腳90度，配合呼氣令前側拉長，骨盆保持中立</div>
+          <div class="warmup-sets">× 20秒每側 · 淺前線（防止大腿前側代償）</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="bottom-nav">
+    <div class="nav-item" onclick="showScreen('home')"><div class="nav-icon">🏠</div><div class="nav-label">主頁</div></div>
+    <div class="nav-item" onclick="showScreen('fis')"><div class="nav-icon">🧬</div><div class="nav-label">檢測</div></div>
+    <div class="nav-item" onclick="showScreen('progress')"><div class="nav-icon">📊</div><div class="nav-label">追蹤</div></div>
+    <div class="nav-item" onclick="showScreen('pain')"><div class="nav-icon">⚡</div><div class="nav-label">診斷</div></div>
+    <div class="nav-item active" onclick="showScreen('warmup')"><div class="nav-icon">🔥</div><div class="nav-label">熱身</div></div>
+  </div>
+</div>
+
+<script>
+// ── API 設定 ──
+// 部署到Cloudflare之後，將呢個URL改成你嘅Workers URL
+// 例如：https://fis-app.alexeywong.workers.dev
+const API_BASE = 'https://fis-app.alexeywong22.workers.dev';
+
+// ── NAVIGATION ──
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+// ── COPY PROMPT ──
+function copyPrompt(btn, id) {
+  const text = document.getElementById(id).textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = '已複製 ✓';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = '複製'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+// ── RATINGS ──
+let ratings = { rating1: null, back1: null, tension1: null };
+
+function selectRating(groupId, el, val) {
+  document.querySelectorAll(`#${groupId} .rating-btn`).forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  ratings[groupId] = val;
+}
+
+function selectToggle(groupId, el, val) {
+  document.querySelectorAll(`#${groupId} .toggle-btn`).forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  ratings[groupId] = val;
+}
+
+// ── BODY PART ──
+let selectedPart = '';
+function selectBodyPart(el, part) {
+  document.querySelectorAll('.body-part-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedPart = part;
+}
+
+// ── WARMUP TOGGLE ──
+function switchWarmup(type, btn) {
+  document.querySelectorAll('.warmup-toggle-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.warmup-section').forEach(s => s.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('wu-' + type).classList.add('active');
+}
+
+// ── AI: PROGRESS ──
+// ── FIS FUNCTIONS ──
+let selectedFiles = [];
+let fisStep1Result = '';
+let fisStep2Result = '';
+
+function handleFileSelect(input) {
+  selectedFiles = Array.from(input.files);
+  document.getElementById('fileCount').textContent = `已選擇 ${selectedFiles.length} 個檔案（需要8個）`;
+}
+
+async function runFisStep1() {
+  if (selectedFiles.length === 0) {
+    alert('請先上載照片同影片');
+    return;
+  }
+
+  const result = document.getElementById('fisStep1Result');
+  const resultText = document.getElementById('fisStep1Text');
+  result.classList.add('show');
+  resultText.innerHTML = '<div class="loading-dots"><span></span><span></span><span></span></div> 正在分析體態特徵，請稍候（約30-60秒）...';
+
+  const formData = new FormData();
+  selectedFiles.forEach(f => formData.append('files', f));
+
+  try {
+    const res = await fetch(`${API_BASE}/api/fis-step1`, {
+      method: 'POST',
+      body: formData
+    });
+    const data = await res.json();
+    fisStep1Result = data.result;
+    resultText.textContent = fisStep1Result;
+  } catch (e) {
+    resultText.textContent = '分析失敗，請檢查網絡連接後重試。';
+  }
+}
+
+async function runFisStep2() {
+  if (!fisStep1Result) {
+    alert('請先完成步驟二的體態分析');
+    return;
+  }
+
+  const result = document.getElementById('fisStep2Result');
+  const resultText = document.getElementById('fisStep2Text');
+  result.classList.add('show');
+  resultText.innerHTML = '<div class="loading-dots"><span></span><span></span><span></span></div> 正在生成報告卡...';
+
+  try {
+    const res = await fetch(`${API_BASE}/api/fis-step2`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ step1Result: fisStep1Result })
+    });
+    const data = await res.json();
+    fisStep2Result = data.result;
+    resultText.textContent = fisStep2Result;
+  } catch (e) {
+    resultText.textContent = '報告卡生成失敗，請重試。';
+  }
+}
+
+async function runFisStep3() {
+  if (!fisStep2Result) {
+    alert('請先完成步驟三的報告卡生成');
+    return;
+  }
+
+  const imageResult = document.getElementById('fisImageResult');
+  imageResult.style.display = 'block';
+  document.getElementById('fisImage').src = '';
+  document.getElementById('fisImage').alt = '正在生成圖片，請稍候（約30秒）...';
+
+  try {
+    const res = await fetch(`${API_BASE}/api/fis-step3`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ step2Result: fisStep2Result })
+    });
+    const data = await res.json();
+    if (data.imageUrl) {
+      document.getElementById('fisImage').src = data.imageUrl;
+    }
+  } catch (e) {
+    document.getElementById('fisImage').alt = '圖片生成失敗，請重試。';
+  }
+}
+
+function downloadImage() {
+  const img = document.getElementById('fisImage');
+  if (!img.src) return;
+  const a = document.createElement('a');
+  a.href = img.src;
+  a.download = 'FIS報告卡.png';
+  a.click();
+}
+
+async function analyzeProgress() {
+  const r1 = ratings['rating1'];
+  const r2 = ratings['back1'];
+  const r3 = ratings['tension1'];
+
+  if (!r1 || !r2 || !r3) {
+    alert('請先填寫所有三個指標');
+    return;
+  }
+
+  const result = document.getElementById('progressResult');
+  const resultText = document.getElementById('progressResultText');
+  result.classList.add('show');
+  resultText.innerHTML = '<div class="loading-dots"><span></span><span></span><span></span></div>';
+
+  try {
+    const res = await fetch(`${API_BASE}/api/progress`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rating: r1, backPain: r2, tensionSpeed: r3 })
+    });
+    const data = await res.json();
+    resultText.textContent = data.result;
+  } catch (e) {
+    resultText.textContent = '分析服務暫時唔可用，請稍後再試。';
+  }
+}
+
+// ── AI: PAIN POINT ──
+async function analyzePain() {
+  const symptom = document.getElementById('symptomInput').value.trim();
+  if (!symptom) { alert('請描述你嘅症狀'); return; }
+  if (!selectedPart) { alert('請選擇訓練部位'); return; }
+
+  const result = document.getElementById('painResult');
+  const resultText = document.getElementById('painResultText');
+  result.classList.add('show');
+  resultText.innerHTML = '<div class="loading-dots"><span></span><span></span><span></span></div>';
+
+  try {
+    const res = await fetch(`${API_BASE}/api/pain`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ bodyPart: selectedPart, symptom })
+    });
+    const data = await res.json();
+    resultText.textContent = data.result;
+  } catch (e) {
+    resultText.textContent = '診斷服務暫時唔可用，請稍後再試。';
+  }
+}
+
+// ── PWA INSTALL ──
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  document.getElementById('installBanner').classList.add('show');
+});
+
+async function installApp() {
+  if (!deferredPrompt) {
+    alert('請喺Safari瀏覽器打開，然後點擊分享按鈕 → 加入主畫面');
+    return;
+  }
+  deferredPrompt.prompt();
+  const result = await deferredPrompt.userChoice;
+  if (result.outcome === 'accepted') {
+    document.getElementById('installBanner').classList.remove('show');
+  }
+  deferredPrompt = null;
+}
+
+// iOS install hint
+const isIOS = /iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase());
+const isStandalone = window.navigator.standalone;
+if (isIOS && !isStandalone) {
+  document.getElementById('installBanner').classList.add('show');
+  document.getElementById('installBanner').querySelector('.install-btn-small').textContent = '點我睇教學';
+  document.getElementById('installBanner').querySelector('.install-btn-small').onclick = () => {
+    alert('加入主畫面方法：
+
+1. 點擊Safari底部「分享」按鈕 (□↑)
+2. 揀選「加入主畫面」
+3. 撳「加入」完成！');
+  };
+}
+// ── DISCLAIMER ──
+let agreed = false;
+
+function toggleAgree() {
+  agreed = !agreed;
+  const checkbox = document.getElementById('agreeCheckbox');
+  const btn = document.getElementById('agreeBtn');
+  checkbox.classList.toggle('checked', agreed);
+  btn.disabled = !agreed;
+}
+
+function enterApp() {
+  localStorage.setItem('fis_agreed', '1');
+  document.getElementById('disclaimer').classList.remove('active');
+  document.getElementById('home').classList.add('active');
+}
+
+// Check if already agreed
+window.addEventListener('DOMContentLoaded', () => {
+  if (localStorage.getItem('fis_agreed') === '1') {
+    document.getElementById('disclaimer').classList.remove('active');
+    document.getElementById('home').classList.add('active');
+  }
+});
+
+// ── HISTORY ──
+function saveRecord() {
+  const r1 = ratings['rating1'];
+  const r2 = ratings['back1'];
+  const r3 = ratings['tension1'];
+  if (!r1 || !r2 || !r3) return;
+
+  const record = {
+    date: new Date().toLocaleDateString('zh-HK'),
+    r1, r2, r3,
+    result: document.getElementById('progressResultText').textContent.substring(0, 100) + '...'
+  };
+
+  const history = JSON.parse(localStorage.getItem('fis_history') || '[]');
+  history.unshift(record);
+  if (history.length > 20) history.pop();
+  localStorage.setItem('fis_history', JSON.stringify(history));
+
+  loadHistory();
+  alert('記錄已儲存 ✓');
+}
+
+function loadHistory() {
+  const history = JSON.parse(localStorage.getItem('fis_history') || '[]');
+  const section = document.getElementById('historySection');
+  const list = document.getElementById('historyList');
+
+  if (history.length === 0) { section.style.display = 'none'; return; }
+
+  section.style.display = 'block';
+  list.innerHTML = history.map(r => `
+    <div class="history-item">
+      <div class="history-date">${r.date}</div>
+      <div class="history-scores">
+        <span class="history-score">發力感：<strong style="color:var(--gold)">${r.r1}分</strong></span>
+        <span class="history-score">腰部代償：<strong style="color:var(--text)">${r.r2}</strong></span>
+        <span class="history-score">張力速度：<strong style="color:var(--text)">${r.r3}</strong></span>
+      </div>
+    </div>
+  `).join('');
+}
+
+// Load history on progress screen
+const origShowScreen = showScreen;
+window.showScreen = function(id) {
+  origShowScreen(id);
+  if (id === 'progress') loadHistory();
+};
+
+</script>
+</body>
+</html>
