@@ -751,7 +751,7 @@
   }
 
   .disclaimer-checkbox.checked::after {
-    content: '✓';
+    content: 'OK';
     font-size: 12px;
     color: #000;
     font-weight: 900;
@@ -874,7 +874,7 @@
     margin-top: 16px;
     -webkit-tap-highlight-color: rgba(255,200,69,0.3);
     touch-action: manipulation;
-  ">我已閱讀，進入訓練工具 →</button>
+  ">我已閱讀，進入訓練工具 -></button>
 </div>
 
 <!-- ═══ HOME ═══ -->
@@ -889,35 +889,35 @@
 
   <div class="install-banner" id="installBanner">
     <div class="install-banner-text">
-      <strong>📱 加入主畫面</strong>
+      <strong>[手機] 加入主畫面</strong>
       點擊安裝，令FIS訓練工具變成你手機嘅App
     </div>
     <button class="install-btn-small" onclick="installApp()">安裝</button>
   </div>
   <div class="module-grid">
     <div class="module-card" onclick="showScreen('fis')">
-      <div class="module-icon">🧬</div>
+      <div class="module-icon">[FIS]</div>
       <div class="module-num">01 · FIS</div>
       <div class="module-name">筋膜線自我檢測</div>
       <div class="module-desc">上載照片生成個人報告卡</div>
     </div>
 
     <div class="module-card" onclick="showScreen('progress')">
-      <div class="module-icon">📊</div>
+      <div class="module-icon">[圖表]</div>
       <div class="module-num">02 · 追蹤</div>
       <div class="module-name">進步追蹤系統</div>
       <div class="module-desc">AI分析今日訓練數據</div>
     </div>
 
     <div class="module-card" onclick="showScreen('pain')">
-      <div class="module-icon">⚡</div>
+      <div class="module-icon">[診斷]</div>
       <div class="module-num">03 · 診斷</div>
       <div class="module-name">訓練痛點診斷</div>
       <div class="module-desc">即時搵出筋膜線根源</div>
     </div>
 
     <div class="module-card" onclick="showScreen('warmup')">
-      <div class="module-icon">🔥</div>
+      <div class="module-icon">[熱身]</div>
       <div class="module-num">04 · 熱身</div>
       <div class="module-name">今日熱身激活</div>
       <div class="module-desc">上下身個人化熱身方案</div>
@@ -926,23 +926,23 @@
 
   <div class="bottom-nav">
     <div class="nav-item active" onclick="showScreen('home')">
-      <div class="nav-icon">🏠</div>
+      <div class="nav-icon">[主頁]</div>
       <div class="nav-label">主頁</div>
     </div>
     <div class="nav-item" onclick="showScreen('fis')">
-      <div class="nav-icon">🧬</div>
+      <div class="nav-icon">[FIS]</div>
       <div class="nav-label">檢測</div>
     </div>
     <div class="nav-item" onclick="showScreen('progress')">
-      <div class="nav-icon">📊</div>
+      <div class="nav-icon">[圖表]</div>
       <div class="nav-label">追蹤</div>
     </div>
     <div class="nav-item" onclick="showScreen('pain')">
-      <div class="nav-icon">⚡</div>
+      <div class="nav-icon">[診斷]</div>
       <div class="nav-label">診斷</div>
     </div>
     <div class="nav-item" onclick="showScreen('warmup')">
-      <div class="nav-icon">🔥</div>
+      <div class="nav-icon">[熱身]</div>
       <div class="nav-label">熱身</div>
     </div>
   </div>
@@ -951,13 +951,13 @@
 <!-- ═══ MODULE 1: FIS ═══ -->
 <div id="fis" class="screen">
   <div class="screen-header">
-    <div class="back-btn" onclick="showScreen('home')"><span class="back-arrow">←</span> 返回</div>
+    <div class="back-btn" onclick="showScreen('home')"><span class="back-arrow"><-</span> 返回</div>
     <div class="screen-title">筋膜線檢測</div>
     <div class="screen-subtitle">FIS SELF-ASSESSMENT · 3步完成</div>
   </div>
   <div class="screen-body">
     <div class="disclaimer-box">
-      <p>⚠️ 以下資訊屬教育性體態參考，並非醫療診斷。如有任何疼痛或傷患，請先咨詢醫生。</p>
+      <p>[!] 以下資訊屬教育性體態參考，並非醫療診斷。如有任何疼痛或傷患，請先咨詢醫生。</p>
     </div>
 
     <div class="section-label">第一步 · 準備檔案</div>
@@ -989,7 +989,7 @@
         </div>
         <label style="display:block;margin-top:12px;background:var(--bg4);border:1px dashed var(--gold-dim);border-radius:10px;padding:16px;text-align:center;cursor:pointer;">
           <input type="file" id="fisFiles" multiple accept="image/*,video/*" style="display:none" onchange="handleFileSelect(this)">
-          <div style="font-size:24px;margin-bottom:4px">📁</div>
+          <div style="font-size:24px;margin-bottom:4px">[檔案]</div>
           <div style="font-size:13px;color:var(--gold)">撳此上載檔案</div>
           <div style="font-size:11px;color:var(--text-dim);margin-top:2px">支援圖片同影片</div>
         </label>
@@ -1002,7 +1002,7 @@
       <div class="step-content">
         <div class="step-title">AI分析體態特徵</div>
         <div class="step-desc">上載完成後，撳以下按鈕開始分析</div>
-        <button class="btn-gold" onclick="runFisStep1()" style="margin-top:8px">開始體態分析 →</button>
+        <button class="btn-gold" onclick="runFisStep1()" style="margin-top:8px">開始體態分析 -></button>
         <div class="ai-result" id="fisStep1Result" style="margin-top:12px">
           <div class="ai-result-title">體態觀察結果</div>
           <div class="ai-result-body" id="fisStep1Text"></div>
@@ -1015,7 +1015,7 @@
       <div class="step-content">
         <div class="step-title">生成筋膜線報告卡</div>
         <div class="step-desc">收到體態分析後，撳以下按鈕生成個人化報告卡</div>
-        <button class="btn-outline" onclick="runFisStep2()" style="margin-top:8px">生成報告卡 →</button>
+        <button class="btn-outline" onclick="runFisStep2()" style="margin-top:8px">生成報告卡 -></button>
         <div class="ai-result" id="fisStep2Result" style="margin-top:12px">
           <div class="ai-result-title">FIS 個人化報告卡</div>
           <div class="ai-result-body" id="fisStep2Text"></div>
@@ -1028,7 +1028,7 @@
       <div class="step-content">
         <div class="step-title">生成視覺化參考圖（可選）</div>
         <div class="step-desc">收到報告卡後，撳以下按鈕生成視覺化圖片</div>
-        <button class="btn-outline" onclick="runFisStep3()" style="margin-top:8px">生成視覺化圖片 →</button>
+        <button class="btn-outline" onclick="runFisStep3()" style="margin-top:8px">生成視覺化圖片 -></button>
         <div id="fisImageResult" style="display:none;margin-top:12px">
           <img id="fisImage" style="width:100%;border-radius:12px;border:1px solid var(--gold-dim)" />
           <button class="btn-outline" onclick="downloadImage()" style="margin-top:8px">下載圖片</button>
@@ -1038,18 +1038,18 @@
 
   </div>
   <div class="bottom-nav">
-    <div class="nav-item" onclick="showScreen('home')"><div class="nav-icon">🏠</div><div class="nav-label">主頁</div></div>
-    <div class="nav-item active" onclick="showScreen('fis')"><div class="nav-icon">🧬</div><div class="nav-label">檢測</div></div>
-    <div class="nav-item" onclick="showScreen('progress')"><div class="nav-icon">📊</div><div class="nav-label">追蹤</div></div>
-    <div class="nav-item" onclick="showScreen('pain')"><div class="nav-icon">⚡</div><div class="nav-label">診斷</div></div>
-    <div class="nav-item" onclick="showScreen('warmup')"><div class="nav-icon">🔥</div><div class="nav-label">熱身</div></div>
+    <div class="nav-item" onclick="showScreen('home')"><div class="nav-icon">[主頁]</div><div class="nav-label">主頁</div></div>
+    <div class="nav-item active" onclick="showScreen('fis')"><div class="nav-icon">[FIS]</div><div class="nav-label">檢測</div></div>
+    <div class="nav-item" onclick="showScreen('progress')"><div class="nav-icon">[圖表]</div><div class="nav-label">追蹤</div></div>
+    <div class="nav-item" onclick="showScreen('pain')"><div class="nav-icon">[診斷]</div><div class="nav-label">診斷</div></div>
+    <div class="nav-item" onclick="showScreen('warmup')"><div class="nav-icon">[熱身]</div><div class="nav-label">熱身</div></div>
   </div>
 </div>
 
 <!-- ═══ MODULE 2: PROGRESS ═══ -->
 <div id="progress" class="screen">
   <div class="screen-header">
-    <div class="back-btn" onclick="showScreen('home')"><span class="back-arrow">←</span> 返回</div>
+    <div class="back-btn" onclick="showScreen('home')"><span class="back-arrow"><-</span> 返回</div>
     <div class="screen-title">進步追蹤</div>
     <div class="screen-subtitle">POST-WORKOUT · AI即時分析</div>
   </div>
@@ -1076,7 +1076,7 @@
       <div class="toggle-btn" onclick="selectToggle('tension1', this, '1-2次')">1-2次</div>
     </div>
 
-    <button class="btn-gold" onclick="analyzeProgress()" style="margin-top:24px">AI即時分析 →</button>
+    <button class="btn-gold" onclick="analyzeProgress()" style="margin-top:24px">AI即時分析 -></button>
 
     <div class="ai-result" id="progressResult">
       <div class="ai-result-title">AI 分析結果</div>
@@ -1090,42 +1090,42 @@
     </div>
   </div>
   <div class="bottom-nav">
-    <div class="nav-item" onclick="showScreen('home')"><div class="nav-icon">🏠</div><div class="nav-label">主頁</div></div>
-    <div class="nav-item" onclick="showScreen('fis')"><div class="nav-icon">🧬</div><div class="nav-label">檢測</div></div>
-    <div class="nav-item active" onclick="showScreen('progress')"><div class="nav-icon">📊</div><div class="nav-label">追蹤</div></div>
-    <div class="nav-item" onclick="showScreen('pain')"><div class="nav-icon">⚡</div><div class="nav-label">診斷</div></div>
-    <div class="nav-item" onclick="showScreen('warmup')"><div class="nav-icon">🔥</div><div class="nav-label">熱身</div></div>
+    <div class="nav-item" onclick="showScreen('home')"><div class="nav-icon">[主頁]</div><div class="nav-label">主頁</div></div>
+    <div class="nav-item" onclick="showScreen('fis')"><div class="nav-icon">[FIS]</div><div class="nav-label">檢測</div></div>
+    <div class="nav-item active" onclick="showScreen('progress')"><div class="nav-icon">[圖表]</div><div class="nav-label">追蹤</div></div>
+    <div class="nav-item" onclick="showScreen('pain')"><div class="nav-icon">[診斷]</div><div class="nav-label">診斷</div></div>
+    <div class="nav-item" onclick="showScreen('warmup')"><div class="nav-icon">[熱身]</div><div class="nav-label">熱身</div></div>
   </div>
 </div>
 
 <!-- ═══ MODULE 3: PAIN POINT ═══ -->
 <div id="pain" class="screen">
   <div class="screen-header">
-    <div class="back-btn" onclick="showScreen('home')"><span class="back-arrow">←</span> 返回</div>
+    <div class="back-btn" onclick="showScreen('home')"><span class="back-arrow"><-</span> 返回</div>
     <div class="screen-title">痛點診斷</div>
     <div class="screen-subtitle">PAIN POINT · AI即時分析</div>
   </div>
   <div class="screen-body">
     <div class="disclaimer-box">
-      <p>⚠️ 以下分析屬教育性參考，並非醫療診斷。如有疼痛請先咨詢醫生。</p>
+      <p>[!] 以下分析屬教育性參考，並非醫療診斷。如有疼痛請先咨詢醫生。</p>
     </div>
 
     <div class="section-label">選擇訓練部位</div>
     <div class="body-selector">
-      <div class="body-part-btn" onclick="selectBodyPart(this, '胸肌')"><div class="bp-icon">💪</div><div class="bp-name">胸肌</div></div>
-      <div class="body-part-btn" onclick="selectBodyPart(this, '背肌')"><div class="bp-icon">🦾</div><div class="bp-name">背肌</div></div>
-      <div class="body-part-btn" onclick="selectBodyPart(this, '膊頭')"><div class="bp-icon">🔝</div><div class="bp-name">膊頭</div></div>
-      <div class="body-part-btn" onclick="selectBodyPart(this, '手臂')"><div class="bp-icon">✊</div><div class="bp-name">手臂</div></div>
-      <div class="body-part-btn" onclick="selectBodyPart(this, '臀部')"><div class="bp-icon">🍑</div><div class="bp-name">臀部</div></div>
-      <div class="body-part-btn" onclick="selectBodyPart(this, '大腿前側')"><div class="bp-icon">🦵</div><div class="bp-name">大腿前側</div></div>
-      <div class="body-part-btn" onclick="selectBodyPart(this, '大腿後側')"><div class="bp-icon">🦿</div><div class="bp-name">大腿後側</div></div>
-      <div class="body-part-btn" onclick="selectBodyPart(this, '全身通用')"><div class="bp-icon">⚡</div><div class="bp-name">全身通用</div></div>
+      <div class="body-part-btn" onclick="selectBodyPart(this, '胸肌')"><div class="bp-icon">[胸肌]</div><div class="bp-name">胸肌</div></div>
+      <div class="body-part-btn" onclick="selectBodyPart(this, '背肌')"><div class="bp-icon">[背肌]</div><div class="bp-name">背肌</div></div>
+      <div class="body-part-btn" onclick="selectBodyPart(this, '膊頭')"><div class="bp-icon">[膊頭]</div><div class="bp-name">膊頭</div></div>
+      <div class="body-part-btn" onclick="selectBodyPart(this, '手臂')"><div class="bp-icon">[手臂]</div><div class="bp-name">手臂</div></div>
+      <div class="body-part-btn" onclick="selectBodyPart(this, '臀部')"><div class="bp-icon">[臀部]</div><div class="bp-name">臀部</div></div>
+      <div class="body-part-btn" onclick="selectBodyPart(this, '大腿前側')"><div class="bp-icon">[大腿前]</div><div class="bp-name">大腿前側</div></div>
+      <div class="body-part-btn" onclick="selectBodyPart(this, '大腿後側')"><div class="bp-icon">[大腿後]</div><div class="bp-name">大腿後側</div></div>
+      <div class="body-part-btn" onclick="selectBodyPart(this, '全身通用')"><div class="bp-icon">[診斷]</div><div class="bp-name">全身通用</div></div>
     </div>
 
     <div class="section-label">描述你的症狀</div>
     <textarea class="symptom-input" id="symptomInput" placeholder="例如：推胸時膊頭前方痛，完全感受唔到胸肌發力..."></textarea>
 
-    <button class="btn-gold" onclick="analyzePain()" style="margin-top:16px">AI即時診斷 →</button>
+    <button class="btn-gold" onclick="analyzePain()" style="margin-top:16px">AI即時診斷 -></button>
 
     <div class="ai-result" id="painResult">
       <div class="ai-result-title">AI 診斷結果</div>
@@ -1133,18 +1133,18 @@
     </div>
   </div>
   <div class="bottom-nav">
-    <div class="nav-item" onclick="showScreen('home')"><div class="nav-icon">🏠</div><div class="nav-label">主頁</div></div>
-    <div class="nav-item" onclick="showScreen('fis')"><div class="nav-icon">🧬</div><div class="nav-label">檢測</div></div>
-    <div class="nav-item" onclick="showScreen('progress')"><div class="nav-icon">📊</div><div class="nav-label">追蹤</div></div>
-    <div class="nav-item active" onclick="showScreen('pain')"><div class="nav-icon">⚡</div><div class="nav-label">診斷</div></div>
-    <div class="nav-item" onclick="showScreen('warmup')"><div class="nav-icon">🔥</div><div class="nav-label">熱身</div></div>
+    <div class="nav-item" onclick="showScreen('home')"><div class="nav-icon">[主頁]</div><div class="nav-label">主頁</div></div>
+    <div class="nav-item" onclick="showScreen('fis')"><div class="nav-icon">[FIS]</div><div class="nav-label">檢測</div></div>
+    <div class="nav-item" onclick="showScreen('progress')"><div class="nav-icon">[圖表]</div><div class="nav-label">追蹤</div></div>
+    <div class="nav-item active" onclick="showScreen('pain')"><div class="nav-icon">[診斷]</div><div class="nav-label">診斷</div></div>
+    <div class="nav-item" onclick="showScreen('warmup')"><div class="nav-icon">[熱身]</div><div class="nav-label">熱身</div></div>
   </div>
 </div>
 
 <!-- ═══ MODULE 4: WARMUP ═══ -->
 <div id="warmup" class="screen">
   <div class="screen-header">
-    <div class="back-btn" onclick="showScreen('home')"><span class="back-arrow">←</span> 返回</div>
+    <div class="back-btn" onclick="showScreen('home')"><span class="back-arrow"><-</span> 返回</div>
     <div class="screen-title">今日熱身</div>
     <div class="screen-subtitle">PRE-WORKOUT · 五大筋膜線激活</div>
   </div>
@@ -1288,11 +1288,11 @@
     </div>
   </div>
   <div class="bottom-nav">
-    <div class="nav-item" onclick="showScreen('home')"><div class="nav-icon">🏠</div><div class="nav-label">主頁</div></div>
-    <div class="nav-item" onclick="showScreen('fis')"><div class="nav-icon">🧬</div><div class="nav-label">檢測</div></div>
-    <div class="nav-item" onclick="showScreen('progress')"><div class="nav-icon">📊</div><div class="nav-label">追蹤</div></div>
-    <div class="nav-item" onclick="showScreen('pain')"><div class="nav-icon">⚡</div><div class="nav-label">診斷</div></div>
-    <div class="nav-item active" onclick="showScreen('warmup')"><div class="nav-icon">🔥</div><div class="nav-label">熱身</div></div>
+    <div class="nav-item" onclick="showScreen('home')"><div class="nav-icon">[主頁]</div><div class="nav-label">主頁</div></div>
+    <div class="nav-item" onclick="showScreen('fis')"><div class="nav-icon">[FIS]</div><div class="nav-label">檢測</div></div>
+    <div class="nav-item" onclick="showScreen('progress')"><div class="nav-icon">[圖表]</div><div class="nav-label">追蹤</div></div>
+    <div class="nav-item" onclick="showScreen('pain')"><div class="nav-icon">[診斷]</div><div class="nav-label">診斷</div></div>
+    <div class="nav-item active" onclick="showScreen('warmup')"><div class="nav-icon">[熱身]</div><div class="nav-label">熱身</div></div>
   </div>
 </div>
 
@@ -1313,7 +1313,7 @@ function showScreen(id) {
 function copyPrompt(btn, id) {
   const text = document.getElementById(id).textContent;
   navigator.clipboard.writeText(text).then(() => {
-    btn.textContent = '已複製 ✓';
+    btn.textContent = '已複製 OK';
     btn.classList.add('copied');
     setTimeout(() => { btn.textContent = '複製'; btn.classList.remove('copied'); }, 2000);
   });
@@ -1510,7 +1510,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
 
 async function installApp() {
   if (!deferredPrompt) {
-    alert('請喺Safari瀏覽器打開，然後點擊分享按鈕 → 加入主畫面');
+    alert('請喺Safari瀏覽器打開，然後點擊分享按鈕 -> 加入主畫面');
     return;
   }
   deferredPrompt.prompt();
@@ -1579,7 +1579,7 @@ function saveRecord() {
   localStorage.setItem('fis_history', JSON.stringify(history));
 
   loadHistory();
-  alert('記錄已儲存 ✓');
+  alert('記錄已儲存 OK');
 }
 
 function loadHistory() {
