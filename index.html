@@ -497,90 +497,179 @@ async function runFisStep3() {
   var lines = (p && p.fascialLines) ? p.fascialLines : {};
   var recs = (p && p.recommendations) ? p.recommendations : {};
 
-  // 消滅星號
+  // Markdown parser
   function md(text) {
     if (!text) return '—';
-    return text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\*(.*?)\*/g, '$1');
+    return text
+      .replace(/\*\*(.*?)\*\*/g, '<strong style="color:#4af;font-weight:700">$1</strong>')
+      .replace(/\*(.*?)\*/g, '$1');
   }
 
-  var linePositions = [
-    { key: 'deepFrontLine',        top: '21%' },
-    { key: 'lateralLine',          top: '29%' },
-    { key: 'spiralLine',           top: '37%' },
-    { key: 'superficialBackLine',  top: '45%' },
-    { key: 'superficialFrontLine', top: '53%' }
+  var lineKeys = [
+    { key: 'deepFrontLine',        name: '深前線', en: 'Deep Front Line' },
+    { key: 'lateralLine',          name: '側線',   en: 'Lateral Line' },
+    { key: 'spiralLine',           name: '螺旋線', en: 'Spiral Line' },
+    { key: 'superficialBackLine',  name: '淺背線', en: 'Superficial Back Line' },
+    { key: 'superficialFrontLine', name: '淺前線', en: 'Superficial Front Line' }
   ];
 
-  var reportCard = document.createElement('div');
-  reportCard.id = 'fis-report-card';
-  reportCard.style.cssText = 'position:relative;width:100%;margin-top:12px;border-radius:12px;overflow:hidden';
+  var recKeys = [
+    { icon: '🫁', label: '90/90版本建議', key: 'breathing' },
+    { icon: '💪', label: '訓練計劃建議', key: 'trainingPlan' },
+    { icon: '🎯', label: '訓練起點建議', key: 'startingPoint' }
+  ];
 
+  // 外層容器
+  var card = document.createElement('div');
+  card.id = 'fis-report-card';
+  card.style.cssText =
+    'margin-top:12px;border-radius:14px;overflow:hidden;' +
+    'border:1px solid rgba(0,150,255,0.35);background:#050d1a;' +
+    'font-family:"Noto Sans HK",sans-serif';
+
+  // ── 標題 ──────────────────────────────────────────────
+  var titleBar = document.createElement('div');
+  titleBar.style.cssText =
+    'background:linear-gradient(90deg,#0a1830,#0d2545);' +
+    'padding:12px 20px;text-align:center;' +
+    'border-bottom:1px solid rgba(0,180,255,0.3);' +
+    'font-size:15px;font-weight:900;letter-spacing:3px;' +
+    'color:#ffc845;text-shadow:0 0 12px rgba(255,200,69,0.6)';
+  titleBar.textContent = 'FIS 體態特徵訓練優先次序參考';
+  card.appendChild(titleBar);
+
+  // ── 主體：左圖 + 右表格 ───────────────────────────────
+  var mainRow = document.createElement('div');
+  mainRow.style.cssText = 'display:flex;align-items:stretch';
+
+  // 左側：人體圖
+  var imgWrap = document.createElement('div');
+  imgWrap.style.cssText = 'flex:0 0 42%;max-width:42%;overflow:hidden';
   var img = document.createElement('img');
   img.src = 'https://alexeywong22-fis.github.io/fis-app/fis-bg.png';
-  img.style.cssText = 'width:100%;display:block';
-  reportCard.appendChild(img);
+  img.style.cssText = 'width:100%;height:100%;object-fit:cover;object-position:left center;display:block';
+  imgWrap.appendChild(img);
+  mainRow.appendChild(imgWrap);
 
-  var overlay = document.createElement('div');
-  overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none';
+  // 右側：表格
+  var tableWrap = document.createElement('div');
+  tableWrap.style.cssText =
+    'flex:1;background:rgba(5,15,35,0.95);' +
+    'border-left:1px solid rgba(0,150,255,0.25);' +
+    'display:flex;flex-direction:column;justify-content:center;padding:8px 0';
 
-  // 1. 表格置中：每個格用 flex + align-items:center + justify-content:center
-  linePositions.forEach(function(lp) {
-    var lineData = lines[lp.key] || {};
+  // 表頭
+  var thead = document.createElement('div');
+  thead.style.cssText =
+    'display:flex;padding:8px 16px;' +
+    'border-bottom:1px solid rgba(0,150,255,0.35);' +
+    'background:rgba(0,80,180,0.15)';
+  thead.innerHTML =
+    '<div style="flex:2;font-size:11px;color:rgba(180,220,255,0.7);font-weight:600;letter-spacing:1px">五大筋膜線狀態</div>' +
+    '<div style="flex:1.2;font-size:11px;color:rgba(180,220,255,0.7);font-weight:600;text-align:center;letter-spacing:1px">評估結果</div>' +
+    '<div style="flex:0.8;font-size:11px;color:rgba(180,220,255,0.7);font-weight:600;text-align:center;letter-spacing:1px">訓練起點</div>';
+  tableWrap.appendChild(thead);
+
+  // 表格行
+  lineKeys.forEach(function(lk, idx) {
+    var lineData = lines[lk.key] || {};
     var status = lineData.status || '—';
     var stage = lineData.stage || '—';
     var isAlert = status === '優先關注';
-    var color = isAlert ? '#ff4444' : '#4499ff';
+    var color = isAlert ? '#ff5555' : '#4499ff';
+    var bg = idx % 2 === 0 ? 'rgba(0,60,140,0.08)' : 'transparent';
 
-    // 狀態燈：position absolute，上下左右由 top+height+flex 控制
-    var statusEl = document.createElement('div');
-    statusEl.style.cssText =
-      'position:absolute;' +
-      'top:calc(' + lp.top + ' - 4%);' +
-      'left:63%;width:19%;height:8%;' +
-      'display:flex;align-items:center;justify-content:center;gap:0.3vw';
-    statusEl.innerHTML =
-      '<span style="width:0.7vw;height:0.7vw;min-width:8px;min-height:8px;border-radius:50%;' +
-      'background:' + color + ';box-shadow:0 0 8px ' + color + ';flex-shrink:0"></span>' +
-      '<span style="color:' + color + ';font-size:1.05vw;font-weight:700;' +
-      'text-shadow:0 0 6px ' + color + ';white-space:nowrap">' + status + '</span>';
-    overlay.appendChild(statusEl);
+    var row = document.createElement('div');
+    row.style.cssText =
+      'display:flex;align-items:center;padding:10px 16px;' +
+      'background:' + bg + ';' +
+      'border-bottom:1px solid rgba(0,120,200,0.12)';
 
-    // Stage
-    var stageEl = document.createElement('div');
-    stageEl.style.cssText =
-      'position:absolute;' +
-      'top:calc(' + lp.top + ' - 4%);' +
-      'left:83%;width:13%;height:8%;' +
-      'display:flex;align-items:center;justify-content:center';
-    stageEl.innerHTML =
-      '<span style="color:' + color + ';font-size:1.05vw;font-weight:700;' +
-      'text-shadow:0 0 6px ' + color + ';white-space:nowrap">' + stage + '</span>';
-    overlay.appendChild(stageEl);
+    // 名稱欄
+    var nameCell = document.createElement('div');
+    nameCell.style.cssText = 'flex:2;color:#b8d8ff;font-size:12px;line-height:1.3';
+    nameCell.innerHTML =
+      '<span style="font-weight:700;font-size:13px">' + (idx+1) + '. ' + lk.name + '</span>' +
+      '<br><span style="font-size:10px;color:rgba(150,190,240,0.6)">(' + lk.en + ')</span>';
+    row.appendChild(nameCell);
+
+    // 狀態欄
+    var statusCell = document.createElement('div');
+    statusCell.style.cssText = 'flex:1.2;display:flex;align-items:center;justify-content:center;gap:5px';
+    statusCell.innerHTML =
+      '<span style="display:inline-block;width:9px;height:9px;border-radius:50%;' +
+      'background:' + color + ';box-shadow:0 0 7px ' + color + ';flex-shrink:0"></span>' +
+      '<span style="color:' + color + ';font-size:12px;font-weight:700;' +
+      'text-shadow:0 0 5px ' + color + ';white-space:nowrap">' + status + '</span>';
+    row.appendChild(statusCell);
+
+    // Stage 欄
+    var stageCell = document.createElement('div');
+    stageCell.style.cssText = 'flex:0.8;text-align:center;color:' + color + ';' +
+      'font-size:12px;font-weight:700;text-shadow:0 0 5px ' + color;
+    stageCell.textContent = stage;
+    row.appendChild(stageCell);
+
+    tableWrap.appendChild(row);
   });
 
-  // 2. 三個建議框：max-height 限制唔穿底，overflow-y:auto 有捲軸
-  var recItems = [
-    { text: recs.breathing || '—',     top: '59%' },
-    { text: recs.trainingPlan || '—',  top: '68%' },
-    { text: recs.startingPoint || '—', top: '77%' }
-  ];
+  mainRow.appendChild(tableWrap);
+  card.appendChild(mainRow);
 
-  recItems.forEach(function(item) {
-    var el = document.createElement('div');
-    el.style.cssText =
-      'position:absolute;top:' + item.top + ';left:22%;right:4%;' +
-      'max-height:6.5%;overflow:hidden;' +
-      'color:#e0f4ff;font-size:0.82vw;line-height:1.35;' +
-      'text-shadow:0 0 4px rgba(0,191,255,0.5);' +
-      'word-break:break-all';
-    // 3. 消滅星號
-    el.innerHTML = md(item.text);
-    overlay.appendChild(el);
+  // ── 三個建議框 ────────────────────────────────────────
+  var recsSection = document.createElement('div');
+  recsSection.style.cssText =
+    'padding:12px 16px;background:#040b18;' +
+    'border-top:1px solid rgba(0,150,255,0.25);' +
+    'display:flex;flex-direction:column;gap:8px';
+
+  recKeys.forEach(function(rk) {
+    var box = document.createElement('div');
+    box.style.cssText =
+      'background:rgba(0,80,180,0.12);' +
+      'border:1px solid rgba(0,150,255,0.22);' +
+      'border-radius:8px;padding:10px 14px;' +
+      'display:flex;gap:10px;align-items:flex-start';
+
+    var icon = document.createElement('span');
+    icon.style.cssText = 'font-size:15px;flex-shrink:0;padding-top:2px';
+    icon.textContent = rk.icon;
+
+    var textWrap = document.createElement('div');
+    textWrap.style.cssText = 'flex:1;min-width:0';
+
+    var label = document.createElement('div');
+    label.style.cssText =
+      'font-size:10px;color:#4a9eff;font-weight:700;' +
+      'letter-spacing:1.5px;margin-bottom:5px;text-transform:uppercase';
+    label.textContent = rk.label;
+
+    var body = document.createElement('div');
+    body.style.cssText =
+      'font-size:12px;color:#c8e6ff;line-height:1.6;' +
+      'word-break:break-word;text-shadow:0 0 3px rgba(0,150,255,0.3)';
+    body.innerHTML = md(recs[rk.key] || '—');
+
+    textWrap.appendChild(label);
+    textWrap.appendChild(body);
+    box.appendChild(icon);
+    box.appendChild(textWrap);
+    recsSection.appendChild(box);
   });
 
-  reportCard.appendChild(overlay);
-  imageResult.appendChild(reportCard);
-  reportCard.scrollIntoView({ behavior: 'smooth' });
+  card.appendChild(recsSection);
+
+  // ── 免責聲明 ──────────────────────────────────────────
+  var disclaimer = document.createElement('div');
+  disclaimer.style.cssText =
+    'text-align:center;padding:8px;font-size:10px;' +
+    'color:rgba(120,160,210,0.6);background:#040b18;' +
+    'border-top:1px solid rgba(0,100,180,0.15)';
+  disclaimer.textContent = '🛡️ 本圖為教育性體態參考，並非醫療診斷';
+  card.appendChild(disclaimer);
+
+  imageResult.appendChild(card);
+  card.scrollIntoView({ behavior: 'smooth' });
 }
 
 function downloadImage() {
