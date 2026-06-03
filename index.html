@@ -40,6 +40,8 @@ body { background: var(--bg); color: var(--text); font-family: 'Noto Sans HK', s
 .dis-text strong { color: var(--text); display: block; margin-bottom: 2px; }
 .dis-divider { height: 1px; background: rgba(255,255,255,0.1); margin: 24px 0; }
 .dis-btn { background: var(--gold); color: #2a3d63; border: none; border-radius: 16px; padding: 20px 24px; font-size: 16px; font-weight: 900; font-family: 'Noto Sans HK', sans-serif; cursor: pointer; width: 100%; margin-top: 8px; touch-action: manipulation; }
+* { -webkit-touch-callout: none; }
+button, [onclick] { cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: rgba(255,200,69,0.2); user-select: none; -webkit-user-select: none; }
 
 /* HOME */
 #home { min-height: 100vh; display: flex; flex-direction: column; }
@@ -648,26 +650,7 @@ function saveRecord() {
   alert('記錄已儲存');
 }
 
-function addTouchListeners() {
-  // Handle all onclick elements with touch
-  document.addEventListener('touchend', function(e) {
-    var target = e.target;
-    // Walk up the DOM to find clickable element
-    while (target && target !== document.body) {
-      var onclick = target.getAttribute('onclick');
-      if (onclick) {
-        e.preventDefault();
-        try { eval(onclick); } catch(err) {}
-        return;
-      }
-      target = target.parentElement;
-    }
-  }, {passive: false});
-}
 
-window.addEventListener('load', function() {
-  addTouchListeners();
-});
 
 function loadHistory() {
   try {
