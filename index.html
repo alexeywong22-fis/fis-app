@@ -497,65 +497,79 @@ async function runFisStep3() {
   var lines = (p && p.fascialLines) ? p.fascialLines : {};
   var recs = (p && p.recommendations) ? p.recommendations : {};
 
-  function lineHTML(status, stage) {
+  // 底圖原始尺寸 1536x1024，比例 3:2
+  // 右側表格格子百分比座標（根據底圖量度）
+  var linePositions = [
+    { key: 'deepFrontLine',         top: '30.5%' },  // 深前線
+    { key: 'lateralLine',           top: '38.5%' },  // 側線
+    { key: 'spiralLine',            top: '46.5%' },  // 螺旋線
+    { key: 'superficialBackLine',   top: '54.5%' },  // 淺背線
+    { key: 'superficialFrontLine',  top: '62.5%' }   // 淺前線
+  ];
+
+  function dotHTML(status) {
     var isAlert = status === '優先關注';
-    var dot = isAlert
-      ? '<span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#ff4444;box-shadow:0 0 6px #ff4444;margin-right:6px;vertical-align:middle"></span>'
-      : '<span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#4499ff;box-shadow:0 0 6px #4499ff;margin-right:6px;vertical-align:middle"></span>';
-    var color = isAlert ? '#ff6666' : '#66aaff';
-    return '<td style="padding:8px 12px;color:' + color + ';font-size:13px;font-weight:700">' + dot + status + '</td>' +
-           '<td style="padding:8px 12px;color:' + color + ';font-size:12px;text-align:center">' + (stage || '') + '</td>';
+    var color = isAlert ? '#ff4444' : '#4499ff';
+    var label = status || '—';
+    return '<span style="display:inline-flex;align-items:center;gap:4px;color:' + color + ';font-weight:700;font-size:1.4vw;text-shadow:0 0 8px ' + color + '">' +
+      '<span style="width:1vw;height:1vw;border-radius:50%;background:' + color + ';box-shadow:0 0 6px ' + color + ';display:inline-block"></span>' +
+      label + '</span>';
   }
 
+  // 建立外層容器
   var reportCard = document.createElement('div');
   reportCard.id = 'fis-report-card';
-  reportCard.style.cssText = 'margin-top:12px;border-radius:12px;overflow:hidden;border:1px solid var(--gold-dim);background:#0a1628';
+  reportCard.style.cssText = 'position:relative;width:100%;margin-top:12px;border-radius:12px;overflow:hidden';
 
-  reportCard.innerHTML =
-    '<img src="https://alexeywong22-fis.github.io/fis-app/fis-bg.png" style="width:100%;display:block" />' +
-    '<div style="padding:16px;background:#0d1f3c">' +
-      '<div style="font-size:13px;font-weight:700;color:var(--gold);letter-spacing:2px;margin-bottom:12px">FIS 體態特徵訓練優先次序</div>' +
-      '<table style="width:100%;border-collapse:collapse;margin-bottom:12px">' +
-        '<tr style="border-bottom:1px solid rgba(255,255,255,0.1)">' +
-          '<td style="padding:6px 12px;color:var(--text-dim);font-size:11px">五大筋膜線狀態</td>' +
-          '<td style="padding:6px 12px;color:var(--text-dim);font-size:11px" colspan="2">訓練建議起點</td>' +
-        '</tr>' +
-        '<tr style="border-bottom:1px solid rgba(255,255,255,0.06)">' +
-          '<td style="padding:8px 12px;color:var(--text);font-size:13px">1. 深前線</td>' +
-          lineHTML((lines.deepFrontLine||{}).status||'—', (lines.deepFrontLine||{}).stage||'—') +
-        '</tr>' +
-        '<tr style="border-bottom:1px solid rgba(255,255,255,0.06)">' +
-          '<td style="padding:8px 12px;color:var(--text);font-size:13px">2. 側線</td>' +
-          lineHTML((lines.lateralLine||{}).status||'—', (lines.lateralLine||{}).stage||'—') +
-        '</tr>' +
-        '<tr style="border-bottom:1px solid rgba(255,255,255,0.06)">' +
-          '<td style="padding:8px 12px;color:var(--text);font-size:13px">3. 螺旋線</td>' +
-          lineHTML((lines.spiralLine||{}).status||'—', (lines.spiralLine||{}).stage||'—') +
-        '</tr>' +
-        '<tr style="border-bottom:1px solid rgba(255,255,255,0.06)">' +
-          '<td style="padding:8px 12px;color:var(--text);font-size:13px">4. 淺背線</td>' +
-          lineHTML((lines.superficialBackLine||{}).status||'—', (lines.superficialBackLine||{}).stage||'—') +
-        '</tr>' +
-        '<tr>' +
-          '<td style="padding:8px 12px;color:var(--text);font-size:13px">5. 淺前線</td>' +
-          lineHTML((lines.superficialFrontLine||{}).status||'—', (lines.superficialFrontLine||{}).stage||'—') +
-        '</tr>' +
-      '</table>' +
-      '<div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;padding:10px;background:rgba(255,200,69,0.05);border:1px solid rgba(255,200,69,0.2);border-radius:8px">' +
-        '<span style="font-size:16px">🫁</span>' +
-        '<div><div style="font-size:11px;color:var(--gold);margin-bottom:4px">90/90版本建議</div><div style="font-size:12px;color:var(--text);line-height:1.6">' + (recs.breathing || '—') + '</div></div>' +
-      '</div>' +
-      '<div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;padding:10px;background:rgba(255,200,69,0.05);border:1px solid rgba(255,200,69,0.2);border-radius:8px">' +
-        '<span style="font-size:16px">💪</span>' +
-        '<div><div style="font-size:11px;color:var(--gold);margin-bottom:4px">訓練計劃建議</div><div style="font-size:12px;color:var(--text);line-height:1.6">' + (recs.trainingPlan || '—') + '</div></div>' +
-      '</div>' +
-      '<div style="display:flex;align-items:flex-start;gap:10px;padding:10px;background:rgba(255,200,69,0.05);border:1px solid rgba(255,200,69,0.2);border-radius:8px">' +
-        '<span style="font-size:16px">🎯</span>' +
-        '<div><div style="font-size:11px;color:var(--gold);margin-bottom:4px">訓練起點建議</div><div style="font-size:12px;color:var(--text);line-height:1.6">' + (recs.startingPoint || '—') + '</div></div>' +
-      '</div>' +
-      '<div style="margin-top:10px;text-align:center;font-size:10px;color:var(--text-dim);padding-top:8px;border-top:1px solid rgba(255,255,255,0.05)">🛡️ 本圖為教育性體態參考，並非醫療診斷</div>' +
-    '</div>';
+  // 底圖
+  var img = document.createElement('img');
+  img.src = 'https://alexeywong22-fis.github.io/fis-app/fis-bg.png';
+  img.style.cssText = 'width:100%;display:block';
+  reportCard.appendChild(img);
 
+  // 疊加層
+  var overlay = document.createElement('div');
+  overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none';
+
+  // 五大筋膜線狀態燈同 Stage（右側表格，左欄約 left:66%，右欄約 left:83%）
+  linePositions.forEach(function(lp) {
+    var lineData = lines[lp.key] || {};
+    var status = lineData.status || '—';
+    var stage = lineData.stage || '—';
+    var isAlert = status === '優先關注';
+    var color = isAlert ? '#ff4444' : '#4499ff';
+
+    // 狀態燈 + 文字
+    var statusEl = document.createElement('div');
+    statusEl.style.cssText = 'position:absolute;top:' + lp.top + ';left:63%;transform:translateY(-50%);display:flex;align-items:center;gap:0.4vw';
+    statusEl.innerHTML = '<span style="width:0.8vw;height:0.8vw;border-radius:50%;background:' + color + ';box-shadow:0 0 8px ' + color + ';display:inline-block;flex-shrink:0"></span>' +
+      '<span style="color:' + color + ';font-size:1.3vw;font-weight:700;text-shadow:0 0 6px ' + color + ';white-space:nowrap">' + status + '</span>';
+    overlay.appendChild(statusEl);
+
+    // Stage
+    var stageEl = document.createElement('div');
+    stageEl.style.cssText = 'position:absolute;top:' + lp.top + ';left:83%;transform:translateY(-50%);color:' + color + ';font-size:1.3vw;font-weight:700;text-shadow:0 0 6px ' + color + ';white-space:nowrap';
+    stageEl.textContent = stage;
+    overlay.appendChild(stageEl);
+  });
+
+  // 下方三個長方框文字（骨盆框、拉筋框、標靶框）
+  var recItems = [
+    { text: recs.breathing || '—',    top: '71%' },
+    { text: recs.trainingPlan || '—', top: '80%' },
+    { text: recs.startingPoint || '—',top: '89%' }
+  ];
+
+  recItems.forEach(function(item) {
+    var el = document.createElement('div');
+    el.style.cssText = 'position:absolute;top:' + item.top + ';left:18%;width:78%;transform:translateY(-50%);' +
+      'color:#ffffff;font-size:1.1vw;line-height:1.4;text-shadow:0 0 5px rgba(0,191,255,0.5);' +
+      'overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical';
+    el.textContent = item.text;
+    overlay.appendChild(el);
+  });
+
+  reportCard.appendChild(overlay);
   imageResult.appendChild(reportCard);
   reportCard.scrollIntoView({ behavior: 'smooth' });
 }
