@@ -497,7 +497,6 @@ async function runFisStep3() {
   var lines = (p && p.fascialLines) ? p.fascialLines : {};
   var recs = (p && p.recommendations) ? p.recommendations : {};
 
-  // 根據截圖微調：每行減4%
   var linePositions = [
     { key: 'deepFrontLine',        top: '19%' },
     { key: 'lateralLine',          top: '27%' },
@@ -525,22 +524,24 @@ async function runFisStep3() {
     var isAlert = status === '優先關注';
     var color = isAlert ? '#ff4444' : '#4499ff';
 
+    // 狀態燈 + 文字：移到右側表格中間欄 left:68%
     var statusEl = document.createElement('div');
-    statusEl.style.cssText = 'position:absolute;top:' + lp.top + ';left:64%;transform:translateY(-50%);' +
+    statusEl.style.cssText = 'position:absolute;top:' + lp.top + ';left:68%;transform:translateY(-50%);' +
       'display:flex;align-items:center;gap:0.3vw';
     statusEl.innerHTML =
       '<span style="width:0.7vw;height:0.7vw;min-width:8px;min-height:8px;border-radius:50%;background:' + color + ';box-shadow:0 0 8px ' + color + ';display:inline-block;flex-shrink:0"></span>' +
-      '<span style="color:' + color + ';font-size:1.2vw;font-weight:700;text-shadow:0 0 6px ' + color + ';white-space:nowrap">' + status + '</span>';
+      '<span style="color:' + color + ';font-size:1.15vw;font-weight:700;text-shadow:0 0 6px ' + color + ';white-space:nowrap">' + status + '</span>';
     overlay.appendChild(statusEl);
 
+    // Stage：移到最右欄 left:88%
     var stageEl = document.createElement('div');
-    stageEl.style.cssText = 'position:absolute;top:' + lp.top + ';left:84%;transform:translateY(-50%);' +
-      'color:' + color + ';font-size:1.2vw;font-weight:700;text-shadow:0 0 6px ' + color + ';white-space:nowrap';
+    stageEl.style.cssText = 'position:absolute;top:' + lp.top + ';left:88%;transform:translateY(-50%) translateX(-50%);' +
+      'color:' + color + ';font-size:1.15vw;font-weight:700;text-shadow:0 0 6px ' + color + ';white-space:nowrap';
     stageEl.textContent = stage;
     overlay.appendChild(stageEl);
   });
 
-  // 三個建議框（調高，入返框入面）
+  // 三個建議框：left:20% 避開圖標，width:76% 限制寬度
   var recItems = [
     { text: recs.breathing || '—',     top: '60%' },
     { text: recs.trainingPlan || '—',  top: '70%' },
@@ -550,8 +551,8 @@ async function runFisStep3() {
   recItems.forEach(function(item) {
     var el = document.createElement('div');
     el.style.cssText =
-      'position:absolute;top:' + item.top + ';left:18%;right:3%;transform:translateY(-50%);' +
-      'color:#e0f4ff;font-size:1.05vw;line-height:1.5;' +
+      'position:absolute;top:' + item.top + ';left:20%;width:76%;transform:translateY(-50%);' +
+      'color:#e0f4ff;font-size:1.0vw;line-height:1.45;' +
       'text-shadow:0 0 5px rgba(0,191,255,0.6);' +
       'overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;' +
       'word-break:break-all';
