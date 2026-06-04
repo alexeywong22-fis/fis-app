@@ -593,6 +593,8 @@ function goTo(screenId) {
   if (screenId === 'data-log') { initDataLog(); }
 }
 
+function bindNav(id, dest) { var el = document.getElementById(id); if (el) el.addEventListener('click', function(){ goTo(dest); }); }
+
 function bindAll() {
   var enterBtn = document.getElementById('enterBtn');
   if (enterBtn) { enterBtn.addEventListener('click', function() { try { localStorage.setItem('fis_agreed', '1'); } catch(e) {} goTo('home'); }); }
@@ -606,7 +608,6 @@ function bindAll() {
   var backProgress = document.getElementById('back-progress'); if (backProgress) { backProgress.addEventListener('click', function() { goTo('home'); }); }
 
   // DATA sub-screens
-  function bindNav(id, dest) { var el = document.getElementById(id); if (el) el.addEventListener('click', function(){ goTo(dest); }); }
   // back buttons: data-log and data-functional go back to home (no hub anymore)
   bindNav('back-data-log', 'home');
   bindNav('back-data-functional', 'home');
@@ -1403,16 +1404,16 @@ function cacheProgressLog(muscleActivation) {
   } catch(e) {}
 }
 
+function saveWeekly() {
   var score = document.getElementById('weeklyScore').value;
-  var improve = document.getElementById('weeklyImprove').value.trim();
-  var next = document.getElementById('weeklyImproveNext').value.trim();
+  var improve = document.getElementById('weeklyImprove') ? document.getElementById('weeklyImprove').value.trim() : '';
+  var next = document.getElementById('weeklyImproveNext') ? document.getElementById('weeklyImproveNext').value.trim() : '';
   var record = { date: new Date().toLocaleDateString('zh-HK'), score: score, improve: improve, next: next };
   try {
     var history = JSON.parse(localStorage.getItem('fis_weekly_history') || '[]');
     history.unshift(record); if (history.length > 20) history.pop();
     localStorage.setItem('fis_weekly_history', JSON.stringify(history));
   } catch(e) {}
-  // 儲存落 D1
   if (window.FIS_USER_ID) {
     fetch(API_BASE + '/api/weekly/save', {
       method: 'POST',
