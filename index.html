@@ -232,58 +232,28 @@ textarea.sym { width: 100%; background: var(--bg3); border: 1px solid rgba(255,2
   </div>
 </div>
 
-<!-- PROGRESS -->
-<!-- DATA HUB -->
-<div id="progress" class="screen">
-  <div class="s-header">
-    <div class="back-btn" id="back-progress">&lt;- 返回</div>
-    <div class="s-title">進步追蹤</div>
-    <div class="s-sub">DATA - 追蹤系統</div>
-  </div>
-  <div class="s-body">
-    <div class="module-grid">
-      <div class="module-card" id="btn-data-log">
-        <div class="module-icon">📋</div>
-        <div class="module-num">01 - 日誌</div>
-        <div class="module-name">訓練筋膜日誌</div>
-        <div class="module-desc">填寫今日訓練三大指標</div>
-      </div>
-      <div class="module-card" id="btn-data-weekly">
-        <div class="module-icon">📊</div>
-        <div class="module-num">02 - 週評</div>
-        <div class="module-name">FIS每周進步評估表</div>
-        <div class="module-desc">對比上週筋膜線狀態</div>
-      </div>
-      <div class="module-card" id="btn-data-functional">
-        <div class="module-icon">🧪</div>
-        <div class="module-num">03 - 功能</div>
-        <div class="module-name">FIS功能性測試記錄表</div>
-        <div class="module-desc">單腳站立、Jefferson Curl</div>
-      </div>
-      <div class="module-card" id="btn-data-report">
-        <div class="module-icon">🏆</div>
-        <div class="module-num">04 - 報告</div>
-        <div class="module-name">12星期終極對比報告</div>
-        <div class="module-desc">完整進步數據總覽</div>
-      </div>
-    </div>
-  </div>
-  <div class="bnav">
-    <div class="bnav-item" id="bnav-progress-home"><div class="bnav-icon">HOME</div><div class="bnav-label">主頁</div></div>
-    <div class="bnav-item" id="bnav-progress-fis"><div class="bnav-icon">FIS</div><div class="bnav-label">檢測</div></div>
-    <div class="bnav-item active"><div class="bnav-icon">DATA</div><div class="bnav-label">追蹤</div></div>
-    <div class="bnav-item" id="bnav-progress-pain"><div class="bnav-icon">RX</div><div class="bnav-label">診斷</div></div>
-    <div class="bnav-item" id="bnav-progress-warmup"><div class="bnav-icon">GO</div><div class="bnav-label">熱身</div></div>
-  </div>
-</div>
+<!-- PROGRESS → smart redirect, kept as ghost node for back-nav compatibility -->
+<div id="progress" class="screen" style="display:none"></div>
 
-<!-- DATA 01: 訓練筋膜日誌 -->
+<!-- DATA 01: 訓練筋膜日誌 (upgraded: functional banner + inline weekly) -->
 <div id="data-log" class="screen">
+
+  <!-- ▸ 4-week functional test banner (hidden by default, shown by JS) -->
+  <div id="functional-banner" style="display:none;margin:12px 16px 0;background:linear-gradient(135deg,rgba(255,200,50,0.15),rgba(255,200,50,0.05));border:1px solid rgba(255,200,50,0.55);border-radius:12px;padding:13px 14px;display:none;align-items:center;gap:10px">
+    <span style="font-size:20px;flex-shrink:0">🧪</span>
+    <div style="flex:1">
+      <div style="font-size:12px;color:var(--gold);font-weight:700;letter-spacing:.5px;margin-bottom:2px">第 4 周功能性評估到了</div>
+      <div style="font-size:11px;color:var(--text-dim)">立即記錄身體機能變化</div>
+    </div>
+    <button onclick="goTo('data-functional')" style="background:var(--gold);color:#0f1c35;border:none;border-radius:8px;padding:7px 11px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;flex-shrink:0">開始測試</button>
+  </div>
+
   <div class="s-header">
     <div class="back-btn" id="back-data-log">&lt;- 返回</div>
     <div class="s-title">訓練筋膜日誌</div>
     <div class="s-sub">POST-WORKOUT - AI即時分析</div>
   </div>
+
   <div class="s-body">
     <div class="sec-label">指標一 - 目標肌肉發力感</div>
     <div class="rating-row">
@@ -313,7 +283,72 @@ textarea.sym { width: 100%; background: var(--bg3); border: 1px solid rgba(255,2
       <div class="sec-label">過往記錄</div>
       <div id="historyList"></div>
     </div>
-  </div>
+
+    <!-- ▸ Inline weekly section: hidden by default, shown by JS on weekends / 4+ sessions -->
+    <div id="inline-weekly-section" style="display:none;margin-top:32px;padding-top:24px;border-top:1px solid rgba(255,200,50,0.2)">
+      <div style="font-size:22px;font-weight:900;color:#fff;margin-bottom:2px">每週進步評估</div>
+      <div class="s-sub" style="margin-bottom:20px">WEEKLY · 對比上週狀態</div>
+
+      <!-- Mini chart: only shown when both weeks have data -->
+      <div id="inline-chart-card" style="display:none;background:rgba(0,0,0,0.25);border:1px solid rgba(255,200,50,0.25);border-radius:12px;padding:16px;margin-bottom:18px">
+        <div class="sec-label" style="margin-bottom:12px">發 力 分 數 對 比</div>
+        <div style="display:flex;gap:16px;align-items:flex-end;height:64px;margin-bottom:6px">
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
+            <div style="width:100%;display:flex;align-items:flex-end;height:52px">
+              <div id="inline-bar-prev" style="width:100%;border-radius:4px 4px 0 0;background:rgba(255,200,50,0.3);transition:height .6s ease"></div>
+            </div>
+            <div style="font-size:9px;color:var(--text-dim)">上週</div>
+            <div id="inline-val-prev" style="font-size:11px;font-weight:700;color:var(--gold)">—</div>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
+            <div style="width:100%;display:flex;align-items:flex-end;height:52px">
+              <div id="inline-bar-curr" style="width:100%;border-radius:4px 4px 0 0;background:var(--gold);transition:height .6s ease"></div>
+            </div>
+            <div style="font-size:9px;color:var(--text-dim)">本週</div>
+            <div id="inline-val-curr" style="font-size:11px;font-weight:700;color:var(--gold)">—</div>
+          </div>
+        </div>
+        <div id="inline-chart-delta" style="font-size:11px;text-align:right;font-family:monospace"></div>
+      </div>
+
+      <!-- Self-rating slider -->
+      <div class="sec-label">本週訓練自評（1-10分）</div>
+      <div style="display:flex;gap:12px;align-items:center;margin-bottom:18px">
+        <input type="range" id="weeklyScore" min="1" max="10" value="7" style="flex:1;accent-color:var(--gold)">
+        <span id="weeklyScoreVal" style="color:var(--gold);font-size:24px;font-weight:900;font-family:Bebas Neue,sans-serif;width:40px;text-align:center">7</span>
+      </div>
+
+      <!-- Collapsible: best improvement -->
+      <div style="margin-bottom:14px">
+        <div id="toggle-improve-btn" onclick="toggleWeeklyField('collapse-improve','toggle-improve-btn')" style="display:flex;align-items:center;gap:6px;cursor:pointer;margin-bottom:8px;user-select:none">
+          <span id="toggle-improve-arrow" style="color:var(--gold);font-size:10px;transition:transform .3s">▶</span>
+          <span class="sec-label" style="margin:0;cursor:pointer">本週最大改善（選填）</span>
+        </div>
+        <div id="collapse-improve" style="max-height:0;overflow:hidden;transition:max-height .4s ease,opacity .3s;opacity:0">
+          <textarea id="weeklyImprove" placeholder="例如：深前線激活感明顯提升..." style="width:100%;background:rgba(0,0,0,0.3);border:1px solid var(--gold-dim);border-radius:10px;padding:12px;color:var(--text);font-family:inherit;font-size:13px;resize:none;height:80px;outline:none"></textarea>
+        </div>
+      </div>
+
+      <!-- Collapsible: still needs work -->
+      <div style="margin-bottom:20px">
+        <div id="toggle-todo-btn" onclick="toggleWeeklyField('collapse-todo','toggle-todo-btn')" style="display:flex;align-items:center;gap:6px;cursor:pointer;margin-bottom:8px;user-select:none">
+          <span id="toggle-todo-arrow" style="color:var(--gold);font-size:10px;transition:transform .3s">▶</span>
+          <span class="sec-label" style="margin:0;cursor:pointer">本週仍需改善（選填）</span>
+        </div>
+        <div id="collapse-todo" style="max-height:0;overflow:hidden;transition:max-height .4s ease,opacity .3s;opacity:0">
+          <textarea id="weeklyImproveNext" placeholder="例如：腰部代償仍有出現..." style="width:100%;background:rgba(0,0,0,0.3);border:1px solid var(--gold-dim);border-radius:10px;padding:12px;color:var(--text);font-family:inherit;font-size:13px;resize:none;height:80px;outline:none"></textarea>
+        </div>
+      </div>
+
+      <button class="btn-gold" id="btn-save-weekly">儲存本週評估</button>
+      <div class="ai-result" id="weeklyResult" style="display:none;margin-top:12px">
+        <div class="ai-result-title">✅ 已儲存</div>
+        <div class="ai-result-body" id="weeklyResultText"></div>
+      </div>
+    </div><!-- /inline-weekly-section -->
+
+  </div><!-- /s-body -->
+
   <div class="bnav">
     <div class="bnav-item" id="bnav-log-home"><div class="bnav-icon">HOME</div><div class="bnav-label">主頁</div></div>
     <div class="bnav-item" id="bnav-log-fis"><div class="bnav-icon">FIS</div><div class="bnav-label">檢測</div></div>
@@ -323,43 +358,10 @@ textarea.sym { width: 100%; background: var(--bg3); border: 1px solid rgba(255,2
   </div>
 </div>
 
-<!-- DATA 02: FIS每周進步評估表 -->
-<div id="data-weekly" class="screen">
-  <div class="s-header">
-    <div class="back-btn" id="back-data-weekly">&lt;- 返回</div>
-    <div class="s-title">FIS每周進步評估表</div>
-    <div class="s-sub">WEEKLY - 對比上週狀態</div>
-  </div>
-  <div class="s-body">
-    <div class="ai-result show" style="margin-bottom:16px">
-      <div class="ai-result-title">本週 vs 上週對比</div>
-      <div class="ai-result-body" id="weeklyCompareText">載入中...</div>
-    </div>
-    <div class="sec-label">本週訓練自評（1-10分）</div>
-    <div style="display:flex;gap:12px;align-items:center;margin-bottom:16px">
-      <input type="range" id="weeklyScore" min="1" max="10" value="7" style="flex:1;accent-color:var(--gold)">
-      <span id="weeklyScoreVal" style="color:var(--gold);font-size:24px;font-weight:900;font-family:Bebas Neue,sans-serif;width:40px;text-align:center">7</span>
-    </div>
-    <div class="sec-label">本週最大改善</div>
-    <textarea id="weeklyImprove" placeholder="例如：深前線激活感明顯提升..." style="width:100%;background:rgba(0,0,0,0.3);border:1px solid var(--gold-dim);border-radius:10px;padding:12px;color:var(--text);font-family:inherit;font-size:13px;resize:none;height:80px;outline:none"></textarea>
-    <div class="sec-label" style="margin-top:12px">本週仍需改善</div>
-    <textarea id="weeklyImproveNext" placeholder="例如：腰部代償仍有出現..." style="width:100%;background:rgba(0,0,0,0.3);border:1px solid var(--gold-dim);border-radius:10px;padding:12px;color:var(--text);font-family:inherit;font-size:13px;resize:none;height:80px;outline:none"></textarea>
-    <button class="btn-gold" id="btn-save-weekly" style="margin-top:20px">儲存本週評估</button>
-    <div class="ai-result" id="weeklyResult" style="display:none">
-      <div class="ai-result-title">✅ 已儲存</div>
-      <div class="ai-result-body" id="weeklyResultText"></div>
-    </div>
-  </div>
-  <div class="bnav">
-    <div class="bnav-item" id="bnav-weekly-home"><div class="bnav-icon">HOME</div><div class="bnav-label">主頁</div></div>
-    <div class="bnav-item" id="bnav-weekly-fis"><div class="bnav-icon">FIS</div><div class="bnav-label">檢測</div></div>
-    <div class="bnav-item active"><div class="bnav-icon">DATA</div><div class="bnav-label">追蹤</div></div>
-    <div class="bnav-item" id="bnav-weekly-pain"><div class="bnav-icon">RX</div><div class="bnav-label">診斷</div></div>
-    <div class="bnav-item" id="bnav-weekly-warmup"><div class="bnav-icon">GO</div><div class="bnav-label">熱身</div></div>
-  </div>
-</div>
+<!-- DATA 02: weekly screen removed — now inline inside data-log -->
+<div id="data-weekly" style="display:none"></div>
 
-<!-- DATA 03: FIS功能性測試記錄表 -->
+<!-- DATA 03: FIS功能性測試記錄表 (upgraded: tap-to-time timer) -->
 <div id="data-functional" class="screen">
   <div class="s-header">
     <div class="back-btn" id="back-data-functional">&lt;- 返回</div>
@@ -367,17 +369,36 @@ textarea.sym { width: 100%; background: var(--bg3); border: 1px solid rgba(255,2
     <div class="s-sub">FUNCTIONAL - 動態評估</div>
   </div>
   <div class="s-body">
-    <div class="sec-label">單腳站立（秒數）</div>
-    <div style="display:flex;gap:12px;margin-bottom:16px">
-      <div style="flex:1">
-        <div style="font-size:11px;color:var(--text-dim);margin-bottom:6px">左腳</div>
-        <input type="number" id="funcLeftSec" placeholder="例如：25" min="0" max="120" style="width:100%;background:rgba(0,0,0,0.3);border:1px solid var(--gold-dim);border-radius:10px;padding:12px;color:var(--text);font-size:16px;outline:none;text-align:center">
+
+    <!-- Timer section -->
+    <div class="sec-label">單腳站立（點擊計時）</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px">
+
+      <!-- Left leg timer -->
+      <div id="timer-card-left" onclick="toggleLegTimer('left')"
+        style="background:rgba(0,0,0,0.25);border:1.5px solid rgba(255,200,50,0.25);border-radius:14px;padding:18px 10px;text-align:center;cursor:pointer;transition:all .2s;user-select:none;position:relative">
+        <div style="font-size:11px;color:var(--text-dim);margin-bottom:8px;letter-spacing:1px">左 腳</div>
+        <div id="timer-display-left" style="font-size:38px;font-weight:700;color:var(--gold);font-family:Bebas Neue,monospace;line-height:1;margin-bottom:8px;transition:color .3s">0.0</div>
+        <div id="timer-status-left" style="font-size:11px;color:var(--text-dim);transition:color .2s">點擊開始</div>
+        <button id="timer-reset-left" onclick="event.stopPropagation();resetLegTimer('left')"
+          style="position:absolute;top:8px;right:8px;background:none;border:none;color:var(--text-dim);font-size:14px;cursor:pointer;opacity:0;transition:opacity .2s;padding:2px">↺</button>
       </div>
-      <div style="flex:1">
-        <div style="font-size:11px;color:var(--text-dim);margin-bottom:6px">右腳</div>
-        <input type="number" id="funcRightSec" placeholder="例如：28" min="0" max="120" style="width:100%;background:rgba(0,0,0,0.3);border:1px solid var(--gold-dim);border-radius:10px;padding:12px;color:var(--text);font-size:16px;outline:none;text-align:center">
+
+      <!-- Right leg timer -->
+      <div id="timer-card-right" onclick="toggleLegTimer('right')"
+        style="background:rgba(0,0,0,0.25);border:1.5px solid rgba(255,200,50,0.25);border-radius:14px;padding:18px 10px;text-align:center;cursor:pointer;transition:all .2s;user-select:none;position:relative">
+        <div style="font-size:11px;color:var(--text-dim);margin-bottom:8px;letter-spacing:1px">右 腳</div>
+        <div id="timer-display-right" style="font-size:38px;font-weight:700;color:var(--gold);font-family:Bebas Neue,monospace;line-height:1;margin-bottom:8px;transition:color .3s">0.0</div>
+        <div id="timer-status-right" style="font-size:11px;color:var(--text-dim);transition:color .2s">點擊開始</div>
+        <button id="timer-reset-right" onclick="event.stopPropagation();resetLegTimer('right')"
+          style="position:absolute;top:8px;right:8px;background:none;border:none;color:var(--text-dim);font-size:14px;cursor:pointer;opacity:0;transition:opacity .2s;padding:2px">↺</button>
       </div>
+
     </div>
+    <!-- Hidden value stores -->
+    <input type="hidden" id="funcLeftSec" value="">
+    <input type="hidden" id="funcRightSec" value="">
+
     <div class="sec-label">Jefferson Curl 脊椎分節級別</div>
     <div class="toggle-row" style="flex-wrap:wrap">
       <div class="toggle-btn" data-group="jc" data-val="1">Level 1<br><span style="font-size:10px">完全僵硬</span></div>
@@ -562,13 +583,14 @@ var selectedPart = '';
 var ratings = { r1: null, r2: null, r3: null };
 
 function goTo(screenId) {
+  // Smart routing: 'progress' now goes directly to data-log
+  if (screenId === 'progress') { screenId = 'data-log'; }
   if (screenId === 'data-report') { setTimeout(load12WeekReport, 300); }
-  if (screenId === 'data-weekly') { setTimeout(loadWeeklyCompare, 300); }
   var all = document.querySelectorAll('.screen');
   for (var i = 0; i < all.length; i++) { all[i].classList.remove('active'); all[i].style.display = 'none'; }
   var target = document.getElementById(screenId);
   if (target) { target.style.display = 'flex'; target.classList.add('active'); window.scrollTo(0, 0); }
-  if (screenId === 'progress') { loadHistory(); }
+  if (screenId === 'data-log') { initDataLog(); }
 }
 
 function bindAll() {
@@ -585,25 +607,21 @@ function bindAll() {
 
   // DATA sub-screens
   function bindNav(id, dest) { var el = document.getElementById(id); if (el) el.addEventListener('click', function(){ goTo(dest); }); }
-  bindNav('btn-data-log', 'data-log');
-  bindNav('btn-data-weekly', 'data-weekly');
-  bindNav('btn-data-functional', 'data-functional');
-  bindNav('btn-data-report', 'data-report');
-  bindNav('back-data-log', 'progress');
-  bindNav('back-data-weekly', 'progress');
-  bindNav('back-data-functional', 'progress');
-  bindNav('back-data-report', 'progress');
+  // back buttons: data-log and data-functional go back to home (no hub anymore)
+  bindNav('back-data-log', 'home');
+  bindNav('back-data-functional', 'home');
+  bindNav('back-data-report', 'home');
   // DATA sub bnav
-  ['bnav-log-home','bnav-weekly-home','bnav-func-home','bnav-report-home'].forEach(function(id){ bindNav(id,'home'); });
-  ['bnav-log-fis','bnav-weekly-fis','bnav-func-fis','bnav-report-fis'].forEach(function(id){ bindNav(id,'fis'); });
-  ['bnav-log-pain','bnav-weekly-pain','bnav-func-pain','bnav-report-pain'].forEach(function(id){ bindNav(id,'pain'); });
-  ['bnav-log-warmup','bnav-weekly-warmup','bnav-func-warmup','bnav-report-warmup'].forEach(function(id){ bindNav(id,'warmup'); });
+  ['bnav-log-home','bnav-func-home','bnav-report-home'].forEach(function(id){ bindNav(id,'home'); });
+  ['bnav-log-fis','bnav-func-fis','bnav-report-fis'].forEach(function(id){ bindNav(id,'fis'); });
+  ['bnav-log-pain','bnav-func-pain','bnav-report-pain'].forEach(function(id){ bindNav(id,'pain'); });
+  ['bnav-log-warmup','bnav-func-warmup','bnav-report-warmup'].forEach(function(id){ bindNav(id,'warmup'); });
 
-  // Weekly score slider
+  // Weekly score slider (now inside data-log inline section)
   var slider = document.getElementById('weeklyScore');
   if (slider) { slider.addEventListener('input', function(){ document.getElementById('weeklyScoreVal').textContent = this.value; }); }
 
-  // Save weekly
+  // Save weekly (button now inside data-log)
   var btnWeekly = document.getElementById('btn-save-weekly');
   if (btnWeekly) { btnWeekly.addEventListener('click', saveWeekly); }
 
@@ -1111,6 +1129,8 @@ async function analyzeProgress() {
         })
       }).then(r=>r.json()).then(d=>{ if(d.success) console.log('Progress auto-saved:', d.logId); })
         .catch(e=>console.warn('Progress save failed:', e.message));
+      // Cache locally for mini-chart routing logic
+      cacheProgressLog(parseInt(ratings.r1) || 1);
     }
   } catch(e) { stopProgress('pb-prog', 'pt-prog'); resultText.textContent = 'Service temporarily unavailable, please try again later.'; }
 }
@@ -1175,7 +1195,214 @@ function stopProgress(barId, textId) {
   if (bar) { bar.style.width = '100%'; } if (txt) { txt.textContent = '100%'; }
 }
 
-function saveWeekly() {
+
+// ═══════════════════════════════════════════════════════════
+// DATA-LOG: Smart init — banner + inline weekly + mini chart
+// ═══════════════════════════════════════════════════════════
+function initDataLog() {
+  checkFunctionalBanner();
+  checkInlineWeekly();
+}
+
+function getThisWeekProgressLogs() {
+  var now = new Date();
+  var monday = new Date(now);
+  monday.setDate(now.getDate() - ((now.getDay() + 6) % 7));
+  monday.setHours(0,0,0,0);
+  try {
+    var logs = JSON.parse(localStorage.getItem('fis_progress_history') || '[]');
+    return logs.filter(function(l){ return new Date(l.date || l.logged_at) >= monday; });
+  } catch(e) { return []; }
+}
+
+function getLastWeekProgressLogs() {
+  var now = new Date();
+  var thisMonday = new Date(now);
+  thisMonday.setDate(now.getDate() - ((now.getDay() + 6) % 7));
+  thisMonday.setHours(0,0,0,0);
+  var lastMonday = new Date(thisMonday);
+  lastMonday.setDate(thisMonday.getDate() - 7);
+  try {
+    var logs = JSON.parse(localStorage.getItem('fis_progress_history') || '[]');
+    return logs.filter(function(l){
+      var d = new Date(l.date || l.logged_at);
+      return d >= lastMonday && d < thisMonday;
+    });
+  } catch(e) { return []; }
+}
+
+function checkFunctionalBanner() {
+  var banner = document.getElementById('functional-banner');
+  if (!banner) return;
+  var lastFunctional = localStorage.getItem('fis_last_functional_date');
+  var now = new Date();
+  // Show if: no functional test ever, OR last one was >28 days ago
+  // AND user has ≥4 total progress logs (has been using the app)
+  try {
+    var allLogs = JSON.parse(localStorage.getItem('fis_progress_history') || '[]');
+    if (allLogs.length < 4) { banner.style.display = 'none'; return; }
+    var shouldShow = false;
+    if (!lastFunctional) {
+      shouldShow = true;
+    } else {
+      var daysSince = (now - new Date(lastFunctional)) / (1000*60*60*24);
+      if (daysSince >= 28) shouldShow = true;
+    }
+    banner.style.display = shouldShow ? 'flex' : 'none';
+  } catch(e) { banner.style.display = 'none'; }
+}
+
+function checkInlineWeekly() {
+  var section = document.getElementById('inline-weekly-section');
+  if (!section) return;
+  var now = new Date();
+  var dayOfWeek = now.getDay(); // 0=Sun, 6=Sat
+  var isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+  var thisWeekLogs = getThisWeekProgressLogs();
+  var shouldShow = (isWeekend && thisWeekLogs.length >= 2) || (thisWeekLogs.length >= 4);
+  if (shouldShow) {
+    section.style.display = 'block';
+    renderInlineMiniChart();
+  } else {
+    section.style.display = 'none';
+  }
+}
+
+function renderInlineMiniChart() {
+  var chartCard = document.getElementById('inline-chart-card');
+  if (!chartCard) return;
+  var thisWeek = getThisWeekProgressLogs();
+  var lastWeek = getLastWeekProgressLogs();
+  if (thisWeek.length === 0 || lastWeek.length === 0) {
+    chartCard.style.display = 'none'; return;
+  }
+  function avg(arr) {
+    return arr.reduce(function(s,l){ return s + (l.muscle_activation || l.activation || 0); }, 0) / arr.length;
+  }
+  var prevAvg = avg(lastWeek);
+  var currAvg = avg(thisWeek);
+  var prevStr = prevAvg.toFixed(1);
+  var currStr = currAvg.toFixed(1);
+  var delta = (currAvg - prevAvg).toFixed(1);
+  var pct = Math.round((parseFloat(delta) / prevAvg) * 100);
+
+  document.getElementById('inline-val-prev').textContent = prevStr;
+  document.getElementById('inline-val-curr').textContent = currStr;
+  document.getElementById('inline-bar-prev').style.height = Math.round((prevAvg / 4) * 100) + '%';
+  document.getElementById('inline-bar-curr').style.height = Math.round((currAvg / 4) * 100) + '%';
+
+  var deltaEl = document.getElementById('inline-chart-delta');
+  if (parseFloat(delta) >= 0) {
+    deltaEl.textContent = '▲ +' + delta + ' 分 / 進步 ' + pct + '%';
+    deltaEl.style.color = '#2ed573';
+  } else {
+    deltaEl.textContent = '▼ ' + delta + ' 分 / 下跌 ' + Math.abs(pct) + '%';
+    deltaEl.style.color = '#ff4757';
+  }
+  chartCard.style.display = 'block';
+}
+
+// ═══════════════════════════════════════════════════════════
+// COLLAPSIBLE weekly fields
+// ═══════════════════════════════════════════════════════════
+function toggleWeeklyField(collapseId, toggleBtnId) {
+  var el = document.getElementById(collapseId);
+  var arrowId = toggleBtnId.replace('-btn', '-arrow');
+  var arrow = document.getElementById(arrowId);
+  var isOpen = el.style.maxHeight !== '0px' && el.style.maxHeight !== '';
+  if (isOpen) {
+    el.style.maxHeight = '0px';
+    el.style.opacity = '0';
+    if (arrow) arrow.style.transform = 'rotate(0deg)';
+  } else {
+    el.style.maxHeight = '200px';
+    el.style.opacity = '1';
+    if (arrow) arrow.style.transform = 'rotate(90deg)';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// LEG TIMER
+// ═══════════════════════════════════════════════════════════
+var legTimers = {
+  left:  { running: false, start: null, elapsed: 0, interval: null },
+  right: { running: false, start: null, elapsed: 0, interval: null }
+};
+
+function toggleLegTimer(side) {
+  var t = legTimers[side];
+  var card = document.getElementById('timer-card-' + side);
+  var display = document.getElementById('timer-display-' + side);
+  var status = document.getElementById('timer-status-' + side);
+  var resetBtn = document.getElementById('timer-reset-' + side);
+  var input = document.getElementById('func' + (side === 'left' ? 'Left' : 'Right') + 'Sec');
+
+  // If already done, ignore tap (use reset button instead)
+  if (card.dataset.state === 'done') return;
+
+  if (card.dataset.state !== 'running') {
+    // START
+    t.running = true;
+    t.start = Date.now() - (t.elapsed * 1000);
+    card.dataset.state = 'running';
+    card.style.borderColor = 'rgba(255,200,50,0.8)';
+    card.style.background = 'rgba(255,200,50,0.08)';
+    status.textContent = '點擊停止';
+    status.style.color = 'var(--gold)';
+    t.interval = setInterval(function() {
+      t.elapsed = (Date.now() - t.start) / 1000;
+      display.textContent = t.elapsed.toFixed(1);
+    }, 100);
+  } else {
+    // STOP
+    clearInterval(t.interval);
+    t.running = false;
+    t.elapsed = (Date.now() - t.start) / 1000;
+    var finalSec = t.elapsed.toFixed(1);
+    display.textContent = finalSec;
+    display.style.color = '#2ed573';
+    input.value = finalSec;
+    card.dataset.state = 'done';
+    card.style.borderColor = 'rgba(46,213,115,0.6)';
+    card.style.background = 'rgba(46,213,115,0.06)';
+    status.textContent = finalSec + ' 秒 ✓';
+    status.style.color = '#2ed573';
+    if (resetBtn) resetBtn.style.opacity = '1';
+  }
+}
+
+function resetLegTimer(side) {
+  var t = legTimers[side];
+  clearInterval(t.interval);
+  t.running = false; t.elapsed = 0; t.start = null;
+  var card = document.getElementById('timer-card-' + side);
+  var display = document.getElementById('timer-display-' + side);
+  var status = document.getElementById('timer-status-' + side);
+  var resetBtn = document.getElementById('timer-reset-' + side);
+  var input = document.getElementById('func' + (side === 'left' ? 'Left' : 'Right') + 'Sec');
+  display.textContent = '0.0';
+  display.style.color = 'var(--gold)';
+  status.textContent = '點擊開始';
+  status.style.color = 'var(--text-dim)';
+  card.dataset.state = '';
+  card.style.borderColor = 'rgba(255,200,50,0.25)';
+  card.style.background = 'rgba(0,0,0,0.25)';
+  if (resetBtn) resetBtn.style.opacity = '0';
+  input.value = '';
+}
+
+// ═══════════════════════════════════════════════════════════
+// Cache progress log locally for mini-chart
+// ═══════════════════════════════════════════════════════════
+function cacheProgressLog(muscleActivation) {
+  try {
+    var logs = JSON.parse(localStorage.getItem('fis_progress_history') || '[]');
+    logs.unshift({ logged_at: new Date().toISOString(), muscle_activation: muscleActivation });
+    if (logs.length > 50) logs = logs.slice(0,50);
+    localStorage.setItem('fis_progress_history', JSON.stringify(logs));
+  } catch(e) {}
+}
+
   var score = document.getElementById('weeklyScore').value;
   var improve = document.getElementById('weeklyImprove').value.trim();
   var next = document.getElementById('weeklyImproveNext').value.trim();
@@ -1237,7 +1464,7 @@ function saveFunctional() {
   var right = document.getElementById('funcRightSec').value;
   var jc = document.querySelector('.toggle-btn[data-group="jc"].active');
   var breath = document.querySelector('.toggle-btn[data-group="breath"].active');
-  if (!left && !right) { alert('請輸入單腳站立秒數'); return; }
+  if (!left || !right) { alert('請先完成左右腳計時（點擊計時器開始/停止）'); return; }
   var jcVal = jc ? parseInt(jc.getAttribute('data-val')) : null;
   var breathVal = breath ? breath.getAttribute('data-val') : null;
   var record = {
@@ -1250,6 +1477,8 @@ function saveFunctional() {
     var history = JSON.parse(localStorage.getItem('fis_functional_history') || '[]');
     history.unshift(record); if (history.length > 20) history.pop();
     localStorage.setItem('fis_functional_history', JSON.stringify(history));
+    // Store date for 4-week banner logic
+    localStorage.setItem('fis_last_functional_date', new Date().toISOString());
   } catch(e) {}
   // 儲存落 D1
   if (window.FIS_USER_ID) {
