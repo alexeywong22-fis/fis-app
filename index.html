@@ -440,27 +440,130 @@ async function runFisStep1() {
   var resultText = document.getElementById('fisStep1Text');
   result.classList.add('show');
   resultText.innerHTML = '<div class="progress-bar-wrap"><div class="progress-bar-fill" id="pb1"></div></div><div class="progress-text" id="pt1">0%</div>';
-  startProgress('pb1', 'pt1', 55000);
+  startProgress('pb1', 'pt1', 90000);
 
-  var imageBase64List = [];
-  for (var i = 0; i < selectedFiles.length; i++) {
-    var file = selectedFiles[i];
-    if (!file.type.startsWith('image/')) continue;
-    try {
-      var b64 = await new Promise(function(resolve, reject) { var reader = new FileReader(); reader.onload = function(e) { resolve(e.target.result); }; reader.onerror = reject; reader.readAsDataURL(file); });
-      imageBase64List.push(b64);
-    } catch(err) { console.warn('跳過檔案:', file.name, err); }
+  // 從影片抽幀（25%, 50%, 75% 三個時間點）
+  function extractVideoFrames(videoFile) {
+    return new Promise(function(resolve) {
+      var frames = [];
+      var video = document.createElement('video');
+      video.muted = true;
+      video.playsInline = true;
+      var url = URL.createObjectURL(videoFile);
+      video.src = url;
+
+      video.addEventListener('loadedmetadata', function() {
+        var duration = video.duration;
+        if (!duration || duration === Infinity) { URL.revokeObjectURL(url); resolve([]); return; }
+        var times = [duration * 0.25, duration * 0.50, duration * 0.75];
+        var idx = 0;
+
+        function captureFrame() {
+          if (idx >= times.length) { URL.revokeObjectURL(url); resolve(frames); return; }
+          video.currentTime = times[idx];
+        }
+
+        video.addEventListener('seeked', function() {
+          var canvas = document.createElement('canvas');
+          canvas.width  = Math.min(video.videoWidth,  640);
+          canvas.height = Math.min(video.videoHeight, 640);
+          var ctx = canvas.getContext('2d');
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          frames.push(canvas.toDataURL('image/jpeg', 0.7));
+          idx++;
+          captureFrame();
+        });
+
+        captureFrame();
+      });
+
+      video.addEventListener('error', function() { URL.revokeObjectURL(url); resolve([]); });
+      video.load();
+    });
   }
 
-  if (imageBase64List.length === 0) { stopProgress('pb1', 'pt1'); resultText.textContent = '請上載最少一張圖片進行分析'; return; }
+  // 處理所有檔案
+  var imageBase64List = [];
+  var videoLabels = [];
+
+  for (var i = 0; i < selectedFiles.length; i++) {
+    var file = selectedFiles[i];
+    if (file.type.startsWith('image/')) {
+      try {
+        var b64 = await new Promise(function(resolve, reject) {
+          var reader = new FileReader();
+          reader.onload = function(e) { resolve(e.target.result); };
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+        imageBase64List.push(b64);
+      } catch(err) { console.warn('跳過圖片:', file.name); }
+
+    } else if (file.type.startsWith('video/')) {
+      try {
+        resultText.innerHTML = '<div class="progress-bar-wrap"><div class="progress-bar-fill" id="pb1" style="width:20%"></div></div>' +
+          '<div class="progress-text" id="pt1">正在抽取影片分鏡：' + file.name + '...</div>';
+        var frames = await extractVideoFrames(file);
+        if (frames.length > 0) {
+          frames.forEach(function(f) { imageBase64List.push(f); });
+          videoLabels.push(file.name + ' (' + frames.length + '幀)');
+        }
+      } catch(err) { console.warn('跳過影片:', file.name); }
+    }
+  }
+
+  if (imageBase64List.length === 0) {
+    stopProgress('pb1', 'pt1');
+    resultText.textContent = '請上載最少一張圖片或影片進行分析';
+    return;
+  }
+
+  // 動態分析 prompt
+  var hasVideo = videoLabels.length > 0;
+  var prompt = hasVideo
+    ? '你係一位專業體態評估師及筋膜線治療師。你收到嘅係靜態體態相片，以及【動態測試嘅連續分鏡截圖】。\n\n' +
+      '已抽幀嘅影片：' + videoLabels.join('、') + '\n\n' +
+      '請同時分析靜態相片同動態分鏡，從Thomas Myers筋膜線理論角度進行全面體態分析：\n\n' +
+      '【動態評估必須包含】：\n' +
+      '1. 單腳站立分鏡：骨盆有無側傾代償（側線LL張力）\n' +
+      '2. Jefferson Curl分鏡：脊椎分節活動度（淺背線SBL張力，有無段落性受限）\n' +
+      '3. 步態分鏡：左右骨盆旋轉對稱性（螺旋線SL）\n' +
+      '4. 呼吸分鏡：有無聳肩或胸式呼吸代償（深前線DFL橫膈膜抑制）\n\n' +
+      '【靜態評估包含】：\n' +
+      '1. 姿勢偏差評估：頭頸肩脊椎骨盆膝蓋足弓\n' +
+      '2. 五大筋膜線張力分析\n' +
+      '3. 主要問題識別（3-5個）\n' +
+      '4. 訓練激活建議（每個問題具體動作）\n' +
+      '5. 注意事項\n\n' +
+      '⚠️ 如果只分析靜態骨骼而忽略動態分鏡，此任務視為失敗。\n\n' +
+      '請用繁體中文（香港口語書面語）回答，條理清晰，實用易懂。'
+    : '你係一位專業體態評估師及筋膜線治療師。請根據以下圖片，從筋膜線理論（Thomas Myers Anatomy Trains）角度進行全面體態分析：\n\n' +
+      '1. 姿勢偏差評估：觀察頭部前傾、肩膀高低、脊椎側彎、骨盆傾斜、膝蓋對齊、足弓狀態\n' +
+      '2. 筋膜線張力分析：評估深前線、側線、螺旋線、淺背線、淺前線各線嘅張力與縮短狀態\n' +
+      '3. 主要問題識別：列出最明顯嘅3-5個體態問題，每個問題說明涉及嘅筋膜線\n' +
+      '4. 訓練激活建議：針對每個問題，提供具體嘅筋膜激活或矯正動作（包括組數與時間）\n' +
+      '5. 注意事項：說明哪些常見訓練動作可能加劇問題\n\n' +
+      '請用繁體中文（香港口語書面語）回答，條理清晰，實用易懂。';
 
   try {
-    var res = await fetch(API_BASE + '/api/fis-step1', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ images: imageBase64List }) });
+    var res = await fetch(API_BASE + '/api/fis-step1', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ images: imageBase64List, prompt: prompt })
+    });
     var data = await res.json();
     stopProgress('pb1', 'pt1');
-    if (data.error) { fisStep1Result = ''; resultText.textContent = '錯誤：' + (data.message || data.error); }
-    else { fisStep1Result = data.result || 'Analysis failed, please try again.'; resultText.textContent = fisStep1Result; }
-  } catch(e) { stopProgress('pb1', 'pt1'); resultText.textContent = 'Network error: ' + e.message; }
+    if (data.error) {
+      fisStep1Result = '';
+      resultText.textContent = '錯誤：' + (data.message || data.error);
+    } else {
+      fisStep1Result = data.result || 'Analysis failed, please try again.';
+      resultText.textContent = fisStep1Result;
+    }
+  } catch(e) {
+    stopProgress('pb1', 'pt1');
+    resultText.textContent = 'Network error: ' + e.message;
+  }
 }
 
 // ── FIS STEP 2 ────────────────────────────────────────────────────────────────
@@ -544,8 +647,8 @@ async function runFisStep3() {
     'flex:0 0 33.333%;width:33.333%;min-width:33.333%;height:100%;overflow:hidden;' +
     'flex-shrink:0;border-right:1px solid rgba(0,150,255,0.25)';
   var img = document.createElement('img');
-  img.src = 'https://alexeywong22-fis.github.io/fis-app/body.png';
-  img.style.cssText = 'width:100%;height:100%;object-fit:contain;object-position:center top;display:block;background:#030a14';
+  img.src = 'https://alexeywong22-fis.github.io/fis-app/body2.png';
+  img.style.cssText = 'width:100%;height:100%;object-fit:contain;object-position:center center;display:block;background:#030a14';
   imgCol.appendChild(img);
   body.appendChild(imgCol);
 
