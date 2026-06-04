@@ -227,8 +227,9 @@ textarea.notes-ta { width: 100%; background: var(--bg4); border: 1px solid rgba(
 }
 .fascial-btn.sel {
   border-color: var(--gold);
-  background: rgba(255,200,69,0.12);
-  color: var(--gold);
+  background: var(--gold);
+  color: #2a3d63;
+  font-weight: 700;
 }
 /* 體感提示文字 */
 .sense-hint-single {
@@ -317,14 +318,27 @@ textarea.notes-ta { width: 100%; background: var(--bg4); border: 1px solid rgba(
 
         <!-- 筋膜線選擇 -->
         <div class="sec-label">今日訓練筋膜線</div>
-        <div class="fascial-grid" id="fascialGrid">
+
+        <!-- 項目一：單線筋膜選擇 -->
+        <div style="font-size:9px;letter-spacing:2px;color:var(--text-dim);margin-bottom:8px;margin-top:4px">項 目 一 · 單 線 筋 膜 選 擇</div>
+
+        <!-- 第一行：3個 -->
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px">
           <div class="fascial-btn" data-val="深前線" onclick="selFascial(this)">深前線</div>
           <div class="fascial-btn" data-val="側線" onclick="selFascial(this)">側線</div>
           <div class="fascial-btn" data-val="螺旋線" onclick="selFascial(this)">螺旋線</div>
+        </div>
+        <!-- 第二行：2個，居中對稱 -->
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;padding:0 16%;margin-bottom:16px">
           <div class="fascial-btn" data-val="淺背線" onclick="selFascial(this)">淺背線</div>
           <div class="fascial-btn" data-val="淺前線" onclick="selFascial(this)">淺前線</div>
-          <div class="fascial-btn fascial-combo" data-val="深前線+側線" onclick="selFascial(this)">深前線<br>+側線</div>
-          <div class="fascial-btn fascial-combo" data-val="螺旋線+淺背線" onclick="selFascial(this)">螺旋線<br>+淺背線</div>
+        </div>
+
+        <!-- 項目二：雙線連動組合 -->
+        <div style="font-size:9px;letter-spacing:2px;color:var(--text-dim);margin-bottom:8px">項 目 二 · 雙 線 連 動 組 合</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px" id="fascialGrid">
+          <div class="fascial-btn fascial-combo" data-val="深前線+側線" onclick="selFascial(this)">深前線<br>+ 側線</div>
+          <div class="fascial-btn fascial-combo" data-val="螺旋線+淺背線" onclick="selFascial(this)">螺旋線<br>+ 淺背線</div>
         </div>
 
         <!-- 指標一：動態標題 + 動態副文字 -->
@@ -488,8 +502,8 @@ const FASCIAL_MAP = {
 let selectedFascial = null;
 
 function selFascial(btn) {
-  // Deselect all
-  document.querySelectorAll('#fascialGrid .fascial-btn').forEach(b => b.classList.remove('sel'));
+  // Deselect all fascial buttons across all groups
+  document.querySelectorAll('.fascial-btn').forEach(b => b.classList.remove('sel'));
   btn.classList.add('sel');
   selectedFascial = btn.dataset.val;
 
