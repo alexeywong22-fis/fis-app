@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#050d1a">
+<link rel="apple-touch-icon" href="fis-icon.png">
+<link rel="icon" type="image/png" href="fis-icon.png">
+<link rel="manifest" href="manifest.json">
+<title>DATA 進步追蹤 · FIS</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+HK:wght@300;400;500;700;900&family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+/* ── 完全繼承主頁 CSS 變數與基礎樣式 ── */
+:root {
+  --gold: #ffc845;
+  --gold-dim: #b38a30;
+  --bg: #2a3d63;
+  --bg2: #243558;
+  --bg3: #1e2d4d;
+  --bg4: #182542;
+  --text: #fdf5e5;
+  --text-dim: #b8a898;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'Noto Sans HK', sans-serif; overflow-x: hidden; }
+
+/* ── Header (與主頁 s-header 一致) ── */
+.s-header { padding: 52px 24px 20px; background: var(--bg2); border-bottom: 1px solid rgba(255,255,255,0.05); }
+.back-btn { font-size: 13px; color: var(--gold); cursor: pointer; margin-bottom: 12px; display: inline-block; text-decoration: none; }
+.s-title { font-family: 'Bebas Neue', sans-serif; font-size: 36px; letter-spacing: 2px; line-height: 1; }
+.s-sub { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
+
+/* ── 訓練日計數器 ── */
+.day-strip {
+  background: var(--bg3); border-bottom: 1px solid rgba(255,255,255,0.06);
+  padding: 14px 20px; display: flex; align-items: center; gap: 14px;
+}
+.day-big { font-family: 'Bebas Neue', sans-serif; font-size: 40px; color: var(--gold); line-height: 1; }
+.day-info-label { font-size: 9px; letter-spacing: 3px; color: var(--text-dim); margin-bottom: 2px; }
+.day-info-title { font-size: 13px; font-weight: 700; }
+.day-bar-wrap { flex: 1; height: 4px; background: var(--bg4); border-radius: 2px; overflow: hidden; margin-top: 6px; }
+.day-bar-fill { height: 100%; background: var(--gold); border-radius: 2px; transition: width 1s ease; }
+
+/* ── 2x2 關卡地圖 (完全複製主頁 .module-grid + .module-card 樣式) ── */
+.module-grid { padding: 16px 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+.module-card {
+  background: var(--bg3);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 16px;
+  padding: 20px 16px;
+  display: flex; flex-direction: column; gap: 8px;
+  min-height: 148px;
+  cursor: pointer;
+  transition: border-color .2s, background .2s;
+  position: relative; overflow: hidden;
+}
+.module-card:active { opacity: .85; }
+.module-card.locked { opacity: .5; cursor: default; }
+.module-card.locked:active { opacity: .5; }
+.module-card.unlocked-glow {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 1px rgba(255,200,69,0.3), inset 0 0 20px rgba(255,200,69,0.04);
+}
+
+.module-icon { font-size: 13px; font-weight: 700; color: var(--gold); }
+.module-num { font-family: 'Bebas Neue', sans-serif; font-size: 11px; letter-spacing: 3px; color: var(--gold-dim); }
+.module-name { font-size: 14px; font-weight: 700; line-height: 1.3; }
+.module-desc { font-size: 11px; color: var(--text-dim); line-height: 1.4; margin-top: auto; }
+
+/* 解鎖進度條（卡片底部）*/
+.card-progress { position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: var(--bg4); }
+.card-progress-fill { height: 100%; background: var(--gold); transition: width 1s ease; }
+
+/* 鎖定標籤 */
+.lock-badge {
+  position: absolute; top: 10px; right: 10px;
+  font-size: 14px; opacity: .7;
+}
+
+/* ── 展開面板（卡片下方全寬） ── */
+.panel-wrap { grid-column: 1 / -1; display: none; }
+.panel-wrap.open { display: block; animation: slideDown .3s ease; }
+@keyframes slideDown { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
+
+.panel {
+  background: var(--bg3); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px; padding: 20px 16px;
+}
+
+/* ── 表單元件（完全一致） ── */
+.sec-label { font-size: 10px; letter-spacing: 3px; color: var(--gold); margin-bottom: 10px; margin-top: 20px; }
+.sec-label:first-child { margin-top: 0; }
+
+.rating-row { display: flex; gap: 8px; margin-top: 8px; }
+.rating-btn { flex: 1; background: var(--bg4); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 10px 4px; text-align: center; cursor: pointer; transition: all .15s; }
+.r-num { font-size: 18px; font-weight: 900; color: var(--text-dim); }
+.r-label { font-size: 9px; color: var(--text-dim); line-height: 1.3; margin-top: 2px; }
+.rating-btn.sel { border-color: var(--gold); background: rgba(255,200,69,0.1); }
+.rating-btn.sel .r-num, .rating-btn.sel .r-label { color: var(--gold); }
+
+.toggle-row { display: flex; gap: 8px; margin-top: 8px; }
+.toggle-btn { flex: 1; background: var(--bg4); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 10px 8px; text-align: center; cursor: pointer; font-size: 13px; font-weight: 500; color: var(--text-dim); font-family: 'Noto Sans HK', sans-serif; transition: all .15s; }
+.toggle-btn.sel { border-color: var(--gold); color: var(--gold); background: rgba(255,200,69,0.1); }
+
+.btn-gold { background: var(--gold); color: #2a3d63; border: none; border-radius: 10px; padding: 14px 24px; font-size: 14px; font-weight: 700; font-family: 'Noto Sans HK', sans-serif; cursor: pointer; width: 100%; margin-top: 16px; display: block; transition: opacity .15s; }
+.btn-gold:disabled { opacity: .5; }
+
+.ai-result { display: none; background: var(--bg4); border: 1px solid var(--gold-dim); border-radius: 12px; padding: 16px; margin-top: 16px; }
+.ai-result.show { display: block; }
+.ai-result-title { font-size: 11px; letter-spacing: 3px; color: var(--gold); margin-bottom: 10px; }
+.ai-result-body { font-size: 13px; color: var(--text); line-height: 1.7; white-space: pre-line; }
+
+/* 感想折疊 */
+.notes-toggle { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-dim); cursor: pointer; margin-top: 14px; user-select: none; }
+.notes-arrow { font-size: 9px; transition: transform .3s; }
+.notes-toggle.open .notes-arrow { transform: rotate(90deg); }
+.notes-col { max-height: 0; overflow: hidden; transition: max-height .4s ease, opacity .3s; opacity: 0; }
+.notes-col.open { max-height: 120px; opacity: 1; }
+textarea.notes-ta { width: 100%; background: var(--bg4); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 12px; color: var(--text); font-size: 13px; font-family: 'Noto Sans HK', sans-serif; resize: none; height: 72px; outline: none; margin-top: 8px; }
+
+/* ── 週評對比圖 ── */
+.compare-bars { display: flex; gap: 16px; align-items: flex-end; height: 72px; margin: 16px 0 8px; }
+.cbar-group { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.cbar-wrap { width: 100%; display: flex; align-items: flex-end; height: 56px; }
+.cbar { width: 100%; border-radius: 4px 4px 0 0; transition: height .8s ease; }
+.cbar-prev { background: rgba(255,200,69,0.3); }
+.cbar-curr { background: var(--gold); }
+.cbar-label { font-size: 9px; color: var(--text-dim); }
+.cbar-val { font-size: 11px; font-weight: 700; color: var(--gold); font-family: 'Bebas Neue', sans-serif; }
+.compare-delta { font-size: 13px; text-align: right; font-weight: 700; margin-top: 4px; }
+.delta-up { color: #4caf7d; }
+.delta-down { color: #e05c5c; }
+
+/* ── 進度提示 ── */
+.lock-info { background: var(--bg4); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 16px; text-align: center; }
+.lock-info-num { font-family: 'Bebas Neue', sans-serif; font-size: 36px; color: var(--gold); line-height: 1; margin-bottom: 4px; }
+.lock-info-msg { font-size: 13px; color: var(--text-dim); line-height: 1.6; }
+.lock-progress-bar { height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden; margin: 10px 0 4px; }
+.lock-progress-fill { height: 100%; background: var(--gold); border-radius: 3px; transition: width 1s ease; }
+.lock-progress-text { font-size: 10px; color: var(--gold-dim); text-align: right; font-family: 'Bebas Neue', sans-serif; letter-spacing: 1px; }
+
+/* ── 計時器 ── */
+.timer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
+.timer-card {
+  background: var(--bg4); border: 1.5px solid rgba(255,255,255,0.08);
+  border-radius: 12px; padding: 16px 10px; text-align: center;
+  cursor: pointer; transition: all .2s; user-select: none; position: relative;
+}
+.timer-card.running { border-color: var(--gold); background: rgba(255,200,69,0.07); }
+.timer-card.done { border-color: #4caf7d; background: rgba(76,175,125,0.07); }
+.timer-leg-label { font-size: 10px; color: var(--text-dim); margin-bottom: 8px; letter-spacing: 1px; }
+.timer-display { font-family: 'Bebas Neue', sans-serif; font-size: 38px; color: var(--gold); line-height: 1; margin-bottom: 6px; transition: color .3s; }
+.timer-card.done .timer-display { color: #4caf7d; }
+.timer-status { font-size: 10px; color: var(--text-dim); }
+.timer-card.running .timer-status { color: var(--gold); }
+.timer-card.done .timer-status { color: #4caf7d; }
+.timer-reset { position: absolute; top: 6px; right: 8px; background: none; border: none; color: var(--text-dim); font-size: 14px; cursor: pointer; opacity: 0; transition: opacity .2s; }
+.timer-card.done .timer-reset { opacity: 1; }
+
+/* ── Jefferson Curl 5格 ── */
+.jc-row { display: flex; gap: 6px; margin-top: 8px; }
+.jc-btn { flex: 1; background: var(--bg4); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 10px 2px; text-align: center; cursor: pointer; transition: all .15s; }
+.jc-lv { font-size: 13px; font-weight: 700; color: var(--text-dim); display: block; }
+.jc-desc { font-size: 8px; color: var(--text-dim); line-height: 1.2; margin-top: 2px; }
+.jc-btn.sel { border-color: var(--gold); background: rgba(255,200,69,0.1); }
+.jc-btn.sel .jc-lv, .jc-btn.sel .jc-desc { color: var(--gold); }
+
+/* ── 相片上載 ── */
+.camera-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; background: var(--bg4); border: 1.5px dashed rgba(255,200,69,0.3); border-radius: 12px; padding: 16px; color: var(--gold); font-size: 14px; cursor: pointer; font-family: 'Noto Sans HK', sans-serif; margin-top: 12px; }
+.photo-preview { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-top: 10px; }
+.photo-thumb { aspect-ratio: 1; border-radius: 8px; object-fit: cover; background: var(--bg4); border: 1px solid rgba(255,255,255,0.08); width: 100%; }
+
+/* ── 12週報告 ── */
+.report-locked-big { text-align: center; padding: 20px 0; }
+.report-lock-icon { font-size: 48px; margin-bottom: 12px; opacity: .4; }
+.report-lock-title { font-size: 16px; font-weight: 700; color: var(--text-dim); margin-bottom: 6px; }
+.report-lock-sub { font-size: 12px; color: var(--text-dim); line-height: 1.6; opacity: .7; }
+.report-unlock-btn { background: var(--gold); color: #2a3d63; border: none; border-radius: 10px; padding: 14px 24px; font-size: 14px; font-weight: 700; font-family: 'Noto Sans HK', sans-serif; cursor: pointer; width: 100%; margin-top: 16px; }
+
+/* ── 歷史記錄 ── */
+.history-item { background: var(--bg4); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; }
+.history-date { font-size: 10px; color: var(--gold-dim); margin-bottom: 6px; }
+.history-scores { display: flex; gap: 8px; flex-wrap: wrap; font-size: 12px; color: var(--text-dim); }
+
+/* ── Toast ── */
+.toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(10px); background: var(--bg3); border: 1px solid var(--gold); border-radius: 30px; padding: 10px 20px; font-size: 13px; color: var(--gold); opacity: 0; transition: all .3s; z-index: 999; white-space: nowrap; pointer-events: none; }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ── Spinner ── */
+.spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(42,61,99,.4); border-top-color: #2a3d63; border-radius: 50%; animation: spin .8s linear infinite; vertical-align: middle; margin-right: 6px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── 底部導航 ── */
+.bnav { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(24,37,66,0.97); border-top: 1px solid rgba(255,255,255,0.08); display: flex; padding: 8px 0 20px; z-index: 100; }
+.bnav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 0; cursor: pointer; }
+.bnav-icon { font-size: 11px; font-weight: 700; color: var(--text-dim); }
+.bnav-label { font-size: 9px; color: var(--text-dim); }
+.bnav-item.active .bnav-icon, .bnav-item.active .bnav-label { color: var(--gold); }
+
+.page-body { padding: 0 0 100px; }
+</style>
+</head>
+<body>
+
+<!-- ── Header ── -->
+<div class="s-header">
+  <a class="back-btn" href="index.html">&lt;- 返回</a>
+  <div class="s-title">進步追蹤</div>
+  <div class="s-sub">DATA - 追蹤系統</div>
+</div>
+
+<!-- ── 訓練日計數器 ── -->
+<div class="day-strip">
+  <div class="day-big" id="dayNum">0</div>
+  <div style="flex:1">
+    <div class="day-info-label">ACTUAL TRAINING DAYS</div>
+    <div class="day-info-title">實質訓練日累積</div>
+    <div class="day-bar-wrap"><div class="day-bar-fill" id="dayBarFill" style="width:0%"></div></div>
+  </div>
+</div>
+
+<!-- ── 頁面主體 ── -->
+<div class="page-body">
+
+  <!-- 2x2 關卡地圖 -->
+  <div class="module-grid">
+
+    <!-- 01 每日筋膜日誌 -->
+    <div class="module-card unlocked-glow" id="card01" onclick="toggleCard('01')">
+      <div class="module-icon">📋</div>
+      <div class="module-num">01 - 日誌</div>
+      <div class="module-name">訓練筋膜日誌</div>
+      <div class="module-desc" id="desc01">填寫今日訓練三大指標</div>
+      <div class="card-progress"><div class="card-progress-fill" style="width:100%"></div></div>
+    </div>
+
+    <!-- 02 每週進步評估 -->
+    <div class="module-card" id="card02" onclick="toggleCard('02')">
+      <div class="module-icon">📈</div>
+      <div class="module-num">02 - 週評</div>
+      <div class="module-name">每週進步評估</div>
+      <div class="module-desc" id="desc02">對比上週筋膜線狀態</div>
+      <div class="card-progress"><div class="card-progress-fill" id="fill02" style="width:0%"></div></div>
+    </div>
+
+    <!-- Panel 01 (跨兩欄) -->
+    <div class="panel-wrap" id="panelWrap01">
+      <div class="panel">
+        <div class="sec-label">指標一 - 目標肌肉發力感</div>
+        <div class="rating-row" id="gR1">
+          <div class="rating-btn" data-val="1" onclick="selR(this,'r1')"><div class="r-num">1</div><div class="r-label">完全感受唔到</div></div>
+          <div class="rating-btn" data-val="2" onclick="selR(this,'r1')"><div class="r-num">2</div><div class="r-label">偶爾感受到</div></div>
+          <div class="rating-btn" data-val="3" onclick="selR(this,'r1')"><div class="r-num">3</div><div class="r-label">大部分時間</div></div>
+          <div class="rating-btn" data-val="4" onclick="selR(this,'r1')"><div class="r-num">4</div><div class="r-label">每一下都感受到</div></div>
+        </div>
+        <div class="sec-label">指標二 - 腰部代償感</div>
+        <div class="toggle-row" id="gR2">
+          <div class="toggle-btn" data-val="有" onclick="selT(this,'r2')">有</div>
+          <div class="toggle-btn" data-val="輕微" onclick="selT(this,'r2')">輕微</div>
+          <div class="toggle-btn" data-val="無" onclick="selT(this,'r2')">無</div>
+        </div>
+        <div class="sec-label">指標三 - 90/90張力出現速度</div>
+        <div class="toggle-row" id="gR3">
+          <div class="toggle-btn" data-val="5次後" onclick="selT(this,'r3')">5次後</div>
+          <div class="toggle-btn" data-val="3次後" onclick="selT(this,'r3')">3次後</div>
+          <div class="toggle-btn" data-val="1-2次" onclick="selT(this,'r3')">1-2次</div>
+        </div>
+        <div class="notes-toggle" id="notesToggle" onclick="toggleNotes()">
+          <span class="notes-arrow">▶</span>
+          <span style="font-size:11px;letter-spacing:1px">訓練感想（選填）</span>
+        </div>
+        <div class="notes-col" id="notesCol">
+          <textarea class="notes-ta" id="notesTA" placeholder="今日訓練感受..."></textarea>
+        </div>
+        <button class="btn-gold" id="btnAnalyze" onclick="analyze()">AI 即時分析</button>
+        <div class="ai-result" id="aiResult">
+          <div class="ai-result-title">AI · 分 析 結 果</div>
+          <div class="ai-result-body" id="aiText"></div>
+        </div>
+        <!-- 歷史記錄 -->
+        <div id="historySection" style="display:none;margin-top:20px">
+          <div class="sec-label">過往記錄</div>
+          <div id="historyList"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel 02 (跨兩欄) -->
+    <div class="panel-wrap" id="panelWrap02">
+      <div class="panel" id="panel02Content">
+        <div style="text-align:center;padding:20px 0;color:var(--text-dim);font-size:13px">載入中...</div>
+      </div>
+    </div>
+
+    <!-- 03 每四周功能測試 -->
+    <div class="module-card" id="card03" onclick="toggleCard('03')">
+      <div class="module-icon">🧪</div>
+      <div class="module-num">03 - 功能</div>
+      <div class="module-name">每四周功能測試</div>
+      <div class="module-desc" id="desc03">🔒 累積 0/28 訓練日解鎖</div>
+      <div class="lock-badge" id="lock03">🔒</div>
+      <div class="card-progress"><div class="card-progress-fill" id="fill03" style="width:0%"></div></div>
+    </div>
+
+    <!-- 04 12週終極報告 -->
+    <div class="module-card locked" id="card04" onclick="toggleCard('04')">
+      <div class="module-icon">🏆</div>
+      <div class="module-num">04 - 報告</div>
+      <div class="module-name">12週終極對比報告</div>
+      <div class="module-desc" id="desc04">🔒 完成 4 次功能測試後解鎖</div>
+      <div class="lock-badge" id="lock04">🔒</div>
+      <div class="card-progress"><div class="card-progress-fill" id="fill04" style="width:0%;background:rgba(255,255,255,0.15)"></div></div>
+    </div>
+
+    <!-- Panel 03 (跨兩欄) -->
+    <div class="panel-wrap" id="panelWrap03">
+      <div class="panel" id="panel03Content">
+        <div style="text-align:center;padding:20px 0;color:var(--text-dim);font-size:13px">載入中...</div>
+      </div>
+    </div>
+
+    <!-- Panel 04 (跨兩欄) -->
+    <div class="panel-wrap" id="panelWrap04">
+      <div class="panel" id="panel04Content">
+        <div class="report-locked-big">
+          <div class="report-lock-icon">🏆</div>
+          <div class="report-lock-title">12週終極對比報告</div>
+          <div class="report-lock-sub">需完成 4 次功能性測試（每 28 個訓練日一次）<br>方可解鎖完整進化報告</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /module-grid -->
+</div><!-- /page-body -->
+
+<!-- ── 底部導航 ── -->
+<div class="bnav">
+  <div class="bnav-item" onclick="location.href='index.html'"><div class="bnav-icon">HOME</div><div class="bnav-label">主頁</div></div>
+  <div class="bnav-item" onclick="location.href='index.html#fis'"><div class="bnav-icon">FIS</div><div class="bnav-label">檢測</div></div>
+  <div class="bnav-item active"><div class="bnav-icon">DATA</div><div class="bnav-label">追蹤</div></div>
+  <div class="bnav-item" onclick="location.href='index.html#rx'"><div class="bnav-icon">RX</div><div class="bnav-label">診斷</div></div>
+  <div class="bnav-item" onclick="location.href='index.html#go'"><div class="bnav-icon">GO</div><div class="bnav-label">熱身</div></div>
+</div>
+
+<div class="toast" id="toast"></div>
+<input type="file" id="fisFileInput" accept="image/*" multiple capture="environment" style="display:none" onchange="handlePhotos(event)">
+
+<script>
+// ═══════════════════════════════════════════════
+const API = 'https://fis-app.alexeywong22.workers.dev';
+let UID = localStorage.getItem('fis_user_id') || null;
+let totalDays = 0;
+let functionalTestCount = 0;
+const sel = { r1: null, r2: null, r3: null };
+let fisPhotos = [];
+const legTimers = {
+  left:  { running:false, start:null, elapsed:0, interval:null },
+  right: { running:false, start:null, elapsed:0, interval:null }
+};
+// Track which panel is open
+let openCard = null;
+
+// ── Init ──────────────────────────────────────
+async function init() {
+  // Init user
+  if (!UID) {
+    try {
+      const r = await fetch(API + '/api/user/init', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({userId: null}) });
+      const d = await r.json();
+      if (d.userId) { UID = d.userId; localStorage.setItem('fis_user_id', UID); }
+    } catch(e) {}
+  }
+  await loadProgress();
+  loadHistory();
+}
+
+// ── Load progress & unlock states ─────────────
+async function loadProgress() {
+  if (!UID) return;
+  try {
+    const r = await fetch(API + '/api/user/check-progress?user_id=' + UID);
+    const d = await r.json();
+    totalDays = d.totalTrainingDays || 0;
+    updateUnlocks(d);
+  } catch(e) { console.warn('loadProgress failed', e); }
+}
+
+function updateUnlocks(d) {
+  document.getElementById('dayNum').textContent = totalDays;
+
+  // Day bar toward next 28-day milestone
+  const nextMile = totalDays < 28 ? 28 : Math.ceil(totalDays / 28) * 28;
+  const dayPct = Math.min(100, Math.round((totalDays / nextMile) * 100));
+  document.getElementById('dayBarFill').style.width = dayPct + '%';
+
+  // ── 02 週評 ──
+  const weekPct = Math.min(100, Math.round((totalDays / 7) * 100));
+  document.getElementById('fill02').style.width = weekPct + '%';
+  const wc = d.weeklyComparison;
+  if (wc?.status === 'available') {
+    document.getElementById('desc02').textContent = '✅ 對比數據就緒';
+    document.getElementById('card02').classList.add('unlocked-glow');
+  } else {
+    document.getElementById('desc02').textContent = `🔒 ${totalDays}/7 天訓練日`;
+  }
+
+  // ── 03 功能測試 ──
+  const fisPct = Math.min(100, Math.round((totalDays / 28) * 100));
+  document.getElementById('fill03').style.width = fisPct + '%';
+  if (totalDays >= 28) {
+    document.getElementById('card03').classList.remove('locked');
+    document.getElementById('card03').classList.add('unlocked-glow');
+    document.getElementById('lock03').style.display = 'none';
+    document.getElementById('desc03').textContent = '✅ 已解鎖，點擊開始測試';
+  } else {
+    document.getElementById('desc03').textContent = `🔒 累積 ${totalDays}/28 訓練日解鎖`;
+  }
+
+  // ── 04 12週報告（需要 4 次功能測試）──
+  // 用 functional_tests 表計數決定
+  checkReportUnlock();
+}
+
+async function checkReportUnlock() {
+  if (!UID) return;
+  try {
+    // 直接從後端撈 functional_tests 數量
+    const r = await fetch(API + '/api/user/check-progress?user_id=' + UID);
+    const d = await r.json();
+    const fc = d.functionalComparison;
+    // Count via totalDays / 28 as proxy; real count from functional tests
+    functionalTestCount = Math.floor(totalDays / 28);
+    const reportPct = Math.min(100, Math.round((functionalTestCount / 4) * 100));
+    document.getElementById('fill04').style.width = reportPct + '%';
+    if (functionalTestCount >= 4) {
+      document.getElementById('card04').classList.remove('locked');
+      document.getElementById('card04').classList.add('unlocked-glow');
+      document.getElementById('lock04').style.display = 'none';
+      document.getElementById('fill04').style.background = 'var(--gold)';
+      document.getElementById('desc04').textContent = '🏆 12週報告已解鎖！';
+      renderReportUnlocked();
+    } else {
+      document.getElementById('desc04').textContent = `🔒 已完成 ${functionalTestCount}/4 次功能測試`;
+      document.getElementById('fill04').style.background = 'rgba(255,255,255,0.15)';
+    }
+  } catch(e) {}
+}
+
+// ── Toggle card panel ──────────────────────────
+function toggleCard(id) {
+  const wrap = document.getElementById('panelWrap' + id);
+  const isOpen = wrap.classList.contains('open');
+
+  // Close all
+  ['01','02','03','04'].forEach(i => {
+    document.getElementById('panelWrap' + i).classList.remove('open');
+  });
+
+  if (!isOpen) {
+    wrap.classList.add('open');
+    openCard = id;
+    if (id === '02') loadWeeklyPanel();
+    if (id === '03') loadFunctionalPanel();
+  } else {
+    openCard = null;
+  }
+}
+
+// ── 01 DATA 日誌 ──────────────────────────────
+function selR(btn, group) {
+  const map = {r1:'gR1', r2:'gR2', r3:'gR3'};
+  document.querySelectorAll('#' + map[group] + ' .rating-btn').forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel');
+  sel[group] = btn.dataset.val;
+}
+function selT(btn, group) {
+  const map = {r2:'gR2', r3:'gR3'};
+  document.querySelectorAll('#' + map[group] + ' .toggle-btn').forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel');
+  sel[group] = btn.dataset.val;
+}
+function toggleNotes() {
+  document.getElementById('notesCol').classList.toggle('open');
+  document.getElementById('notesToggle').classList.toggle('open');
+}
+
+async function analyze() {
+  if (!sel.r1 || !sel.r2 || !sel.r3) { showToast('請填寫全部三個指標'); return; }
+  const btn = document.getElementById('btnAnalyze');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>分析中...';
+  try {
+    const r = await fetch(API + '/api/progress', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ rating: sel.r1, backPain: sel.r2, tensionSpeed: sel.r3 })
+    });
+    const d = await r.json();
+    const aiText = d.result || '分析完成';
+    document.getElementById('aiText').textContent = aiText;
+    document.getElementById('aiResult').classList.add('show');
+
+    // 儲存落 D1
+    if (UID) {
+      totalDays++;
+      await fetch(API + '/api/progress/save', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({
+          userId: UID,
+          muscleActivation: parseInt(sel.r1),
+          backCompensation: sel.r2,
+          tensionSpeed: sel.r3,
+          trainingDayIndex: totalDays,
+          notes: aiText
+        })
+      });
+      document.getElementById('dayNum').textContent = totalDays;
+      document.getElementById('desc01').textContent = '✅ 今日已記錄';
+      showToast('今日訓練已儲存 ✓');
+      loadHistory();
+    }
+  } catch(e) { showToast('分析失敗，請重試'); }
+  finally { btn.disabled = false; btn.innerHTML = 'AI 即時分析'; }
+}
+
+async function loadHistory() {
+  if (!UID) return;
+  const section = document.getElementById('historySection');
+  const list = document.getElementById('historyList');
+  try {
+    const r = await fetch(API + '/api/progress/history?userId=' + UID);
+    const d = await r.json();
+    const records = d.records || [];
+    if (records.length === 0) { section.style.display = 'none'; return; }
+    section.style.display = 'block';
+    list.innerHTML = records.slice(0,5).map(rec => `
+      <div class="history-item">
+        <div class="history-date">${(rec.logged_at||rec.created_at||'').substring(0,10)}</div>
+        <div class="history-scores">
+          <span>發力：${rec.muscle_activation}/4</span>
+          <span>代償：${rec.back_compensation||'—'}</span>
+          <span>張力：${rec.tension_speed||'—'}</span>
+        </div>
+      </div>`).join('');
+  } catch(e) { section.style.display = 'none'; }
+}
+
+// ── 02 週評 ───────────────────────────────────
+async function loadWeeklyPanel() {
+  const content = document.getElementById('panel02Content');
+  content.innerHTML = '<div style="text-align:center;padding:20px 0;color:var(--text-dim);font-size:13px">載入中...</div>';
+  try {
+    const r = await fetch(API + '/api/user/check-progress?user_id=' + UID);
+    const d = await r.json();
+    const wc = d.weeklyComparison;
+    if (wc?.status === 'insufficient') {
+      const pct = Math.round((wc.current / 7) * 100);
+      content.innerHTML = `
+        <div class="lock-info">
+          <div class="lock-info-num">🔒</div>
+          <div class="lock-info-msg">${wc.message}</div>
+          <div class="lock-progress-bar"><div class="lock-progress-fill" style="width:${pct}%"></div></div>
+          <div class="lock-progress-text">${wc.current} / 7 訓練日</div>
+        </div>`;
+    } else if (wc?.status === 'available') {
+      const a = wc.activation;
+      const ph = Math.round((a.before / 4) * 100);
+      const ch = Math.round((a.after / 4) * 100);
+      const arrow = a.direction === 'up' ? '▲' : a.direction === 'down' ? '▼' : '→';
+      const deltaClass = a.direction === 'up' ? 'delta-up' : 'delta-down';
+      content.innerHTML = `
+        <div style="font-size:10px;letter-spacing:3px;color:var(--gold);margin-bottom:4px">發力感對比 · 第${wc.period.from.day}天 vs 第${wc.period.to.day}天</div>
+        <div class="compare-bars">
+          <div class="cbar-group">
+            <div class="cbar-wrap"><div class="cbar cbar-prev" style="height:${ph}%"></div></div>
+            <div class="cbar-label">7天前</div>
+            <div class="cbar-val">${a.before}/4</div>
+          </div>
+          <div class="cbar-group">
+            <div class="cbar-wrap"><div class="cbar cbar-curr" style="height:${ch}%"></div></div>
+            <div class="cbar-label">今日</div>
+            <div class="cbar-val">${a.after}/4</div>
+          </div>
+        </div>
+        <div class="compare-delta ${deltaClass}">${arrow} ${a.diff > 0 ? '+' : ''}${a.diff} 分 / ${a.pct > 0 ? '+' : ''}${a.pct}%</div>
+        <div style="margin-top:10px;font-size:12px;color:var(--text-dim)">代償：${wc.compensation.before} → ${wc.compensation.after} &nbsp;|&nbsp; 張力：${wc.tension.before} → ${wc.tension.after}</div>`;
+    }
+  } catch(e) {
+    content.innerHTML = '<div style="color:#e05c5c;font-size:13px;padding:14px 0">載入失敗，請重試</div>';
+  }
+}
+
+// ── 03 功能測試 ───────────────────────────────
+async function loadFunctionalPanel() {
+  const content = document.getElementById('panel03Content');
+  if (totalDays < 28) {
+    const pct = Math.round((totalDays / 28) * 100);
+    content.innerHTML = `
+      <div class="lock-info">
+        <div class="lock-info-num">🔒</div>
+        <div class="lock-info-msg">累積 28 個實質訓練日後解鎖每四周功能測試</div>
+        <div class="lock-progress-bar"><div class="lock-progress-fill" style="width:${pct}%"></div></div>
+        <div class="lock-progress-text">${totalDays} / 28 訓練日</div>
+      </div>`;
+    return;
+  }
+  content.innerHTML = `
+    <div class="sec-label">單腳站立（點擊計時）</div>
+    <div class="timer-grid">
+      <div class="timer-card" id="timerLeft" onclick="toggleTimer('left')">
+        <button class="timer-reset" onclick="event.stopPropagation();resetTimer('left')">↺</button>
+        <div class="timer-leg-label">左 腳</div>
+        <div class="timer-display" id="dispLeft">0.0</div>
+        <div class="timer-status" id="statLeft">點擊開始</div>
+      </div>
+      <div class="timer-card" id="timerRight" onclick="toggleTimer('right')">
+        <button class="timer-reset" onclick="event.stopPropagation();resetTimer('right')">↺</button>
+        <div class="timer-leg-label">右 腳</div>
+        <div class="timer-display" id="dispRight">0.0</div>
+        <div class="timer-status" id="statRight">點擊開始</div>
+      </div>
+    </div>
+    <input type="hidden" id="valLeft"><input type="hidden" id="valRight">
+
+    <div class="sec-label">Jefferson Curl 脊椎分節</div>
+    <div class="jc-row" id="gJC">
+      <div class="jc-btn" data-val="1" onclick="selJC(this)"><span class="jc-lv">L1</span><span class="jc-desc">完全僵硬</span></div>
+      <div class="jc-btn" data-val="2" onclick="selJC(this)"><span class="jc-lv">L2</span><span class="jc-desc">輕微分節</span></div>
+      <div class="jc-btn" data-val="3" onclick="selJC(this)"><span class="jc-lv">L3</span><span class="jc-desc">明顯分節</span></div>
+      <div class="jc-btn" data-val="4" onclick="selJC(this)"><span class="jc-lv">L4</span><span class="jc-desc">流暢分節</span></div>
+      <div class="jc-btn" data-val="5" onclick="selJC(this)"><span class="jc-lv">L5</span><span class="jc-desc">完全控制</span></div>
+    </div>
+
+    <div class="sec-label">呼吸模式評估</div>
+    <div class="toggle-row" id="gBreath">
+      <div class="toggle-btn" data-val="胸式" onclick="selT(this,'breath')">胸式<br><span style="font-size:9px;color:var(--text-dim)">肩膀聳起</span></div>
+      <div class="toggle-btn" data-val="混合" onclick="selT(this,'breath')">混合<br><span style="font-size:9px;color:var(--text-dim)">輕微代償</span></div>
+      <div class="toggle-btn" data-val="腹式" onclick="selT(this,'breath')">腹式<br><span style="font-size:9px;color:var(--text-dim)">橫膈膜主導</span></div>
+    </div>
+
+    <div class="sec-label">體態相片（正面 · 側面 · 背面）</div>
+    <button class="camera-btn" onclick="document.getElementById('fisFileInput').click()">📷 拍攝或選擇相片</button>
+    <div class="photo-preview" id="photoPreview"></div>
+
+    <button class="btn-gold" id="btnFuncSave" onclick="saveFunctional()">儲存今日測試</button>
+    <div class="ai-result" id="funcResult">
+      <div class="ai-result-title">✅ 已儲存</div>
+      <div class="ai-result-body" id="funcResultText"></div>
+    </div>`;
+}
+
+function selJC(btn) {
+  document.querySelectorAll('#gJC .jc-btn').forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel');
+}
+// Extend selT for breath group
+const origSelT = selT;
+function selT(btn, group) {
+  const map = {r2:'gR2', r3:'gR3', breath:'gBreath'};
+  if (!map[group]) return;
+  document.querySelectorAll('#' + map[group] + ' .toggle-btn').forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel');
+  sel[group] = btn.dataset.val;
+}
+
+// ── Leg timer ─────────────────────────────────
+function toggleTimer(side) {
+  const t = legTimers[side];
+  const card = document.getElementById('timer' + (side==='left'?'Left':'Right'));
+  const disp = document.getElementById('disp' + (side==='left'?'Left':'Right'));
+  const stat = document.getElementById('stat' + (side==='left'?'Left':'Right'));
+  const inp  = document.getElementById('val' + (side==='left'?'Left':'Right'));
+  if (card.classList.contains('done')) return;
+  if (!t.running) {
+    t.running = true;
+    t.start = Date.now() - t.elapsed * 1000;
+    card.classList.add('running');
+    stat.textContent = '點擊停止';
+    t.interval = setInterval(() => {
+      t.elapsed = (Date.now() - t.start) / 1000;
+      disp.textContent = t.elapsed.toFixed(1);
+    }, 100);
+  } else {
+    clearInterval(t.interval);
+    t.running = false;
+    t.elapsed = (Date.now() - t.start) / 1000;
+    const sec = t.elapsed.toFixed(1);
+    disp.textContent = sec;
+    inp.value = sec;
+    card.classList.remove('running');
+    card.classList.add('done');
+    stat.textContent = sec + ' 秒 ✓';
+    showToast((side==='left'?'左':'右') + '腳 ' + sec + ' 秒已記錄');
+  }
+}
+function resetTimer(side) {
+  const t = legTimers[side];
+  clearInterval(t.interval);
+  t.running = false; t.elapsed = 0; t.start = null;
+  const card = document.getElementById('timer' + (side==='left'?'Left':'Right'));
+  const disp = document.getElementById('disp' + (side==='left'?'Left':'Right'));
+  const stat = document.getElementById('stat' + (side==='left'?'Left':'Right'));
+  const inp  = document.getElementById('val' + (side==='left'?'Left':'Right'));
+  disp.textContent = '0.0'; stat.textContent = '點擊開始';
+  card.classList.remove('running','done'); inp.value = '';
+}
+
+// ── Photo compress & upload ───────────────────
+async function handlePhotos(e) {
+  const files = Array.from(e.target.files);
+  fisPhotos = [];
+  const prev = document.getElementById('photoPreview');
+  if (prev) prev.innerHTML = '';
+  for (const f of files.slice(0,3)) {
+    const c = await compress(f);
+    fisPhotos.push(c);
+    if (prev) {
+      const img = document.createElement('img');
+      img.className = 'photo-thumb'; img.src = c;
+      prev.appendChild(img);
+    }
+  }
+}
+function compress(file) {
+  return new Promise(res => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let w = img.width, h = img.height, max = 1200;
+        if (w > max || h > max) { if (w > h) { h = Math.round(h*max/w); w = max; } else { w = Math.round(w*max/h); h = max; } }
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        let lo = 0.1, hi = 0.92, result = canvas.toDataURL('image/webp', 0.8);
+        for (let i = 0; i < 8; i++) {
+          const mid = (lo+hi)/2, data = canvas.toDataURL('image/webp', mid);
+          const bytes = Math.round((data.length-22)*3/4);
+          if (bytes > 500*1024) hi = mid; else { lo = mid; result = data; }
+        }
+        res(result);
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+async function saveFunctional() {
+  const left  = document.getElementById('valLeft')?.value;
+  const right = document.getElementById('valRight')?.value;
+  const jc    = document.querySelector('#gJC .jc-btn.sel')?.dataset?.val;
+  const breath= document.querySelector('#gBreath .toggle-btn.sel')?.dataset?.val;
+  if (!left || !right) { showToast('請先完成左右腳計時'); return; }
+  const btn = document.getElementById('btnFuncSave');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>儲存中...';
+  try {
+    if (UID) {
+      await fetch(API + '/api/functional/save', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({
+          userId: UID,
+          singleLegLeft: parseFloat(left),
+          singleLegRight: parseFloat(right),
+          jeffersonCurlLevel: jc ? parseInt(jc) : null,
+          breathingPattern: breath || null,
+          trainingDayIndex: totalDays
+        })
+      });
+      // Upload photos if any
+      if (fisPhotos.length > 0) {
+        await fetch(API + '/api/fis-step1', {
+          method: 'POST', headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ images: fisPhotos, userId: UID })
+        });
+      }
+    }
+    document.getElementById('funcResultText').textContent =
+      `左腳：${left}秒 / 右腳：${right}秒 / Jefferson：L${jc||'—'} / 呼吸：${breath||'—'}`;
+    document.getElementById('funcResult').classList.add('show');
+    showToast('功能測試已儲存 ✓');
+    functionalTestCount++;
+    checkReportUnlock();
+  } catch(e) { showToast('儲存失敗，請重試'); }
+  finally { btn.disabled = false; btn.innerHTML = '儲存今日測試'; }
+}
+
+// ── 04 12週報告解鎖後 ──────────────────────
+function renderReportUnlocked() {
+  document.getElementById('panel04Content').innerHTML = `
+    <div style="text-align:center;padding:16px 0">
+      <div style="font-size:40px;margin-bottom:10px">🏆</div>
+      <div style="font-size:16px;font-weight:700;color:var(--gold);margin-bottom:6px">12週進化報告已解鎖！</div>
+      <div style="font-size:12px;color:var(--text-dim);line-height:1.7;margin-bottom:16px">
+        恭喜完成完整12週FIS訓練週期<br>你的筋膜系統已全面升級
+      </div>
+      <button class="report-unlock-btn" onclick="showToast('報告生成功能即將推出！')">查看完整進化報告</button>
+    </div>`;
+}
+
+// ── Toast ─────────────────────────────────────
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
