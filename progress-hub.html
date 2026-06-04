@@ -200,6 +200,71 @@ textarea.notes-ta { width: 100%; background: var(--bg4); border: 1px solid rgba(
 .bnav-label { font-size: 9px; color: var(--text-dim); }
 .bnav-item.active .bnav-icon, .bnav-item.active .bnav-label { color: var(--gold); }
 
+/* ── 筋膜線選擇器 ── */
+.fascial-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-top: 8px;
+}
+.fascial-btn {
+  background: var(--bg4);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  padding: 10px 4px;
+  text-align: center;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-dim);
+  font-family: 'Noto Sans HK', sans-serif;
+  line-height: 1.4;
+  transition: all .15s;
+}
+.fascial-btn.fascial-combo {
+  grid-column: span 2;
+  font-size: 12px;
+}
+.fascial-btn.sel {
+  border-color: var(--gold);
+  background: rgba(255,200,69,0.12);
+  color: var(--gold);
+}
+/* 體感提示文字 */
+.sense-hint-single {
+  background: rgba(255,200,69,0.06);
+  border-left: 2px solid var(--gold-dim);
+  border-radius: 0 8px 8px 0;
+  padding: 8px 12px;
+  font-size: 12px;
+  color: var(--gold);
+  line-height: 1.6;
+}
+.sense-hint-double {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.sense-hint-line {
+  background: rgba(255,200,69,0.06);
+  border-left: 2px solid var(--gold-dim);
+  border-radius: 0 8px 8px 0;
+  padding: 7px 12px;
+  font-size: 12px;
+  color: var(--gold);
+  line-height: 1.5;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.sense-hint-num {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 14px;
+  color: var(--gold-dim);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
 .page-body { padding: 0 0 100px; }
 </style>
 </head>
@@ -249,7 +314,26 @@ textarea.notes-ta { width: 100%; background: var(--bg4); border: 1px solid rgba(
     <!-- Panel 01 (跨兩欄) -->
     <div class="panel-wrap" id="panelWrap01">
       <div class="panel">
-        <div class="sec-label">指標一 - 目標肌肉發力感</div>
+
+        <!-- 筋膜線選擇 -->
+        <div class="sec-label">今日訓練筋膜線</div>
+        <div class="fascial-grid" id="fascialGrid">
+          <div class="fascial-btn" data-val="深前線" onclick="selFascial(this)">深前線</div>
+          <div class="fascial-btn" data-val="側線" onclick="selFascial(this)">側線</div>
+          <div class="fascial-btn" data-val="螺旋線" onclick="selFascial(this)">螺旋線</div>
+          <div class="fascial-btn" data-val="淺背線" onclick="selFascial(this)">淺背線</div>
+          <div class="fascial-btn" data-val="淺前線" onclick="selFascial(this)">淺前線</div>
+          <div class="fascial-btn fascial-combo" data-val="深前線+側線" onclick="selFascial(this)">深前線<br>+側線</div>
+          <div class="fascial-btn fascial-combo" data-val="螺旋線+淺背線" onclick="selFascial(this)">螺旋線<br>+淺背線</div>
+        </div>
+
+        <!-- 指標一：動態標題 + 動態副文字 -->
+        <div class="sec-label" style="margin-top:20px">
+          指標一 -
+          <span id="r1DynLabel" style="color:var(--text-dim);font-size:9px;letter-spacing:1px;font-weight:400">請先選擇今日訓練的筋膜線</span>
+        </div>
+        <!-- 動態體感提示（無頁面跳動，用 min-height 固定高度）-->
+        <div id="r1SenseHint" style="min-height:36px;margin-bottom:10px;transition:opacity .25s ease;opacity:0"></div>
         <div class="rating-row" id="gR1">
           <div class="rating-btn" data-val="1" onclick="selR(this,'r1')"><div class="r-num">1</div><div class="r-label">完全感受唔到</div></div>
           <div class="rating-btn" data-val="2" onclick="selR(this,'r1')"><div class="r-num">2</div><div class="r-label">偶爾感受到</div></div>
@@ -362,6 +446,72 @@ const legTimers = {
 };
 // Track which panel is open
 let openCard = null;
+
+// ── 筋膜線體感文字對照表 ──────────────────────
+const FASCIAL_MAP = {
+  '深前線': {
+    label: '下腹深層穩定感與大腿內側發力感',
+    hints: ['下腹深層穩定感與大腿內側發力感']
+  },
+  '側線': {
+    label: '臀中肌發力感（骨盆兩側）',
+    hints: ['臀中肌發力感（骨盆兩側）']
+  },
+  '螺旋線': {
+    label: '腹斜肌與前鋸肌聯動感',
+    hints: ['腹斜肌與前鋸肌聯動感']
+  },
+  '淺背線': {
+    label: '膕繩肌（後腿）與豎脊肌發力感',
+    hints: ['膕繩肌（後腿）與豎脊肌發力感']
+  },
+  '淺前線': {
+    label: '腹直肌發力與股直肌（大腿前側中間）拉長發力聯動感',
+    hints: ['腹直肌發力與股直肌（大腿前側中間）拉長發力聯動感']
+  },
+  '深前線+側線': {
+    label: '深前線 + 側線聯動感',
+    hints: [
+      '下腹深層穩定感與大腿內側發力感',
+      '臀中肌發力感（骨盆兩側）'
+    ]
+  },
+  '螺旋線+淺背線': {
+    label: '螺旋線 + 淺背線聯動感',
+    hints: [
+      '腹斜肌與前鋸肌聯動感',
+      '膕繩肌（後腿）與豎脊肌發力感'
+    ]
+  }
+};
+
+let selectedFascial = null;
+
+function selFascial(btn) {
+  // Deselect all
+  document.querySelectorAll('#fascialGrid .fascial-btn').forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel');
+  selectedFascial = btn.dataset.val;
+
+  const map = FASCIAL_MAP[selectedFascial];
+  const hintEl = document.getElementById('r1SenseHint');
+  const labelEl = document.getElementById('r1DynLabel');
+
+  // Fade out → update → fade in (no layout shift)
+  hintEl.style.opacity = '0';
+  setTimeout(() => {
+    if (map.hints.length === 1) {
+      hintEl.innerHTML = `<div class="sense-hint-single">${map.hints[0]}</div>`;
+    } else {
+      hintEl.innerHTML = `<div class="sense-hint-double">
+        ${map.hints.map((h, i) => `<div class="sense-hint-line"><span class="sense-hint-num">${i+1}.</span><span>${h}</span></div>`).join('')}
+      </div>`;
+    }
+    labelEl.textContent = map.label;
+    labelEl.style.color = 'var(--gold-dim)';
+    hintEl.style.opacity = '1';
+  }, 200);
+}
 
 // ── Init ──────────────────────────────────────
 async function init() {
@@ -488,20 +638,21 @@ function toggleNotes() {
 }
 
 async function analyze() {
+  if (!selectedFascial) { showToast('請先選擇今日訓練的筋膜線'); return; }
   if (!sel.r1 || !sel.r2 || !sel.r3) { showToast('請填寫全部三個指標'); return; }
   const btn = document.getElementById('btnAnalyze');
   btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>分析中...';
   try {
     const r = await fetch(API + '/api/progress', {
       method: 'POST', headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ rating: sel.r1, backPain: sel.r2, tensionSpeed: sel.r3 })
+      body: JSON.stringify({ rating: sel.r1, backPain: sel.r2, tensionSpeed: sel.r3, fascialLine: selectedFascial })
     });
     const d = await r.json();
     const aiText = d.result || '分析完成';
     document.getElementById('aiText').textContent = aiText;
     document.getElementById('aiResult').classList.add('show');
 
-    // 儲存落 D1
+    // 儲存落 D1（包含筋膜線組合）
     if (UID) {
       totalDays++;
       await fetch(API + '/api/progress/save', {
@@ -511,6 +662,7 @@ async function analyze() {
           muscleActivation: parseInt(sel.r1),
           backCompensation: sel.r2,
           tensionSpeed: sel.r3,
+          trainingType: selectedFascial,
           trainingDayIndex: totalDays,
           notes: aiText
         })
