@@ -4,1592 +4,424 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="FIS">
-<meta name="theme-color" content="#050d1a">
-<link rel="apple-touch-icon" href="fis-icon.png">
-<link rel="icon" type="image/png" href="fis-icon.png">
-<link rel="manifest" href="manifest.json">
-<title>FIS Training Toolkit</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+HK:wght@300;400;500;700;900&family=Bebas+Neue&display=swap" rel="stylesheet">
+<meta name="theme-color" content="#0a0f1e">
+<title>FIS 訓練工具</title>
 <style>
 :root {
-  --gold: #ffc845;
-  --gold-dim: #b38a30;
-  --bg: #2a3d63;
-  --bg2: #243558;
-  --bg3: #1e2d4d;
-  --bg4: #182542;
-  --text: #fdf5e5;
-  --text-dim: #b8a898;
+  --bg:#0a0f1e;--bg2:#111827;--card:#131d35;--card2:#1a2540;
+  --gold:#f5c842;--gold2:#c9a030;--gold-glow:rgba(245,200,66,0.12);
+  --green:#22d3a0;--red:#f56565;--text:#e2e8f4;--dim:#64748b;
+  --border:rgba(245,200,66,0.18);--r:16px;
 }
-* { margin: 0; padding: 0; box-sizing: border-box; }
-html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'Noto Sans HK', sans-serif; overflow-x: hidden; }
-.screen { display: none; min-height: 100vh; flex-direction: column; background: var(--bg); }
-.screen.active { display: flex; }
-#disclaimer { padding: 40px 24px; justify-content: center; }
-.dis-logo { font-family: 'Bebas Neue', sans-serif; font-size: 56px; color: var(--gold); letter-spacing: 4px; margin-bottom: 4px; }
-.dis-sub { font-size: 11px; letter-spacing: 3px; color: var(--text-dim); margin-bottom: 40px; }
-.dis-title { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 20px; }
-.dis-point { display: flex; gap: 12px; margin-bottom: 16px; }
-.dis-num { width: 24px; height: 24px; min-width: 24px; background: rgba(255,200,69,0.15); border: 1px solid var(--gold-dim); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--gold); font-weight: 700; }
-.dis-text { font-size: 13px; color: var(--text-dim); line-height: 1.6; }
-.dis-text strong { color: var(--text); display: block; margin-bottom: 2px; }
-.dis-divider { height: 1px; background: rgba(255,255,255,0.1); margin: 24px 0; }
-#home { padding-bottom: 80px; }
-.home-header { padding: 60px 28px 0; }
-.brand-tag { display: inline-block; font-size: 10px; letter-spacing: 4px; color: var(--gold); border: 1px solid var(--gold-dim); padding: 4px 12px; margin-bottom: 20px; }
-.home-title { font-family: 'Bebas Neue', sans-serif; font-size: 72px; line-height: 0.9; margin-bottom: 6px; letter-spacing: 2px; }
-.home-title span { color: var(--gold); }
-.home-sub { font-size: 13px; color: var(--text-dim); letter-spacing: 1px; margin-bottom: 40px; }
-.home-line { width: 40px; height: 2px; background: var(--gold); margin-bottom: 40px; }
-.module-grid { padding: 0 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.module-card { background: var(--bg3); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 20px 16px; display: flex; flex-direction: column; gap: 10px; min-height: 140px; cursor: pointer; }
-.module-num { font-family: 'Bebas Neue', sans-serif; font-size: 11px; letter-spacing: 3px; color: var(--gold-dim); }
-.module-name { font-size: 14px; font-weight: 700; line-height: 1.3; }
-.module-desc { font-size: 11px; color: var(--text-dim); line-height: 1.4; margin-top: auto; }
-.module-icon { font-size: 13px; font-weight: 700; color: var(--gold); }
-.s-header { padding: 52px 24px 20px; background: var(--bg2); border-bottom: 1px solid rgba(255,255,255,0.05); }
-.back-btn { font-size: 13px; color: var(--gold); cursor: pointer; margin-bottom: 12px; display: inline-block; }
-.s-title { font-family: 'Bebas Neue', sans-serif; font-size: 36px; letter-spacing: 2px; line-height: 1; }
-.s-sub { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
-.s-body { flex: 1; padding: 24px 20px 120px; overflow-y: auto; }
-.bnav { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(24,37,66,0.97); border-top: 1px solid rgba(255,255,255,0.08); display: flex; padding: 8px 0 20px; z-index: 999; }
-.bnav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 0; cursor: pointer; }
-.bnav-icon { font-size: 11px; font-weight: 700; color: var(--text-dim); }
-.bnav-label { font-size: 9px; color: var(--text-dim); }
-.bnav-item.active .bnav-icon, .bnav-item.active .bnav-label { color: var(--gold); }
-.sec-label { font-size: 10px; letter-spacing: 3px; color: var(--gold); text-transform: uppercase; margin-bottom: 12px; margin-top: 28px; }
-.sec-label:first-child { margin-top: 0; }
-.info-card { background: var(--bg3); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
-.info-card-title { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
-.file-list { background: var(--bg4); border-radius: 10px; padding: 12px; margin-top: 8px; }
-.file-item { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 12px; color: var(--text-dim); }
-.file-item:last-child { border-bottom: none; }
-.file-dot { width: 6px; height: 6px; background: var(--gold); border-radius: 50%; flex-shrink: 0; }
-.step-row { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 16px; }
-.step-num { width: 28px; height: 28px; min-width: 28px; background: var(--gold); color: #2a3d63; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
-.step-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
-.step-desc { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
-.btn-gold { background: var(--gold); color: #2a3d63; border: none; border-radius: 10px; padding: 14px 24px; font-size: 14px; font-weight: 700; font-family: 'Noto Sans HK', sans-serif; cursor: pointer; width: 100%; margin-top: 8px; display: block; }
-.btn-outline { background: transparent; color: var(--gold); border: 1px solid var(--gold-dim); border-radius: 10px; padding: 12px 24px; font-size: 13px; font-weight: 500; font-family: 'Noto Sans HK', sans-serif; cursor: pointer; width: 100%; margin-top: 8px; display: block; }
-.dis-btn { background: var(--gold); color: #2a3d63; border: none; border-radius: 16px; padding: 20px 24px; font-size: 16px; font-weight: 900; font-family: 'Noto Sans HK', sans-serif; cursor: pointer; width: 100%; display: block; margin-top: 8px; }
-.ai-result { display: none; background: var(--bg3); border: 1px solid var(--gold-dim); border-radius: 12px; padding: 16px; margin-top: 16px; }
-.ai-result.show { display: block; }
-.ai-result-title { font-size: 11px; letter-spacing: 3px; color: var(--gold); margin-bottom: 10px; }
-.ai-result-body { font-size: 13px; color: var(--text); line-height: 1.7; white-space: pre-line; }
-.rating-row { display: flex; gap: 8px; margin-top: 8px; }
-.rating-btn { flex: 1; background: var(--bg4); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 10px 4px; text-align: center; cursor: pointer; }
-.r-num { font-size: 18px; font-weight: 900; color: var(--text-dim); }
-.r-label { font-size: 9px; color: var(--text-dim); line-height: 1.3; margin-top: 2px; }
-.rating-btn.sel { border-color: var(--gold); background: rgba(255,200,69,0.1); }
-.rating-btn.sel .r-num, .rating-btn.sel .r-label { color: var(--gold); }
-.toggle-row { display: flex; gap: 8px; margin-top: 8px; }
-.toggle-btn { flex: 1; background: var(--bg4); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 10px 8px; text-align: center; cursor: pointer; font-size: 13px; font-weight: 500; color: var(--text-dim); font-family: 'Noto Sans HK', sans-serif; }
-.toggle-btn.sel { border-color: var(--gold); color: var(--gold); background: rgba(255,200,69,0.1); }
-.body-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
-.body-btn { background: var(--bg3); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 14px 10px; text-align: center; cursor: pointer; }
-.body-btn .bp-icon { font-size: 13px; font-weight: 700; color: var(--gold); margin-bottom: 4px; }
-.body-btn .bp-name { font-size: 13px; font-weight: 500; color: var(--text-dim); }
-.body-btn.sel { border-color: var(--gold); background: rgba(255,200,69,0.08); }
-.body-btn.sel .bp-name { color: var(--gold); }
-textarea.sym { width: 100%; background: var(--bg3); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 14px; color: var(--text); font-size: 14px; font-family: 'Noto Sans HK', sans-serif; resize: none; height: 100px; line-height: 1.6; outline: none; margin-top: 8px; }
-.wu-toggle { display: flex; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; overflow: hidden; margin-bottom: 20px; }
-.wu-btn { flex: 1; padding: 12px; text-align: center; font-size: 12px; font-weight: 600; cursor: pointer; background: var(--bg3); color: var(--text-dim); border: none; font-family: 'Noto Sans HK', sans-serif; }
-.wu-btn.active { background: var(--gold); color: #2a3d63; }
-.wu-section { display: none; }
-.wu-section.active { display: block; }
-.wu-item { display: flex; gap: 12px; padding: 14px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
-.wu-item:last-child { border-bottom: none; }
-.wu-num { width: 26px; height: 26px; min-width: 26px; border: 1px solid var(--gold-dim); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--gold); font-weight: 700; }
-.wu-name { font-size: 14px; font-weight: 600; margin-bottom: 3px; }
-.wu-detail { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
-.wu-sets { font-size: 11px; color: var(--gold-dim); margin-top: 4px; font-weight: 600; }
-.progress-bar-wrap { background: var(--bg4); border-radius: 20px; height: 6px; margin: 8px 0; overflow: hidden; }
-.progress-bar-fill { height: 100%; background: var(--gold); border-radius: 20px; width: 0%; transition: width 0.3s ease; }
-.progress-text { font-size: 13px; color: var(--gold); text-align: center; margin-top: 6px; font-weight: 700; }
-.dbox { background: rgba(255,200,69,0.05); border: 1px solid rgba(255,200,69,0.2); border-radius: 10px; padding: 12px; margin-bottom: 20px; font-size: 11px; color: var(--gold-dim); line-height: 1.6; }
-.history-item { background: var(--bg3); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; }
-.history-date { font-size: 10px; color: var(--gold-dim); margin-bottom: 6px; }
-.history-scores { display: flex; gap: 8px; flex-wrap: wrap; font-size: 12px; color: var(--text-dim); }
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Noto Serif TC','Hiragino Sans GB',serif;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");opacity:.4}
+.ambient{position:fixed;border-radius:50%;filter:blur(80px);pointer-events:none;z-index:0}
+.a1{width:400px;height:400px;top:-100px;right:-100px;background:rgba(245,200,66,0.06)}
+.a2{width:300px;height:300px;bottom:100px;left:-80px;background:rgba(34,211,160,0.04)}
+.screen{display:none;flex-direction:column;min-height:100vh;position:relative;z-index:1;padding-bottom:88px}
+.screen.active{display:flex;animation:fadeUp .35s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.header{padding:52px 20px 20px;border-bottom:1px solid var(--border);display:flex;align-items:flex-end;justify-content:space-between}
+.app-tag{font-size:10px;letter-spacing:3px;color:var(--gold);font-family:'DM Mono',monospace;margin-bottom:6px}
+.app-title{font-size:28px;font-weight:900;color:#fff;line-height:1.1}
+.app-sub{font-size:12px;color:var(--dim);margin-top:4px}
+.user-badge{background:var(--card2);border:1px solid var(--border);border-radius:30px;padding:6px 12px;font-size:11px;color:var(--gold);cursor:pointer;font-family:'DM Mono',monospace}
+.day-counter{margin:16px 20px 0;background:linear-gradient(135deg,rgba(245,200,66,0.1),rgba(245,200,66,0.03));border:1px solid var(--border);border-radius:var(--r);padding:14px 18px;display:flex;align-items:center;gap:14px}
+.day-num{font-size:42px;font-weight:900;color:var(--gold);font-family:'DM Mono',monospace;line-height:1}
+.day-label{font-size:10px;letter-spacing:2px;color:var(--dim);margin-bottom:2px}
+.day-title{font-size:14px;font-weight:700}
+.day-bar{margin-top:6px;height:3px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden}
+.day-bar-fill{height:100%;background:var(--gold);border-radius:2px;transition:width 1s ease}
+.unlock-banner{display:none;margin:12px 20px 0;background:linear-gradient(135deg,rgba(34,211,160,0.15),rgba(34,211,160,0.05));border:1px solid rgba(34,211,160,0.4);border-radius:var(--r);padding:14px 18px;align-items:center;gap:12px;animation:pulse 2.5s ease-in-out infinite}
+.unlock-banner.show{display:flex}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(34,211,160,0.2)}50%{box-shadow:0 0 0 8px rgba(34,211,160,0)}}
+.banner-btn{background:var(--green);color:#0a0f1e;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;flex-shrink:0}
+.quest-list{padding:16px 20px;display:flex;flex-direction:column;gap:12px}
+.quest-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--r);overflow:hidden;transition:transform .2s,border-color .2s;cursor:pointer}
+.quest-card:active{transform:scale(0.985)}
+.quest-card.locked{border-color:rgba(255,255,255,0.06);cursor:default}
+.quest-card.locked:active{transform:none}
+.quest-card.active-card{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold),0 8px 32px rgba(245,200,66,0.12)}
+.qh{padding:14px 16px 12px;display:flex;align-items:center;gap:12px}
+.q-icon{font-size:22px;flex-shrink:0}
+.q-meta{flex:1}
+.q-tag{display:inline-block;font-size:9px;letter-spacing:1.5px;padding:2px 7px;border-radius:20px;margin-bottom:5px;font-family:'DM Mono',monospace;font-weight:600}
+.tag-always{background:rgba(245,200,66,0.15);color:var(--gold)}
+.tag-7{background:rgba(34,211,160,0.12);color:var(--green)}
+.tag-28{background:rgba(139,92,246,0.12);color:#a78bfa}
+.tag-84{background:rgba(255,255,255,0.06);color:var(--dim)}
+.q-name{font-size:15px;font-weight:700}
+.q-status{font-size:11px;color:var(--dim);margin-top:2px}
+.q-pw{padding:0 16px 14px}
+.q-pt{height:3px;background:rgba(255,255,255,0.07);border-radius:2px;overflow:hidden}
+.q-pf{height:100%;border-radius:2px;transition:width 1s ease}
+.fill-gold{background:var(--gold)}
+.fill-green{background:var(--green)}
+.fill-purple{background:#a78bfa}
+.quest-panel{padding:0 16px 16px;border-top:1px solid rgba(255,255,255,0.06);display:none}
+.quest-panel.open{display:block;animation:fadeDown .3s ease}
+@keyframes fadeDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+.ql{font-size:10px;letter-spacing:2px;color:var(--gold);font-family:'DM Mono',monospace;margin:14px 0 8px}
+.rating-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+.r-btn{background:var(--card2);border:1.5px solid rgba(255,255,255,0.08);border-radius:10px;padding:12px 4px;text-align:center;cursor:pointer;transition:all .15s;user-select:none}
+.r-num{font-size:20px;font-weight:700;color:var(--dim);display:block;margin-bottom:2px}
+.r-sub{font-size:9px;color:var(--dim);line-height:1.2}
+.r-btn.sel{background:var(--gold-glow);border-color:var(--gold)}
+.r-btn.sel .r-num,.r-btn.sel .r-sub{color:var(--gold)}
+.toggle-row{display:flex;gap:8px;margin-bottom:14px}
+.t-btn{flex:1;background:var(--card2);border:1.5px solid rgba(255,255,255,0.08);border-radius:10px;padding:10px 4px;text-align:center;cursor:pointer;font-size:13px;color:var(--dim);transition:all .15s;user-select:none}
+.t-btn.sel{background:var(--gold-glow);border-color:var(--gold);color:var(--gold)}
+.notes-toggle{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--dim);cursor:pointer;margin-bottom:8px;user-select:none}
+.notes-toggle .arr{font-size:9px;transition:transform .3s}
+.notes-toggle.open .arr{transform:rotate(90deg)}
+.notes-col{max-height:0;overflow:hidden;transition:max-height .4s ease,opacity .3s;opacity:0}
+.notes-col.open{max-height:120px;opacity:1}
+.notes-ta{width:100%;background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--text);font-family:inherit;font-size:13px;resize:none;height:70px;outline:none}
+.notes-ta::placeholder{color:var(--dim)}
+.cta{display:block;width:100%;background:var(--gold);color:#0a0f1e;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:14px;transition:transform .15s}
+.cta:active{transform:scale(0.98)}
+.cta:disabled{opacity:.4}
+.compare-card{background:rgba(0,0,0,0.25);border:1px solid var(--border);border-radius:12px;padding:14px;margin-top:14px}
+.ct{font-size:10px;letter-spacing:2px;color:var(--gold);font-family:'DM Mono',monospace;margin-bottom:12px}
+.c-bars{display:flex;gap:16px;align-items:flex-end;height:60px;margin-bottom:8px}
+.bg{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+.bw{width:100%;display:flex;align-items:flex-end;height:48px}
+.bar{width:100%;border-radius:4px 4px 0 0;transition:height .8s ease}
+.bp{background:rgba(245,200,66,0.3)}
+.bc{background:var(--gold)}
+.bl{font-size:9px;color:var(--dim)}
+.bv{font-size:11px;font-weight:700;color:var(--gold);font-family:'DM Mono',monospace}
+.cdelta{font-size:12px;text-align:right;font-family:'DM Mono',monospace;margin-top:4px}
+.du{color:var(--green)}.dd{color:var(--red)}
+.camera-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;background:var(--card2);border:1.5px dashed rgba(245,200,66,0.3);border-radius:12px;padding:16px;color:var(--gold);font-size:14px;cursor:pointer;font-family:inherit;margin-top:14px}
+.photo-preview{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.photo-thumb{aspect-ratio:1;border-radius:8px;object-fit:cover;background:var(--card2);border:1px solid var(--border)}
+.ai-box{background:rgba(245,200,66,0.05);border:1px solid var(--border);border-radius:10px;padding:12px;margin-top:12px;font-size:13px;line-height:1.7;display:none}
+.ai-box.show{display:block;animation:fadeDown .4s ease}
+.ai-lbl{font-size:10px;letter-spacing:2px;color:var(--gold);font-family:'DM Mono',monospace;margin-bottom:8px}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(10,15,30,0.3);border-top-color:#0a0f1e;border-radius:50%;animation:spin .8s linear infinite;vertical-align:middle;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--card2);border:1px solid var(--gold);border-radius:30px;padding:10px 20px;font-size:13px;color:var(--gold);opacity:0;transition:all .3s;z-index:999;white-space:nowrap;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+nav{position:fixed;bottom:0;left:0;right:0;z-index:50;background:rgba(10,15,30,0.96);border-top:1px solid rgba(245,200,66,0.12);backdrop-filter:blur(20px);display:flex}
+.nb{flex:1;display:flex;flex-direction:column;align-items:center;padding:12px 0 10px;gap:3px;cursor:pointer;color:var(--dim);font-size:10px;border:none;background:none;font-family:inherit;transition:color .2s}
+.nb .ni{font-size:18px}
+.nb.active{color:var(--gold)}
 </style>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 </head>
 <body>
+<div class="ambient a1"></div>
+<div class="ambient a2"></div>
 
-<!-- DISCLAIMER -->
-<div id="disclaimer" class="screen active">
-  <div class="dis-logo">FIS</div>
-  <div class="dis-sub">FASCIAL INTEGRATION SYSTEM - TRAINING TOOLKIT</div>
-  <div class="dis-title">使用前請閱讀以下聲明</div>
-  <div class="dis-point"><div class="dis-num">1</div><div class="dis-text"><strong>教育性參考，非醫療診斷</strong>本工具提供嘅所有分析結果屬教育性體態參考，並非醫療診斷、物理治療建議或運動處方。</div></div>
-  <div class="dis-point"><div class="dis-num">2</div><div class="dis-text"><strong>個人差異</strong>每個人身體狀況唔同，AI分析結果僅供個人參考，實際效果因人而異。</div></div>
-  <div class="dis-point"><div class="dis-num">3</div><div class="dis-text"><strong>有傷患請先咨詢醫生</strong>如你有任何關節疼痛、舊患或傷患，請先咨詢醫生或物理治療師，再決定是否使用本工具。</div></div>
-  <div class="dis-point"><div class="dis-num">4</div><div class="dis-text"><strong>訓練中如有不適請立即停止</strong>訓練過程中如出現任何疼痛或不適，請立即停止並咨詢專業醫療人士。</div></div>
-  <div class="dis-divider"></div>
-  <button class="dis-btn" id="enterBtn">我已閱讀，進入訓練工具</button>
-</div>
+<div class="screen active" id="screen-home">
+  <div class="header">
+    <div>
+      <div class="app-tag">FIS · FASCIAL INTEGRATION SYSTEM</div>
+      <div class="app-title">筋膜進化<br>關卡系統</div>
+      <div class="app-sub">TRAINING TOOLKIT · <span id="uname">載入中...</span></div>
+    </div>
+    <div class="user-badge" onclick="editName()">✏️ 改名</div>
+  </div>
 
-<!-- HOME -->
-<div id="home" class="screen">
-  <div class="home-header">
-    <div class="brand-tag">FIS - FASCIAL INTEGRATION SYSTEM</div>
-    <div class="home-title">訓練<span>工具</span></div>
-    <div class="home-sub">TRAINING TOOLKIT - ALEXEY WONG</div>
-    <div class="home-line"></div>
-  </div>
-  <div class="module-grid">
-    <div class="module-card" id="btn-fis"><div class="module-icon">FIS</div><div class="module-num">01 - FIS</div><div class="module-name">筋膜線自我檢測</div><div class="module-desc">上載照片生成個人報告卡</div></div>
-    <div class="module-card" id="btn-progress"><div class="module-icon">DATA</div><div class="module-num">02 - 追蹤</div><div class="module-name">進步追蹤系統</div><div class="module-desc">AI分析今日訓練數據</div></div>
-    <div class="module-card" id="btn-pain"><div class="module-icon">RX</div><div class="module-num">03 - 診斷</div><div class="module-name">訓練痛點診斷</div><div class="module-desc">即時搵出筋膜線根源</div></div>
-    <div class="module-card" id="btn-warmup"><div class="module-icon">GO</div><div class="module-num">04 - 熱身</div><div class="module-name">今日熱身激活</div><div class="module-desc">上下身個人化熱身方案</div></div>
-  </div>
-  <div class="bnav">
-    <div class="bnav-item active" id="bnav-home-btn"><div class="bnav-icon">HOME</div><div class="bnav-label">主頁</div></div>
-    <div class="bnav-item" id="bnav-fis-btn"><div class="bnav-icon">FIS</div><div class="bnav-label">檢測</div></div>
-    <div class="bnav-item" id="bnav-progress-btn"><div class="bnav-icon">DATA</div><div class="bnav-label">追蹤</div></div>
-    <div class="bnav-item" id="bnav-pain-btn"><div class="bnav-icon">RX</div><div class="bnav-label">診斷</div></div>
-    <div class="bnav-item" id="bnav-warmup-btn"><div class="bnav-icon">GO</div><div class="bnav-label">熱身</div></div>
-  </div>
-</div>
-
-<!-- FIS -->
-<div id="fis" class="screen">
-  <div class="s-header">
-    <div class="back-btn" id="back-fis">&lt;- 返回</div>
-    <div class="s-title">筋膜線檢測</div>
-    <div class="s-sub">FIS SELF-ASSESSMENT</div>
-  </div>
-  <div class="s-body">
-    <div class="dbox">[!] 以下資訊屬教育性體態參考，並非醫療診斷。如有任何疼痛或傷患，請先咨詢醫生。</div>
-    <div class="sec-label">第一步 - 準備八個檔案</div>
-    <div class="info-card">
-      <div class="info-card-title">需要準備以下檔案</div>
-      <div class="file-list">
-        <div class="file-item"><div class="file-dot"></div>照片一：正面站立</div>
-        <div class="file-item"><div class="file-dot"></div>照片二：側面站立</div>
-        <div class="file-item"><div class="file-dot"></div>照片三：背面站立</div>
-        <div class="file-item"><div class="file-dot"></div>影片一：左腳單腳站立30秒</div>
-        <div class="file-item"><div class="file-dot"></div>影片二：右腳單腳站立30秒</div>
-        <div class="file-item"><div class="file-dot"></div>影片三：Jefferson Curl側面</div>
-        <div class="file-item"><div class="file-dot"></div>影片四：原地行走10步正面</div>
-        <div class="file-item"><div class="file-dot"></div>影片五：雙手舉高呼吸5下側面</div>
-      </div>
-    </div>
-    <div class="step-row">
-      <div class="step-num">1</div>
-      <div>
-        <div class="step-title">上載照片同影片</div>
-        <div class="step-desc">撳下面按鈕選擇八個檔案</div>
-        <label style="display:block;margin-top:12px;background:var(--bg4);border:1px dashed var(--gold-dim);border-radius:10px;padding:16px;text-align:center;cursor:pointer;">
-          <input type="file" id="fisFiles" multiple accept="image/*,video/*" style="display:none">
-          <div style="font-size:13px;color:var(--gold);margin-bottom:4px">[FILE] 撳此上載檔案</div>
-          <div style="font-size:11px;color:var(--text-dim)">支援圖片同影片</div>
-        </label>
-        <div id="fileCount" style="font-size:12px;color:var(--text-dim);margin-top:8px;text-align:center"></div>
-      </div>
-    </div>
-    <div class="step-row">
-      <div class="step-num">2</div>
-      <div style="flex:1">
-        <div class="step-title">AI分析體態特徵</div>
-        <div class="step-desc">上載完成後，撳以下按鈕開始分析</div>
-        <button class="btn-gold" id="btn-fis-step1">開始體態分析</button>
-        <div class="ai-result" id="fisStep1Result">
-          <div class="ai-result-title">體態觀察結果</div>
-          <div class="ai-result-body" id="fisStep1Text"></div>
-        </div>
-      </div>
-    </div>
-    <div class="step-row">
-      <div class="step-num">3</div>
-      <div style="flex:1">
-        <div class="step-title">生成筋膜線報告卡</div>
-        <button class="btn-outline" id="btn-fis-step2">生成筋膜線報告卡</button>
-        <div class="ai-result" id="fisStep2Result">
-          <div class="ai-result-title">FIS 個人化報告卡</div>
-          <div class="ai-result-body" id="fisStep2Text"></div>
-        </div>
-      </div>
-    </div>
-    <div class="step-row">
-      <div class="step-num">4</div>
-      <div style="flex:1">
-        <div class="step-title">生成視覺化參考圖</div>
-        <button class="btn-outline" id="btn-fis-step3">生成視覺化圖片</button>
-        <div id="fisImageResult" style="display:none;margin-top:12px">
-          <img id="fisImage" style="width:100%;border-radius:12px;border:1px solid var(--gold-dim);display:none" alt="">
-          <button class="btn-outline" id="btn-download">下載圖片</button>
-        </div>
-      </div>
+  <div class="day-counter">
+    <div class="day-num" id="dayNum">0</div>
+    <div>
+      <div class="day-label">ACTUAL TRAINING DAYS</div>
+      <div class="day-title">實質訓練日累積</div>
+      <div class="day-bar"><div class="day-bar-fill" id="dayFill" style="width:0%"></div></div>
     </div>
   </div>
-  <div class="bnav">
-    <div class="bnav-item" id="bnav-fis-home"><div class="bnav-icon">HOME</div><div class="bnav-label">主頁</div></div>
-    <div class="bnav-item active"><div class="bnav-icon">FIS</div><div class="bnav-label">檢測</div></div>
-    <div class="bnav-item" id="bnav-fis-progress"><div class="bnav-icon">DATA</div><div class="bnav-label">追蹤</div></div>
-    <div class="bnav-item" id="bnav-fis-pain"><div class="bnav-icon">RX</div><div class="bnav-label">診斷</div></div>
-    <div class="bnav-item" id="bnav-fis-warmup"><div class="bnav-icon">GO</div><div class="bnav-label">熱身</div></div>
-  </div>
-</div>
 
-<!-- PROGRESS → smart redirect, kept as ghost node for back-nav compatibility -->
-<div id="progress" class="screen" style="display:none"></div>
-
-<!-- DATA 01: 訓練筋膜日誌 (upgraded: functional banner + inline weekly) -->
-<div id="data-log" class="screen">
-
-  <!-- ▸ 4-week functional test banner (hidden by default, shown by JS) -->
-  <div id="functional-banner" style="display:none;margin:12px 16px 0;background:linear-gradient(135deg,rgba(255,200,50,0.15),rgba(255,200,50,0.05));border:1px solid rgba(255,200,50,0.55);border-radius:12px;padding:13px 14px;display:none;align-items:center;gap:10px">
-    <span style="font-size:20px;flex-shrink:0">🧪</span>
+  <div class="unlock-banner" id="unlockBanner">
+    <div style="font-size:24px">🔓</div>
     <div style="flex:1">
-      <div style="font-size:12px;color:var(--gold);font-weight:700;letter-spacing:.5px;margin-bottom:2px">第 4 周功能性評估到了</div>
-      <div style="font-size:11px;color:var(--text-dim)">立即記錄身體機能變化</div>
+      <strong style="display:block;color:var(--green);font-size:13px;margin-bottom:2px">第 28 訓練日達成！</strong>
+      <span style="font-size:11px;color:var(--dim)">FIS 筋膜線自我檢測已解鎖</span>
     </div>
-    <button onclick="goTo('data-functional')" style="background:var(--gold);color:#0f1c35;border:none;border-radius:8px;padding:7px 11px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;flex-shrink:0">開始測試</button>
+    <button class="banner-btn" onclick="openFIS()">立即檢測</button>
   </div>
 
-  <div class="s-header">
-    <div class="back-btn" id="back-data-log">&lt;- 返回</div>
-    <div class="s-title">訓練筋膜日誌</div>
-    <div class="s-sub">POST-WORKOUT - AI即時分析</div>
-  </div>
+  <div class="quest-list">
 
-  <div class="s-body">
-    <div class="sec-label">指標一 - 目標肌肉發力感</div>
-    <div class="rating-row">
-      <div class="rating-btn" data-group="r1" data-val="1"><div class="r-num">1</div><div class="r-label">完全感受唔到</div></div>
-      <div class="rating-btn" data-group="r1" data-val="2"><div class="r-num">2</div><div class="r-label">偶爾感受到</div></div>
-      <div class="rating-btn" data-group="r1" data-val="3"><div class="r-num">3</div><div class="r-label">大部分時間</div></div>
-      <div class="rating-btn" data-group="r1" data-val="4"><div class="r-num">4</div><div class="r-label">每一下都感受到</div></div>
-    </div>
-    <div class="sec-label">指標二 - 腰部代償感</div>
-    <div class="toggle-row">
-      <div class="toggle-btn" data-group="r2" data-val="有">有</div>
-      <div class="toggle-btn" data-group="r2" data-val="輕微">輕微</div>
-      <div class="toggle-btn" data-group="r2" data-val="無">無</div>
-    </div>
-    <div class="sec-label">指標三 - 90/90張力出現速度</div>
-    <div class="toggle-row">
-      <div class="toggle-btn" data-group="r3" data-val="5次後">5次後</div>
-      <div class="toggle-btn" data-group="r3" data-val="3次後">3次後</div>
-      <div class="toggle-btn" data-group="r3" data-val="1-2次">1-2次</div>
-    </div>
-    <button class="btn-gold" id="btn-analyze-progress" style="margin-top:24px">AI即時分析</button>
-    <div class="ai-result" id="progressResult">
-      <div class="ai-result-title">AI 分析結果</div>
-      <div class="ai-result-body" id="progressResultText"></div>
-    </div>
-    <div id="historySection" style="display:none;margin-top:20px">
-      <div class="sec-label">過往記錄</div>
-      <div id="historyList"></div>
-    </div>
-
-    <!-- ▸ Inline weekly section: hidden by default, shown by JS on weekends / 4+ sessions -->
-    <div id="inline-weekly-section" style="display:none;margin-top:32px;padding-top:24px;border-top:1px solid rgba(255,200,50,0.2)">
-      <div style="font-size:22px;font-weight:900;color:#fff;margin-bottom:2px">每週進步評估</div>
-      <div class="s-sub" style="margin-bottom:20px">WEEKLY · 對比上週狀態</div>
-
-      <!-- Mini chart: only shown when both weeks have data -->
-      <div id="inline-chart-card" style="display:none;background:rgba(0,0,0,0.25);border:1px solid rgba(255,200,50,0.25);border-radius:12px;padding:16px;margin-bottom:18px">
-        <div class="sec-label" style="margin-bottom:12px">發 力 分 數 對 比</div>
-        <div style="display:flex;gap:16px;align-items:flex-end;height:64px;margin-bottom:6px">
-          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
-            <div style="width:100%;display:flex;align-items:flex-end;height:52px">
-              <div id="inline-bar-prev" style="width:100%;border-radius:4px 4px 0 0;background:rgba(255,200,50,0.3);transition:height .6s ease"></div>
-            </div>
-            <div style="font-size:9px;color:var(--text-dim)">上週</div>
-            <div id="inline-val-prev" style="font-size:11px;font-weight:700;color:var(--gold)">—</div>
-          </div>
-          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
-            <div style="width:100%;display:flex;align-items:flex-end;height:52px">
-              <div id="inline-bar-curr" style="width:100%;border-radius:4px 4px 0 0;background:var(--gold);transition:height .6s ease"></div>
-            </div>
-            <div style="font-size:9px;color:var(--text-dim)">本週</div>
-            <div id="inline-val-curr" style="font-size:11px;font-weight:700;color:var(--gold)">—</div>
-          </div>
+    <!-- DATA -->
+    <div class="quest-card active-card" id="cardData">
+      <div class="qh" onclick="toggle('panelData')">
+        <div class="q-icon">📊</div>
+        <div class="q-meta">
+          <span class="q-tag tag-always">當天訓練計算</span>
+          <div class="q-name">02 · DATA 進步追蹤</div>
+          <div class="q-status" id="dataStatus">今日尚未記錄</div>
         </div>
-        <div id="inline-chart-delta" style="font-size:11px;text-align:right;font-family:monospace"></div>
+        <div>▾</div>
       </div>
-
-      <!-- Self-rating slider -->
-      <div class="sec-label">本週訓練自評（1-10分）</div>
-      <div style="display:flex;gap:12px;align-items:center;margin-bottom:18px">
-        <input type="range" id="weeklyScore" min="1" max="10" value="7" style="flex:1;accent-color:var(--gold)">
-        <span id="weeklyScoreVal" style="color:var(--gold);font-size:24px;font-weight:900;font-family:Bebas Neue,sans-serif;width:40px;text-align:center">7</span>
-      </div>
-
-      <!-- Collapsible: best improvement -->
-      <div style="margin-bottom:14px">
-        <div id="toggle-improve-btn" onclick="toggleWeeklyField('collapse-improve','toggle-improve-btn')" style="display:flex;align-items:center;gap:6px;cursor:pointer;margin-bottom:8px;user-select:none">
-          <span id="toggle-improve-arrow" style="color:var(--gold);font-size:10px;transition:transform .3s">▶</span>
-          <span class="sec-label" style="margin:0;cursor:pointer">本週最大改善（選填）</span>
+      <div class="q-pw"><div class="q-pt"><div class="q-pf fill-gold" style="width:100%"></div></div></div>
+      <div class="quest-panel" id="panelData">
+        <div class="ql">指 標 一 · 目 標 肌 肉 發 力 感</div>
+        <div class="rating-row" id="gR1">
+          <div class="r-btn" data-val="1" onclick="selR(this,'r1')"><span class="r-num">1</span><span class="r-sub">完全感受唔到</span></div>
+          <div class="r-btn" data-val="2" onclick="selR(this,'r1')"><span class="r-num">2</span><span class="r-sub">偶爾感受到</span></div>
+          <div class="r-btn" data-val="3" onclick="selR(this,'r1')"><span class="r-num">3</span><span class="r-sub">大部分時間</span></div>
+          <div class="r-btn" data-val="4" onclick="selR(this,'r1')"><span class="r-num">4</span><span class="r-sub">每一下都感受到</span></div>
         </div>
-        <div id="collapse-improve" style="max-height:0;overflow:hidden;transition:max-height .4s ease,opacity .3s;opacity:0">
-          <textarea id="weeklyImprove" placeholder="例如：深前線激活感明顯提升..." style="width:100%;background:rgba(0,0,0,0.3);border:1px solid var(--gold-dim);border-radius:10px;padding:12px;color:var(--text);font-family:inherit;font-size:13px;resize:none;height:80px;outline:none"></textarea>
+        <div class="ql">指 標 二 · 腰 部 代 償 感</div>
+        <div class="toggle-row" id="gR2">
+          <div class="t-btn" data-val="有" onclick="selT(this,'r2')">有</div>
+          <div class="t-btn" data-val="輕微" onclick="selT(this,'r2')">輕微</div>
+          <div class="t-btn" data-val="無" onclick="selT(this,'r2')">無</div>
         </div>
-      </div>
-
-      <!-- Collapsible: still needs work -->
-      <div style="margin-bottom:20px">
-        <div id="toggle-todo-btn" onclick="toggleWeeklyField('collapse-todo','toggle-todo-btn')" style="display:flex;align-items:center;gap:6px;cursor:pointer;margin-bottom:8px;user-select:none">
-          <span id="toggle-todo-arrow" style="color:var(--gold);font-size:10px;transition:transform .3s">▶</span>
-          <span class="sec-label" style="margin:0;cursor:pointer">本週仍需改善（選填）</span>
+        <div class="ql">指 標 三 · 9 0 / 9 0 張 力 速 度</div>
+        <div class="toggle-row" id="gR3">
+          <div class="t-btn" data-val="5次後" onclick="selT(this,'r3')">5次後</div>
+          <div class="t-btn" data-val="3次後" onclick="selT(this,'r3')">3次後</div>
+          <div class="t-btn" data-val="1-2次" onclick="selT(this,'r3')">1-2次</div>
         </div>
-        <div id="collapse-todo" style="max-height:0;overflow:hidden;transition:max-height .4s ease,opacity .3s;opacity:0">
-          <textarea id="weeklyImproveNext" placeholder="例如：腰部代償仍有出現..." style="width:100%;background:rgba(0,0,0,0.3);border:1px solid var(--gold-dim);border-radius:10px;padding:12px;color:var(--text);font-family:inherit;font-size:13px;resize:none;height:80px;outline:none"></textarea>
+        <div class="notes-toggle" id="nToggle" onclick="toggleNotes()">
+          <span class="arr">▶</span><span style="font-size:11px;letter-spacing:1px">訓練感想（選填）</span>
         </div>
+        <div class="notes-col" id="nCol">
+          <textarea class="notes-ta" id="notesTA" placeholder="今日訓練感受..."></textarea>
+        </div>
+        <button class="cta" id="btnAnalyze" onclick="analyze()">AI 即時分析</button>
+        <div class="ai-box" id="aiBox"><div class="ai-lbl">A I · 分 析 結 果</div><div id="aiText"></div></div>
       </div>
+    </div>
 
-      <button class="btn-gold" id="btn-save-weekly">儲存本週評估</button>
-      <div class="ai-result" id="weeklyResult" style="display:none;margin-top:12px">
-        <div class="ai-result-title">✅ 已儲存</div>
-        <div class="ai-result-body" id="weeklyResultText"></div>
+    <!-- Weekly -->
+    <div class="quest-card" id="cardWeekly">
+      <div class="qh" onclick="loadWeekly()">
+        <div class="q-icon">📈</div>
+        <div class="q-meta">
+          <span class="q-tag tag-7">7 天訓練日計算</span>
+          <div class="q-name">每週進步評估</div>
+          <div class="q-status" id="weeklyStatus">點擊載入對比數據</div>
+        </div>
+        <div>▾</div>
       </div>
-    </div><!-- /inline-weekly-section -->
+      <div class="q-pw"><div class="q-pt"><div class="q-pf fill-green" id="weeklyFill" style="width:0%"></div></div></div>
+      <div class="quest-panel" id="panelWeekly"><div id="weeklyContent"></div></div>
+    </div>
 
-  </div><!-- /s-body -->
+    <!-- FIS -->
+    <div class="quest-card locked" id="cardFIS">
+      <div class="qh" onclick="openFIS()">
+        <div class="q-icon">🧬</div>
+        <div class="q-meta">
+          <span class="q-tag tag-28">4 星期訓練日計算</span>
+          <div class="q-name">01 · FIS 筋膜線自我檢測</div>
+          <div class="q-status" id="fisStatus">🔒 累積 0/28 訓練日解鎖</div>
+        </div>
+        <div id="fisLock">🔒</div>
+      </div>
+      <div class="q-pw"><div class="q-pt"><div class="q-pf fill-purple" id="fisFill" style="width:0%"></div></div></div>
+      <div class="quest-panel" id="panelFIS">
+        <div class="ql" style="margin-top:14px">上載體態相片（正面 · 側面 · 背面）</div>
+        <input type="file" id="fisFileInput" accept="image/*" multiple capture="environment" style="display:none" onchange="handlePhotos(event)">
+        <button class="camera-btn" onclick="document.getElementById('fisFileInput').click()">📷 點擊拍攝或選擇相片</button>
+        <div class="photo-preview" id="photoPreview"></div>
+        <button class="cta" id="btnFISUpload" onclick="uploadFIS()" style="display:none">上載並分析體態</button>
+        <div class="ai-box" id="fisAIBox"><div class="ai-lbl">F I S · 體 態 分 析</div><div id="fisAIText"></div></div>
+      </div>
+    </div>
 
-  <div class="bnav">
-    <div class="bnav-item" id="bnav-log-home"><div class="bnav-icon">HOME</div><div class="bnav-label">主頁</div></div>
-    <div class="bnav-item" id="bnav-log-fis"><div class="bnav-icon">FIS</div><div class="bnav-label">檢測</div></div>
-    <div class="bnav-item active"><div class="bnav-icon">DATA</div><div class="bnav-label">追蹤</div></div>
-    <div class="bnav-item" id="bnav-log-pain"><div class="bnav-icon">RX</div><div class="bnav-label">診斷</div></div>
-    <div class="bnav-item" id="bnav-log-warmup"><div class="bnav-icon">GO</div><div class="bnav-label">熱身</div></div>
+    <!-- Report -->
+    <div class="quest-card locked" id="cardReport">
+      <div class="qh">
+        <div class="q-icon">🏆</div>
+        <div class="q-meta">
+          <span class="q-tag tag-84">12 星期訓練完成計算</span>
+          <div class="q-name">12 週終極對比報告</div>
+          <div class="q-status" id="reportStatus">🔒 完成 4 次功能性測試後解鎖</div>
+        </div>
+        <div>🔒</div>
+      </div>
+      <div class="q-pw"><div class="q-pt"><div class="q-pf" id="reportFill" style="width:0%;background:rgba(255,255,255,0.15)"></div></div></div>
+    </div>
+
   </div>
 </div>
 
-<!-- DATA 02: weekly screen removed — now inline inside data-log -->
-<div id="data-weekly" style="display:none"></div>
-
-<!-- DATA 03: FIS功能性測試記錄表 (upgraded: tap-to-time timer) -->
-<div id="data-functional" class="screen">
-  <div class="s-header">
-    <div class="back-btn" id="back-data-functional">&lt;- 返回</div>
-    <div class="s-title">FIS功能性測試記錄表</div>
-    <div class="s-sub">FUNCTIONAL - 動態評估</div>
-  </div>
-  <div class="s-body">
-
-    <!-- Timer section -->
-    <div class="sec-label">單腳站立（點擊計時）</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px">
-
-      <!-- Left leg timer -->
-      <div id="timer-card-left" onclick="toggleLegTimer('left')"
-        style="background:rgba(0,0,0,0.25);border:1.5px solid rgba(255,200,50,0.25);border-radius:14px;padding:18px 10px;text-align:center;cursor:pointer;transition:all .2s;user-select:none;position:relative">
-        <div style="font-size:11px;color:var(--text-dim);margin-bottom:8px;letter-spacing:1px">左 腳</div>
-        <div id="timer-display-left" style="font-size:38px;font-weight:700;color:var(--gold);font-family:Bebas Neue,monospace;line-height:1;margin-bottom:8px;transition:color .3s">0.0</div>
-        <div id="timer-status-left" style="font-size:11px;color:var(--text-dim);transition:color .2s">點擊開始</div>
-        <button id="timer-reset-left" onclick="event.stopPropagation();resetLegTimer('left')"
-          style="position:absolute;top:8px;right:8px;background:none;border:none;color:var(--text-dim);font-size:14px;cursor:pointer;opacity:0;transition:opacity .2s;padding:2px">↺</button>
-      </div>
-
-      <!-- Right leg timer -->
-      <div id="timer-card-right" onclick="toggleLegTimer('right')"
-        style="background:rgba(0,0,0,0.25);border:1.5px solid rgba(255,200,50,0.25);border-radius:14px;padding:18px 10px;text-align:center;cursor:pointer;transition:all .2s;user-select:none;position:relative">
-        <div style="font-size:11px;color:var(--text-dim);margin-bottom:8px;letter-spacing:1px">右 腳</div>
-        <div id="timer-display-right" style="font-size:38px;font-weight:700;color:var(--gold);font-family:Bebas Neue,monospace;line-height:1;margin-bottom:8px;transition:color .3s">0.0</div>
-        <div id="timer-status-right" style="font-size:11px;color:var(--text-dim);transition:color .2s">點擊開始</div>
-        <button id="timer-reset-right" onclick="event.stopPropagation();resetLegTimer('right')"
-          style="position:absolute;top:8px;right:8px;background:none;border:none;color:var(--text-dim);font-size:14px;cursor:pointer;opacity:0;transition:opacity .2s;padding:2px">↺</button>
-      </div>
-
-    </div>
-    <!-- Hidden value stores -->
-    <input type="hidden" id="funcLeftSec" value="">
-    <input type="hidden" id="funcRightSec" value="">
-
-    <div class="sec-label">Jefferson Curl 脊椎分節級別</div>
-    <div class="toggle-row" style="flex-wrap:wrap">
-      <div class="toggle-btn" data-group="jc" data-val="1">Level 1<br><span style="font-size:10px">完全僵硬</span></div>
-      <div class="toggle-btn" data-group="jc" data-val="2">Level 2<br><span style="font-size:10px">輕微分節</span></div>
-      <div class="toggle-btn" data-group="jc" data-val="3">Level 3<br><span style="font-size:10px">明顯分節</span></div>
-      <div class="toggle-btn" data-group="jc" data-val="4">Level 4<br><span style="font-size:10px">流暢分節</span></div>
-      <div class="toggle-btn" data-group="jc" data-val="5">Level 5<br><span style="font-size:10px">完全控制</span></div>
-    </div>
-    <div class="sec-label" style="margin-top:16px">呼吸模式評估</div>
-    <div class="toggle-row">
-      <div class="toggle-btn" data-group="breath" data-val="胸式">胸式<br><span style="font-size:10px">肩膀聳起</span></div>
-      <div class="toggle-btn" data-group="breath" data-val="混合">混合<br><span style="font-size:10px">輕微代償</span></div>
-      <div class="toggle-btn" data-group="breath" data-val="腹式">腹式<br><span style="font-size:10px">橫膈膜主導</span></div>
-    </div>
-    <button class="btn-gold" id="btn-save-functional" style="margin-top:24px">儲存今日測試</button>
-    <div class="ai-result" id="functionalResult" style="display:none">
-      <div class="ai-result-title">✅ 已儲存</div>
-      <div class="ai-result-body" id="functionalResultText"></div>
-    </div>
-  </div>
-  <div class="bnav">
-    <div class="bnav-item" id="bnav-func-home"><div class="bnav-icon">HOME</div><div class="bnav-label">主頁</div></div>
-    <div class="bnav-item" id="bnav-func-fis"><div class="bnav-icon">FIS</div><div class="bnav-label">檢測</div></div>
-    <div class="bnav-item active"><div class="bnav-icon">DATA</div><div class="bnav-label">追蹤</div></div>
-    <div class="bnav-item" id="bnav-func-pain"><div class="bnav-icon">RX</div><div class="bnav-label">診斷</div></div>
-    <div class="bnav-item" id="bnav-func-warmup"><div class="bnav-icon">GO</div><div class="bnav-label">熱身</div></div>
-  </div>
-</div>
-
-<!-- DATA 04: 12星期終極對比報告 -->
-<div id="data-report" class="screen">
-  <div class="s-header">
-    <div class="back-btn" id="back-data-report">&lt;- 返回</div>
-    <div class="s-title">12星期終極對比報告</div>
-    <div class="s-sub">FINAL REPORT - 完整進步數據</div>
-  </div>
-  <div class="s-body">
-    <div class="ai-result show" id="report12Section">
-      <div class="ai-result-title">📊 載入報告中...</div>
-      <div class="ai-result-body" id="report12Text">正在從數據庫讀取你的訓練紀錄...</div>
-    </div>
-  </div>
-  <div class="bnav">
-    <div class="bnav-item" id="bnav-report-home"><div class="bnav-icon">HOME</div><div class="bnav-label">主頁</div></div>
-    <div class="bnav-item" id="bnav-report-fis"><div class="bnav-icon">FIS</div><div class="bnav-label">檢測</div></div>
-    <div class="bnav-item active"><div class="bnav-icon">DATA</div><div class="bnav-label">追蹤</div></div>
-    <div class="bnav-item" id="bnav-report-pain"><div class="bnav-icon">RX</div><div class="bnav-label">診斷</div></div>
-    <div class="bnav-item" id="bnav-report-warmup"><div class="bnav-icon">GO</div><div class="bnav-label">熱身</div></div>
-  </div>
-</div>
-
-<!-- PAIN -->
-<div id="pain" class="screen">
-  <div class="s-header">
-    <div class="back-btn" id="back-pain">&lt;- 返回</div>
-    <div class="s-title">痛點診斷</div>
-    <div class="s-sub">PAIN POINT - AI即時分析</div>
-  </div>
-  <div class="s-body">
-    <div class="dbox">[!] 以下分析屬教育性參考，並非醫療診斷。如有疼痛請先咨詢醫生。</div>
-    <div class="sec-label">選擇訓練部位</div>
-    <div class="body-grid">
-      <div class="body-btn" data-part="胸肌"><div class="bp-icon">胸</div><div class="bp-name">胸肌</div></div>
-      <div class="body-btn" data-part="背肌"><div class="bp-icon">背</div><div class="bp-name">背肌</div></div>
-      <div class="body-btn" data-part="膊頭"><div class="bp-icon">肩</div><div class="bp-name">膊頭</div></div>
-      <div class="body-btn" data-part="手臂"><div class="bp-icon">臂</div><div class="bp-name">手臂</div></div>
-      <div class="body-btn" data-part="臀部"><div class="bp-icon">臀</div><div class="bp-name">臀部</div></div>
-      <div class="body-btn" data-part="大腿前側"><div class="bp-icon">前腿</div><div class="bp-name">大腿前側</div></div>
-      <div class="body-btn" data-part="大腿後側"><div class="bp-icon">後腿</div><div class="bp-name">大腿後側</div></div>
-      <div class="body-btn" data-part="全身通用"><div class="bp-icon">全身</div><div class="bp-name">全身通用</div></div>
-    </div>
-    <div class="sec-label">描述你的症狀</div>
-    <textarea class="sym" id="symptomInput" placeholder="例如：推胸時膊頭前方痛，完全感受唔到胸肌發力..."></textarea>
-    <button class="btn-gold" id="btn-analyze-pain" style="margin-top:16px">AI即時診斷</button>
-    <div class="ai-result" id="painResult">
-      <div class="ai-result-title">AI 診斷結果</div>
-      <div class="ai-result-body" id="painResultText"></div>
-    </div>
-  </div>
-  <div class="bnav">
-    <div class="bnav-item" id="bnav-pain-home"><div class="bnav-icon">HOME</div><div class="bnav-label">主頁</div></div>
-    <div class="bnav-item" id="bnav-pain-fis"><div class="bnav-icon">FIS</div><div class="bnav-label">檢測</div></div>
-    <div class="bnav-item" id="bnav-pain-progress"><div class="bnav-icon">DATA</div><div class="bnav-label">追蹤</div></div>
-    <div class="bnav-item active"><div class="bnav-icon">RX</div><div class="bnav-label">診斷</div></div>
-    <div class="bnav-item" id="bnav-pain-warmup"><div class="bnav-icon">GO</div><div class="bnav-label">熱身</div></div>
-  </div>
-</div>
-
-<!-- WARMUP -->
-<div id="warmup" class="screen">
-  <div class="s-header">
-    <div class="back-btn" id="back-warmup">&lt;- 返回</div>
-    <div class="s-title">今日熱身</div>
-    <div class="s-sub">PRE-WORKOUT - 五大筋膜線激活</div>
-  </div>
-  <div class="s-body">
-    <div class="wu-toggle">
-      <button class="wu-btn active" data-wu="upper">上身訓練日</button>
-      <button class="wu-btn" data-wu="lower-m">下身（男）</button>
-      <button class="wu-btn" data-wu="lower-f">下身（女）</button>
-    </div>
-    <div class="wu-section active" id="wu-upper">
-      <div class="wu-item"><div class="wu-num">1</div><div><div class="wu-name">9090 呼吸重置</div><div class="wu-detail">仰臥雙腳踩牆，鼻吸鼻呼，呼氣呼盡保持微弱呼吸5下</div><div class="wu-sets">5次循環 - 深前線</div></div></div>
-      <div class="wu-item"><div class="wu-num">2</div><div><div class="wu-name">Cat Cow Pose</div><div class="wu-detail">四足跪姿，脊椎由頸椎到腰椎逐節分節活動</div><div class="wu-sets">10下 - 胸椎活動度</div></div></div>
-      <div class="wu-item"><div class="wu-num">3</div><div><div class="wu-name">四足跪姿手肘撐地貓式</div><div class="wu-detail">手肘撐地十指緊扣，呼氣肋骨下降臀部退後，感受肩胛骨向外推開</div><div class="wu-sets">10下 - 螺旋線前鋸肌</div></div></div>
-      <div class="wu-item"><div class="wu-num">4</div><div><div class="wu-name">T Raise 肩胛上下迴旋</div><div class="wu-detail">俯臥雙手T字，離地後做肩胛上下迴旋，頸部全程放鬆</div><div class="wu-sets">10下 - 淺背線中下斜方肌</div></div></div>
-      <div class="wu-item"><div class="wu-num">5</div><div><div class="wu-name">半跪姿髖屈肌拉伸</div><div class="wu-detail">半跪姿前腳90度，配合呼氣令前側拉長，骨盆保持中立</div><div class="wu-sets">20秒每側 - 淺前線</div></div></div>
-    </div>
-    <div class="wu-section" id="wu-lower-m">
-      <div class="wu-item"><div class="wu-num">1</div><div><div class="wu-name">9090 呼吸重置</div><div class="wu-detail">仰臥雙腳踩牆，鼻吸鼻呼，呼氣呼盡保持微弱呼吸5下</div><div class="wu-sets">5次循環 - 深前線</div></div></div>
-      <div class="wu-item"><div class="wu-num">2</div><div><div class="wu-name">Cat Cow Pose</div><div class="wu-detail">四足跪姿，脊椎逐節分節活動</div><div class="wu-sets">10下 - 胸椎活動度</div></div></div>
-      <div class="wu-item"><div class="wu-num">3</div><div><div class="wu-name">Dorsiflexion 激活</div><div class="wu-detail">踎低持3kg啞鈴向前伸，腳跟貼地，感受腳踝背屈發力並維持</div><div class="wu-sets">Hold 10秒 x 3-5次 - 深前線起點</div></div></div>
-      <div class="wu-item"><div class="wu-num">4</div><div><div class="wu-name">側臥髖135度臀中肌激活</div><div class="wu-detail">Side Plank位置髖關節135度，上面腳向前伸，微微將臀部升起一個拳頭</div><div class="wu-sets">Hold 30秒每側 - 側線</div></div></div>
-      <div class="wu-item"><div class="wu-num">5</div><div><div class="wu-name">90/90 腳跟踩凳微橋式</div><div class="wu-detail">仰臥腳跟踩凳，呼氣呼盡腰背貼地，腳跟輕踩臀部微抬一個拳頭</div><div class="wu-sets">10下 - 淺背線</div></div></div>
-    </div>
-    <div class="wu-section" id="wu-lower-f">
-      <div class="wu-item"><div class="wu-num">1</div><div><div class="wu-name">9090 呼吸重置</div><div class="wu-detail">仰臥雙腳踩牆，鼻吸鼻呼，呼氣呼盡保持微弱呼吸5下</div><div class="wu-sets">5次循環 - 深前線</div></div></div>
-      <div class="wu-item"><div class="wu-num">2</div><div><div class="wu-name">Cat Cow Pose</div><div class="wu-detail">四足跪姿，脊椎逐節分節活動</div><div class="wu-sets">10下 - 胸椎活動度</div></div></div>
-      <div class="wu-item"><div class="wu-num">3</div><div><div class="wu-name">Dorsiflexion 激活</div><div class="wu-detail">踎低持3kg啞鈴向前伸，腳跟貼地，感受腳踝背屈發力並維持</div><div class="wu-sets">Hold 10秒 x 3-5次 - 深前線起點</div></div></div>
-      <div class="wu-item"><div class="wu-num">4</div><div><div class="wu-name">側臥髖135度臀中肌激活</div><div class="wu-detail">Side Plank位置髖關節135度，上面腳向前伸，微微將臀部升起一個拳頭</div><div class="wu-sets">Hold 30秒每側 - 側線</div></div></div>
-      <div class="wu-item"><div class="wu-num">5</div><div><div class="wu-name">半跪姿髖屈肌拉伸</div><div class="wu-detail">半跪姿前腳90度，配合呼氣令前側拉長，骨盆保持中立</div><div class="wu-sets">20秒每側 - 淺前線</div></div></div>
-    </div>
-  </div>
-  <div class="bnav">
-    <div class="bnav-item" id="bnav-warmup-home"><div class="bnav-icon">HOME</div><div class="bnav-label">主頁</div></div>
-    <div class="bnav-item" id="bnav-warmup-fis"><div class="bnav-icon">FIS</div><div class="bnav-label">檢測</div></div>
-    <div class="bnav-item" id="bnav-warmup-progress"><div class="bnav-icon">DATA</div><div class="bnav-label">追蹤</div></div>
-    <div class="bnav-item" id="bnav-warmup-pain"><div class="bnav-icon">RX</div><div class="bnav-label">診斷</div></div>
-    <div class="bnav-item active"><div class="bnav-icon">GO</div><div class="bnav-label">熱身</div></div>
-  </div>
-</div>
+<nav>
+  <button class="nb active" onclick=""><span class="ni">🏠</span>主頁</button>
+  <button class="nb" onclick="showToast('功能開發中...')"><span class="ni">💊</span>RX 診斷</button>
+  <button class="nb" onclick="showToast('功能開發中...')"><span class="ni">🔥</span>熱身</button>
+</nav>
+<div class="toast" id="toast"></div>
 
 <script>
-var API_BASE = 'https://fis-app.alexeywong22.workers.dev';
+const API='https://fis-app.alexeywong22.workers.dev';
+let UID=localStorage.getItem('fis_user_id')||null;
+let totalDays=0;
+const sel={r1:null,r2:null,r3:null};
+let fisPhotos=[];
 
-  // ── 匿名用戶初始化 ────────────────────────────────────────
-  window.FIS_USER_ID = localStorage.getItem('fis_user_id') || null;
-
-  async function initUser() {
-    try {
-      var res = await fetch(API_BASE + '/api/user/init', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: window.FIS_USER_ID })
-      });
-      var data = await res.json();
-      if (data.userId) {
-        window.FIS_USER_ID = data.userId;
-        localStorage.setItem('fis_user_id', window.FIS_USER_ID);
-        console.log(data.existing ? 'Existing user: ' + window.FIS_USER_ID : 'New user: ' + window.FIS_USER_ID);
-      }
-    } catch(e) {
-      console.warn('User init failed:', e.message);
-    }
-  }
-  initUser();
-
-  // ── 顯示/更新用戶名 ──────────────────────────────────────────────────────
-  async function updateUsername(newName) {
-    if (!window.FIS_USER_ID) return;
-    try {
-      var res = await fetch(API_BASE + '/api/user/update-name', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ userId: window.FIS_USER_ID, newName: newName })
-      });
-      var data = await res.json();
-      if (data.success) {
-        localStorage.setItem('fis_username', data.name);
-        return { success: true };
-      } else {
-        return { error: data.error };
-      }
-    } catch(e) {
-      return { error: e.message };
-    }
-  }
-var selectedFiles = [];
-var fisStep1Result = '';
-var fisStep2Result = '';
-var selectedPart = '';
-var ratings = { r1: null, r2: null, r3: null };
-
-function goTo(screenId) {
-  // Smart routing: 'progress' now goes directly to data-log
-  if (screenId === 'progress') { screenId = 'data-log'; }
-  if (screenId === 'data-report') { setTimeout(load12WeekReport, 300); }
-  var all = document.querySelectorAll('.screen');
-  for (var i = 0; i < all.length; i++) { all[i].classList.remove('active'); all[i].style.display = 'none'; }
-  var target = document.getElementById(screenId);
-  if (target) { target.style.display = 'flex'; target.classList.add('active'); window.scrollTo(0, 0); }
-  if (screenId === 'data-log') { initDataLog(); }
+async function init(){
+  try{
+    const r=await fetch(API+'/api/user/init',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:UID})});
+    const d=await r.json();
+    if(d.userId){UID=d.userId;localStorage.setItem('fis_user_id',UID);}
+  }catch(e){}
+  document.getElementById('uname').textContent=localStorage.getItem('fis_display_name')||UID?.substring(4,12)||'訓練員';
+  await loadProgress();
 }
 
-function bindNav(id, dest) { var el = document.getElementById(id); if (el) el.addEventListener('click', function(){ goTo(dest); }); }
-
-function bindAll() {
-  var enterBtn = document.getElementById('enterBtn');
-  if (enterBtn) { enterBtn.addEventListener('click', function() { try { localStorage.setItem('fis_agreed', '1'); } catch(e) {} goTo('home'); }); }
-
-  var btnFis = document.getElementById('btn-fis'); if (btnFis) { btnFis.addEventListener('click', function() { goTo('fis'); }); }
-  var btnProgress = document.getElementById('btn-progress'); if (btnProgress) { btnProgress.addEventListener('click', function() { goTo('progress'); }); }
-  var btnPain = document.getElementById('btn-pain'); if (btnPain) { btnPain.addEventListener('click', function() { goTo('pain'); }); }
-  var btnWarmup = document.getElementById('btn-warmup'); if (btnWarmup) { btnWarmup.addEventListener('click', function() { goTo('warmup'); }); }
-
-  var backFis = document.getElementById('back-fis'); if (backFis) { backFis.addEventListener('click', function() { goTo('home'); }); }
-  var backProgress = document.getElementById('back-progress'); if (backProgress) { backProgress.addEventListener('click', function() { goTo('home'); }); }
-
-  // DATA sub-screens
-  // back buttons: data-log and data-functional go back to home (no hub anymore)
-  bindNav('back-data-log', 'home');
-  bindNav('back-data-functional', 'home');
-  bindNav('back-data-report', 'home');
-  // DATA sub bnav
-  ['bnav-log-home','bnav-func-home','bnav-report-home'].forEach(function(id){ bindNav(id,'home'); });
-  ['bnav-log-fis','bnav-func-fis','bnav-report-fis'].forEach(function(id){ bindNav(id,'fis'); });
-  ['bnav-log-pain','bnav-func-pain','bnav-report-pain'].forEach(function(id){ bindNav(id,'pain'); });
-  ['bnav-log-warmup','bnav-func-warmup','bnav-report-warmup'].forEach(function(id){ bindNav(id,'warmup'); });
-
-  // Weekly score slider (now inside data-log inline section)
-  var slider = document.getElementById('weeklyScore');
-  if (slider) { slider.addEventListener('input', function(){ document.getElementById('weeklyScoreVal').textContent = this.value; }); }
-
-  // Save weekly (button now inside data-log)
-  var btnWeekly = document.getElementById('btn-save-weekly');
-  if (btnWeekly) { btnWeekly.addEventListener('click', saveWeekly); }
-
-  // Save functional
-  var btnFunc = document.getElementById('btn-save-functional');
-  if (btnFunc) { btnFunc.addEventListener('click', saveFunctional); }
-  var backPain = document.getElementById('back-pain'); if (backPain) { backPain.addEventListener('click', function() { goTo('home'); }); }
-  var backWarmup = document.getElementById('back-warmup'); if (backWarmup) { backWarmup.addEventListener('click', function() { goTo('home'); }); }
-
-  var bnavFisHome = document.getElementById('bnav-fis-home'); if (bnavFisHome) { bnavFisHome.addEventListener('click', function() { goTo('home'); }); }
-  var bnavFisProgress = document.getElementById('bnav-fis-progress'); if (bnavFisProgress) { bnavFisProgress.addEventListener('click', function() { goTo('progress'); }); }
-  var bnavFisPain = document.getElementById('bnav-fis-pain'); if (bnavFisPain) { bnavFisPain.addEventListener('click', function() { goTo('pain'); }); }
-  var bnavFisWarmup = document.getElementById('bnav-fis-warmup'); if (bnavFisWarmup) { bnavFisWarmup.addEventListener('click', function() { goTo('warmup'); }); }
-  var bnavProgressHome = document.getElementById('bnav-progress-home'); if (bnavProgressHome) { bnavProgressHome.addEventListener('click', function() { goTo('home'); }); }
-  var bnavProgressFis = document.getElementById('bnav-progress-fis'); if (bnavProgressFis) { bnavProgressFis.addEventListener('click', function() { goTo('fis'); }); }
-  var bnavProgressPain = document.getElementById('bnav-progress-pain'); if (bnavProgressPain) { bnavProgressPain.addEventListener('click', function() { goTo('pain'); }); }
-  var bnavProgressWarmup = document.getElementById('bnav-progress-warmup'); if (bnavProgressWarmup) { bnavProgressWarmup.addEventListener('click', function() { goTo('warmup'); }); }
-  var bnavPainHome = document.getElementById('bnav-pain-home'); if (bnavPainHome) { bnavPainHome.addEventListener('click', function() { goTo('home'); }); }
-  var bnavPainFis = document.getElementById('bnav-pain-fis'); if (bnavPainFis) { bnavPainFis.addEventListener('click', function() { goTo('fis'); }); }
-  var bnavPainProgress = document.getElementById('bnav-pain-progress'); if (bnavPainProgress) { bnavPainProgress.addEventListener('click', function() { goTo('progress'); }); }
-  var bnavPainWarmup = document.getElementById('bnav-pain-warmup'); if (bnavPainWarmup) { bnavPainWarmup.addEventListener('click', function() { goTo('warmup'); }); }
-  var bnavWarmupHome = document.getElementById('bnav-warmup-home'); if (bnavWarmupHome) { bnavWarmupHome.addEventListener('click', function() { goTo('home'); }); }
-  var bnavWarmupFis = document.getElementById('bnav-warmup-fis'); if (bnavWarmupFis) { bnavWarmupFis.addEventListener('click', function() { goTo('fis'); }); }
-  var bnavWarmupProgress = document.getElementById('bnav-warmup-progress'); if (bnavWarmupProgress) { bnavWarmupProgress.addEventListener('click', function() { goTo('progress'); }); }
-  var bnavWarmupPain = document.getElementById('bnav-warmup-pain'); if (bnavWarmupPain) { bnavWarmupPain.addEventListener('click', function() { goTo('pain'); }); }
-
-  var ratingBtns = document.querySelectorAll('.rating-btn');
-  for (var i = 0; i < ratingBtns.length; i++) {
-    (function(btn) { btn.addEventListener('click', function() { var group = btn.getAttribute('data-group'); var val = btn.getAttribute('data-val'); var siblings = document.querySelectorAll('.rating-btn[data-group="' + group + '"]'); for (var j = 0; j < siblings.length; j++) { siblings[j].classList.remove('sel'); } btn.classList.add('sel'); ratings[group] = val; }); })(ratingBtns[i]);
-  }
-  var toggleBtns = document.querySelectorAll('.toggle-btn');
-  for (var i = 0; i < toggleBtns.length; i++) {
-    (function(btn) { btn.addEventListener('click', function() { var group = btn.getAttribute('data-group'); var val = btn.getAttribute('data-val'); var siblings = document.querySelectorAll('.toggle-btn[data-group="' + group + '"]'); for (var j = 0; j < siblings.length; j++) { siblings[j].classList.remove('sel'); } btn.classList.add('sel'); ratings[group] = val; }); })(toggleBtns[i]);
-  }
-  var bodyBtns = document.querySelectorAll('.body-btn');
-  for (var i = 0; i < bodyBtns.length; i++) {
-    (function(btn) { btn.addEventListener('click', function() { var all = document.querySelectorAll('.body-btn'); for (var j = 0; j < all.length; j++) { all[j].classList.remove('sel'); } btn.classList.add('sel'); selectedPart = btn.getAttribute('data-part'); }); })(bodyBtns[i]);
-  }
-  var wuBtns = document.querySelectorAll('.wu-btn');
-  for (var i = 0; i < wuBtns.length; i++) {
-    (function(btn) { btn.addEventListener('click', function() { var type = btn.getAttribute('data-wu'); var allBtns = document.querySelectorAll('.wu-btn'); var allSections = document.querySelectorAll('.wu-section'); for (var j = 0; j < allBtns.length; j++) { allBtns[j].classList.remove('active'); } for (var j = 0; j < allSections.length; j++) { allSections[j].classList.remove('active'); } btn.classList.add('active'); var section = document.getElementById('wu-' + type); if (section) { section.classList.add('active'); } }); })(wuBtns[i]);
-  }
-
-  var fisFiles = document.getElementById('fisFiles');
-  if (fisFiles) { fisFiles.addEventListener('change', function() { selectedFiles = Array.from(this.files); var el = document.getElementById('fileCount'); if (el) { el.textContent = 'Selected ' + selectedFiles.length + ' files (need 8)'; } }); }
-
-  var btnFisStep1 = document.getElementById('btn-fis-step1'); if (btnFisStep1) { btnFisStep1.addEventListener('click', runFisStep1); }
-  var btnFisStep2 = document.getElementById('btn-fis-step2'); if (btnFisStep2) { btnFisStep2.addEventListener('click', runFisStep2); }
-  var btnFisStep3 = document.getElementById('btn-fis-step3'); if (btnFisStep3) { btnFisStep3.addEventListener('click', runFisStep3); }
-  var btnDownload = document.getElementById('btn-download'); if (btnDownload) { btnDownload.addEventListener('click', downloadImage); }
-  var btnAnalyzeProgress = document.getElementById('btn-analyze-progress'); if (btnAnalyzeProgress) { btnAnalyzeProgress.addEventListener('click', analyzeProgress); }
-  var btnSaveRecord = document.getElementById('btn-save-record'); if (btnSaveRecord) { btnSaveRecord.addEventListener('click', saveRecord); }
-  var btnAnalyzePain = document.getElementById('btn-analyze-pain'); if (btnAnalyzePain) { btnAnalyzePain.addEventListener('click', analyzePain); }
+async function loadProgress(){
+  if(!UID)return;
+  try{
+    const r=await fetch(API+'/api/user/check-progress?user_id='+UID);
+    const d=await r.json();
+    totalDays=d.totalTrainingDays||0;
+    updateUI(d);
+  }catch(e){}
 }
 
-// ── FIS STEP 1 ────────────────────────────────────────────────────────────────
-async function runFisStep1() {
-  if (selectedFiles.length === 0) { alert('Please upload photos and videos first'); return; }
-  var result = document.getElementById('fisStep1Result');
-  var resultText = document.getElementById('fisStep1Text');
-  result.classList.add('show');
-  resultText.innerHTML = '<div class="progress-bar-wrap"><div class="progress-bar-fill" id="pb1"></div></div><div class="progress-text" id="pt1">0%</div>';
-  startProgress('pb1', 'pt1', 90000);
-
-  // 從影片抽幀（25%, 50%, 75% 三個時間點）
-  function extractVideoFrames(videoFile) {
-    return new Promise(function(resolve) {
-      var frames = [];
-      var video = document.createElement('video');
-      video.muted = true;
-      video.playsInline = true;
-      var url = URL.createObjectURL(videoFile);
-      video.src = url;
-
-      video.addEventListener('loadedmetadata', function() {
-        var duration = video.duration;
-        if (!duration || duration === Infinity) { URL.revokeObjectURL(url); resolve([]); return; }
-        var times = [duration * 0.25, duration * 0.50, duration * 0.75];
-        var idx = 0;
-
-        function captureFrame() {
-          if (idx >= times.length) { URL.revokeObjectURL(url); resolve(frames); return; }
-          video.currentTime = times[idx];
-        }
-
-        video.addEventListener('seeked', function() {
-          var canvas = document.createElement('canvas');
-          canvas.width  = Math.min(video.videoWidth,  640);
-          canvas.height = Math.min(video.videoHeight, 640);
-          var ctx = canvas.getContext('2d');
-          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-          frames.push(canvas.toDataURL('image/jpeg', 0.7));
-          idx++;
-          captureFrame();
-        });
-
-        captureFrame();
-      });
-
-      video.addEventListener('error', function() { URL.revokeObjectURL(url); resolve([]); });
-      video.load();
-    });
+function updateUI(d){
+  document.getElementById('dayNum').textContent=totalDays;
+  const next=totalDays<28?28:Math.ceil(totalDays/28)*28;
+  document.getElementById('dayFill').style.width=Math.min(100,Math.round(totalDays/next*100))+'%';
+  document.getElementById('weeklyFill').style.width=Math.min(100,Math.round(totalDays/7*100))+'%';
+  const wc=d.weeklyComparison;
+  if(wc?.status==='available') document.getElementById('weeklyStatus').textContent='✅ 對比數據就緒，點擊查看';
+  else if(wc?.status==='insufficient') document.getElementById('weeklyStatus').textContent=`🔒 已累積 ${totalDays}/7 天，數據不足暫無分析`;
+  document.getElementById('fisFill').style.width=Math.min(100,Math.round(totalDays/28*100))+'%';
+  if(totalDays>=28){
+    document.getElementById('cardFIS').classList.remove('locked');
+    document.getElementById('fisLock').textContent='▾';
+    document.getElementById('fisStatus').textContent='✅ 已解鎖，點擊開始檢測';
+    document.getElementById('unlockBanner').classList.add('show');
+  }else{
+    document.getElementById('fisStatus').textContent=`🔒 累積 ${totalDays}/28 訓練日解鎖`;
   }
+  document.getElementById('reportFill').style.width=Math.min(100,Math.round(totalDays/84*100))+'%';
+  const testsLeft=Math.max(0,4-Math.floor(totalDays/28));
+  document.getElementById('reportStatus').textContent=totalDays>=84?'🏆 12週報告已解鎖！':`🔒 還需完成 ${testsLeft} 次功能性測試`;
+  if(totalDays>=84){document.getElementById('cardReport').classList.remove('locked');document.getElementById('reportFill').style.background='var(--gold)';}
+  if(localStorage.getItem('fis_last_log')===new Date().toLocaleDateString('zh-HK')) document.getElementById('dataStatus').textContent='✅ 今日已記錄';
+}
 
-  // 處理所有檔案
-  var imageBase64List = [];
-  var videoLabels = [];
-
-  for (var i = 0; i < selectedFiles.length; i++) {
-    var file = selectedFiles[i];
-    if (file.type.startsWith('image/')) {
-      try {
-        var b64 = await new Promise(function(resolve, reject) {
-          var reader = new FileReader();
-          reader.onload = function(e) { resolve(e.target.result); };
-          reader.onerror = reject;
-          reader.readAsDataURL(file);
-        });
-        imageBase64List.push(b64);
-      } catch(err) { console.warn('跳過圖片:', file.name); }
-
-    } else if (file.type.startsWith('video/')) {
-      try {
-        resultText.innerHTML = '<div class="progress-bar-wrap"><div class="progress-bar-fill" id="pb1" style="width:20%"></div></div>' +
-          '<div class="progress-text" id="pt1">正在抽取影片分鏡：' + file.name + '...</div>';
-        var frames = await extractVideoFrames(file);
-        if (frames.length > 0) {
-          frames.forEach(function(f) { imageBase64List.push(f); });
-          videoLabels.push(file.name + ' (' + frames.length + '幀)');
-        }
-      } catch(err) { console.warn('跳過影片:', file.name); }
+async function loadWeekly(){
+  const panel=document.getElementById('panelWeekly');
+  if(panel.classList.contains('open')){panel.classList.remove('open');return;}
+  panel.classList.add('open');
+  const content=document.getElementById('weeklyContent');
+  content.innerHTML='<div style="color:var(--dim);font-size:13px;padding:14px 0">載入中...</div>';
+  try{
+    const r=await fetch(API+'/api/user/check-progress?user_id='+UID);
+    const d=await r.json();
+    const wc=d.weeklyComparison;
+    if(wc?.status==='insufficient'){
+      const pct=Math.round((wc.current/7)*100);
+      content.innerHTML=`<div style="padding:14px 0;text-align:center"><div style="font-size:32px;margin-bottom:8px">🔒</div><div style="font-size:14px;color:var(--dim)">${wc.message}</div><div style="margin-top:12px;height:6px;background:rgba(255,255,255,0.07);border-radius:3px;overflow:hidden"><div style="height:100%;width:${pct}%;background:var(--green);border-radius:3px;transition:width 1s"></div></div><div style="font-size:11px;color:var(--dim);margin-top:6px;font-family:'DM Mono',monospace">${wc.current} / 7 訓練日</div></div>`;
+    }else if(wc?.status==='available'){
+      const a=wc.activation;
+      const ph=Math.round((a.before/4)*100),ch=Math.round((a.after/4)*100);
+      const arrow=a.direction==='up'?'▲':a.direction==='down'?'▼':'→';
+      const cls=a.direction==='up'?'du':'dd';
+      content.innerHTML=`<div class="compare-card"><div class="ct">發 力 感 對 比 · 第 ${wc.period.from.day} 天 vs 第 ${wc.period.to.day} 天</div><div class="c-bars"><div class="bg"><div class="bw"><div class="bar bp" style="height:${ph}%"></div></div><div class="bl">7天前</div><div class="bv">${a.before}/4</div></div><div class="bg"><div class="bw"><div class="bar bc" style="height:${ch}%"></div></div><div class="bl">今日</div><div class="bv">${a.after}/4</div></div></div><div class="cdelta ${cls}">${arrow} ${a.diff>0?'+':''}${a.diff} 分 · ${a.pct>0?'+':''}${a.pct}%</div></div><div style="margin-top:12px;font-size:12px;color:var(--dim)">代償：${wc.compensation.before} → ${wc.compensation.after} &nbsp;|&nbsp; 張力：${wc.tension.before} → ${wc.tension.after}</div>`;
     }
-  }
+  }catch(e){content.innerHTML='<div style="color:var(--red);font-size:13px;padding:14px 0">載入失敗，請重試</div>';}
+}
 
-  if (imageBase64List.length === 0) {
-    stopProgress('pb1', 'pt1');
-    resultText.textContent = '請上載最少一張圖片或影片進行分析';
-    return;
-  }
+function selR(btn,g){document.querySelectorAll('#gR'+g.slice(-1).toUpperCase()+' .r-btn').forEach(b=>b.classList.remove('sel'));btn.classList.add('sel');sel[g]=btn.dataset.val;}
+// Fix: map group names to element IDs
+function selR(btn,g){
+  const map={r1:'gR1',r2:'gR2',r3:'gR3'};
+  document.querySelectorAll('#'+map[g]+' .r-btn').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');sel[g]=btn.dataset.val;
+}
+function selT(btn,g){
+  const map={r2:'gR2',r3:'gR3'};
+  document.querySelectorAll('#'+map[g]+' .t-btn').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');sel[g]=btn.dataset.val;
+}
+function toggleNotes(){const c=document.getElementById('nCol'),t=document.getElementById('nToggle');c.classList.toggle('open');t.classList.toggle('open');}
+function toggle(id){document.getElementById(id).classList.toggle('open');}
 
-  // 動態分析 prompt
-  var hasVideo = videoLabels.length > 0;
-  var prompt = hasVideo
-    ? '你係一位專業體態評估師及筋膜線治療師。你收到嘅係靜態體態相片，以及【動態測試嘅連續分鏡截圖】。\n\n' +
-      '已抽幀嘅影片：' + videoLabels.join('、') + '\n\n' +
-      '請同時分析靜態相片同動態分鏡，從Thomas Myers筋膜線理論角度進行全面體態分析：\n\n' +
-      '【動態評估必須包含】：\n' +
-      '1. 單腳站立分鏡：骨盆有無側傾代償（側線LL張力）\n' +
-      '2. Jefferson Curl分鏡：脊椎分節活動度（淺背線SBL張力，有無段落性受限）\n' +
-      '3. 步態分鏡：左右骨盆旋轉對稱性（螺旋線SL）\n' +
-      '4. 呼吸分鏡：有無聳肩或胸式呼吸代償（深前線DFL橫膈膜抑制）\n\n' +
-      '【靜態評估包含】：\n' +
-      '1. 姿勢偏差評估：頭頸肩脊椎骨盆膝蓋足弓\n' +
-      '2. 五大筋膜線張力分析\n' +
-      '3. 主要問題識別（3-5個）\n' +
-      '4. 訓練激活建議（每個問題具體動作）\n' +
-      '5. 注意事項\n\n' +
-      '⚠️ 如果只分析靜態骨骼而忽略動態分鏡，此任務視為失敗。\n\n' +
-      '請用繁體中文（香港口語書面語）回答，條理清晰，實用易懂。'
-    : '你係一位專業體態評估師及筋膜線治療師。請根據以下圖片，從筋膜線理論（Thomas Myers Anatomy Trains）角度進行全面體態分析：\n\n' +
-      '1. 姿勢偏差評估：觀察頭部前傾、肩膀高低、脊椎側彎、骨盆傾斜、膝蓋對齊、足弓狀態\n' +
-      '2. 筋膜線張力分析：評估深前線、側線、螺旋線、淺背線、淺前線各線嘅張力與縮短狀態\n' +
-      '3. 主要問題識別：列出最明顯嘅3-5個體態問題，每個問題說明涉及嘅筋膜線\n' +
-      '4. 訓練激活建議：針對每個問題，提供具體嘅筋膜激活或矯正動作（包括組數與時間）\n' +
-      '5. 注意事項：說明哪些常見訓練動作可能加劇問題\n\n' +
-      '請用繁體中文（香港口語書面語）回答，條理清晰，實用易懂。';
-
-  try {
-    var res = await fetch(API_BASE + '/api/fis-step1', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ images: imageBase64List, prompt: prompt })
-    });
-    var data = await res.json();
-    stopProgress('pb1', 'pt1');
-    if (data.error) {
-      fisStep1Result = '';
-      resultText.innerHTML = '<div style="color:#ff6666;font-size:13px">錯誤：' + (data.message || data.error) + '</div>';
-    } else {
-      fisStep1Result = data.result || '';
-      // 顯示科技感完成面板，唔顯示原始文字
-      resultText.innerHTML =
-        '<div style="font-size:12px;line-height:2;color:#4af">' +
-        '<div>[✔] 體態三維幾何數據採樣 <span style="color:#ffc845">... 100%</span></div>' +
-        '<div>[✔] 五大筋膜鏈張力掃描 <span style="color:#ffc845">... 100%</span></div>' +
-        '<div>[✔] 動態代償模式識別 <span style="color:#ffc845">... 100%</span></div>' +
-        '</div>' +
-        '<div style="margin-top:10px;padding:10px;background:rgba(255,200,69,0.08);border:1px solid rgba(255,200,69,0.3);border-radius:8px;font-size:12px;color:#ffc845">' +
-        '⚡ FIS 體態原始數據採樣完成，請點擊【生成筋膜線報告卡】繼續。' +
-        '</div>';
-      // 自動 scroll 去 Step 2 按鈕
-      setTimeout(function() {
-        var btn2 = document.getElementById('btn-fis-step2');
-        if (btn2) btn2.scrollIntoView({behavior:'smooth', block:'center'});
-      }, 600);
+async function analyze(){
+  if(!sel.r1||!sel.r2||!sel.r3){showToast('請填寫全部三個指標');return;}
+  const btn=document.getElementById('btnAnalyze');
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span>分析中...';
+  try{
+    const r=await fetch(API+'/api/progress',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rating:sel.r1,backPain:sel.r2,tensionSpeed:sel.r3})});
+    const d=await r.json();
+    document.getElementById('aiText').textContent=d.result||'分析完成';
+    document.getElementById('aiBox').classList.add('show');
+    if(UID){
+      await fetch(API+'/api/progress/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:UID,muscleActivation:parseInt(sel.r1),backCompensation:sel.r2,tensionSpeed:sel.r3,trainingDayIndex:totalDays+1,notes:d.result||''})});
+      totalDays++;
+      localStorage.setItem('fis_last_log',new Date().toLocaleDateString('zh-HK'));
+      document.getElementById('dayNum').textContent=totalDays;
+      document.getElementById('dataStatus').textContent='✅ 今日已記錄';
+      showToast('記錄已儲存 ✓');
     }
-  } catch(e) {
-    stopProgress('pb1', 'pt1');
-    resultText.innerHTML = '<div style="color:#ff6666;font-size:13px">Network error: ' + e.message + '</div>';
-  }
+  }catch(e){showToast('分析失敗，請重試');}
+  finally{btn.disabled=false;btn.innerHTML='AI 即時分析';}
 }
 
-// ── FIS STEP 2 ────────────────────────────────────────────────────────────────
-var fisParsedData = null;
-async function runFisStep2() {
-  if (!fisStep1Result) { alert('Please complete step 2 posture analysis first'); return; }
-  var result = document.getElementById('fisStep2Result');
-  var resultText = document.getElementById('fisStep2Text');
-  result.classList.add('show');
-  resultText.innerHTML = '<div class="progress-bar-wrap"><div class="progress-bar-fill" id="pb2"></div></div><div class="progress-text" id="pt2">0%</div>';
-  startProgress('pb2', 'pt2', 30000);
-  try {
-    var res = await fetch(API_BASE + '/api/fis-step2', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({step1Result: fisStep1Result}) });
-    var data = await res.json();
-    stopProgress('pb2', 'pt2');
-    fisParsedData = data.parsed || null;
-    fisParsedData = data.parsed || null;
-    fisParsedData = data.parsed || null;
-    fisStep2Result = data.result || '';
-    stopProgress('pb2', 'pt2');
-    resultText.innerHTML =
-      '<div style="font-size:12px;line-height:2;color:#4af;margin-bottom:8px">' +
-      '<div>[✔] 筋膜鏈動力學代償矩陣分析 <span style="color:#ffc845">... 100%</span></div>' +
-      '<div>[✔] 五大筋膜線評級封裝 <span style="color:#ffc845">... 100%</span></div>' +
-      '<div>[✔] 個人化訓練方案生成 <span style="color:#ffc845">... 100%</span></div>' +
-      '</div>' +
-      '<div style="padding:10px;background:rgba(255,200,69,0.08);border:1px solid rgba(255,200,69,0.3);border-radius:8px;font-size:12px;color:#ffc845">' +
-      '⚡ FIS 筋膜矩陣核心分析完成，已成功封裝底層數據。請點擊下方【生成視覺化圖片】解鎖體態特徵面板。' +
-      '</div>';
-    setTimeout(function() {
-      var btn3 = document.getElementById('btn-fis-step3');
-      if (btn3) btn3.scrollIntoView({behavior:'smooth', block:'center'});
-    }, 600);
-  } catch(e) { stopProgress('pb2', 'pt2'); resultText.textContent = 'Generation failed, please try again.'; }
+function openFIS(){
+  if(totalDays<28){showToast(`🔒 還需 ${28-totalDays} 個訓練日`);return;}
+  document.getElementById('cardFIS').classList.remove('locked');
+  toggle('panelFIS');
+  document.getElementById('cardFIS').scrollIntoView({behavior:'smooth'});
 }
 
-// ── FIS STEP 3 ────────────────────────────────────────────────────────────────
-async function runFisStep3() {
-  if (!fisStep2Result) { alert('Please complete step 3 report card generation first'); return; }
-
-  var imageResult = document.getElementById('fisImageResult');
-  imageResult.style.display = 'block';
-  var old = document.getElementById('fis-report-card');
-  if (old) old.remove();
-
-  var p     = fisParsedData || {};
-  var lines = p.fascialLines    || {};
-  var recs  = p.recommendations || {};
-
-  function md(t) {
-    if (!t) return '—';
-    return t.replace(/\*\*(.*?)\*\*/g,'<strong style="color:#44aaff;font-weight:700">$1</strong>')
-             .replace(/\*(.*?)\*/g,'$1');
+async function handlePhotos(e){
+  const files=Array.from(e.target.files);fisPhotos=[];
+  const prev=document.getElementById('photoPreview');prev.innerHTML='';
+  for(const f of files.slice(0,3)){
+    const c=await compress(f);fisPhotos.push(c);
+    const img=document.createElement('img');img.className='photo-thumb';img.src=c;prev.appendChild(img);
   }
+  document.getElementById('btnFISUpload').style.display=fisPhotos.length>0?'block':'none';
+}
 
-  // 注入動畫 CSS（只注入一次）
-  if (!document.getElementById('fis-anim-style')) {
-    var style = document.createElement('style');
-    style.id = 'fis-anim-style';
-    style.textContent =
-      '@keyframes fisSlideIn{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}' +
-      '.fis-anim{animation:fisSlideIn 0.45s ease both}' +
-      '.fis-row-hover:hover{background:rgba(0,100,200,0.18)!important;transition:background 0.2s}';
-    document.head.appendChild(style);
-  }
-
-  var lineKeys = [
-    {key:'deepFrontLine',        name:'深前線',  en:'Deep Front Line'},
-    {key:'lateralLine',          name:'側線',    en:'Lateral Line'},
-    {key:'spiralLine',           name:'螺旋線',  en:'Spiral Line'},
-    {key:'superficialBackLine',  name:'淺背線',  en:'Superficial Back Line'},
-    {key:'superficialFrontLine', name:'淺前線',  en:'Superficial Front Line'}
-  ];
-  var recKeys = [
-    {icon:'🫁', label:'90/90版本建議', key:'breathing'},
-    {icon:'💪', label:'訓練計劃建議',  key:'trainingPlan'},
-    {icon:'🎯', label:'訓練起點建議',  key:'startingPoint'}
-  ];
-
-  /* ── 外層卡片 ── */
-  var card = document.createElement('div');
-  card.id = 'fis-report-card';
-  card.style.cssText =
-    'margin-top:12px;border-radius:16px;overflow:hidden;' +
-    'border:1px solid rgba(0,180,255,0.3);' +
-    'background:rgba(5,13,26,0.92);' +
-    'backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);' +
-    'box-shadow:0 0 40px rgba(0,100,255,0.12),0 0 0 1px rgba(0,180,255,0.08);' +
-    'font-family:"Inter","Noto Sans HK",sans-serif';
-
-  /* ── 頂部 Header（預留 Logo 位）── */
-  var header = document.createElement('div');
-  header.style.cssText =
-    'background:linear-gradient(135deg,#0a1830 0%,#0d2545 60%,#091a35 100%);' +
-    'min-height:72px;padding:14px 20px;' +
-    'display:flex;align-items:center;justify-content:space-between;' +
-    'border-bottom:1px solid rgba(0,200,255,0.2);' +
-    'position:relative';
-
-  // Logo 佔位符（預設隱藏，將來放 Logo）
-  var logoSlot = document.createElement('div');
-  logoSlot.id = 'fis-logo-slot';
-  logoSlot.style.cssText = 'display:none;width:120px;flex-shrink:0';
-  logoSlot.setAttribute('data-placeholder', 'logo');
-  header.appendChild(logoSlot);
-
-  // 標題
-  var titleEl = document.createElement('div');
-  titleEl.style.cssText =
-    'flex:1;text-align:center;' +
-    'font-size:14px;font-weight:900;letter-spacing:2px;' +
-    'color:#ffc845;text-shadow:0 0 12px rgba(255,200,69,0.5)';
-  titleEl.textContent = 'FIS 體態特徵訓練優先次序參考';
-  header.appendChild(titleEl);
-
-  // 右側空白平衡（對應 logo slot）
-  var rightPad = document.createElement('div');
-  rightPad.style.cssText = 'width:120px;flex-shrink:0';
-  header.appendChild(rightPad);
-
-  card.appendChild(header);
-
-  /* ── 表頭 ── */
-  var thead = document.createElement('div');
-  thead.className = 'fis-anim';
-  thead.style.cssText =
-    'display:flex;align-items:center;padding:8px 18px;' +
-    'background:rgba(0,80,180,0.25);' +
-    'border-bottom:1px solid rgba(0,150,255,0.25);' +
-    'animation-delay:0.05s';
-  thead.innerHTML =
-    '<div style="flex:2;font-size:10px;color:rgba(180,220,255,0.65);font-weight:700;letter-spacing:1.5px;text-transform:uppercase">五大筋膜線狀態</div>' +
-    '<div style="flex:1.5;font-size:10px;color:rgba(180,220,255,0.65);font-weight:700;text-align:center;letter-spacing:1px">評估結果</div>' +
-    '<div style="flex:1.2;font-size:10px;color:rgba(180,220,255,0.65);font-weight:700;text-align:center;letter-spacing:1px">訓練起點</div>';
-  card.appendChild(thead);
-
-  /* ── 筋膜線行 ── */
-  lineKeys.forEach(function(lk, idx) {
-    var d      = lines[lk.key] || {};
-    var status = d.status || '—';
-    var stage  = d.stage  || '—';
-    var isAlert = status === '優先關注';
-    var color   = isAlert ? '#ff5555' : '#44cc88';
-    var bg      = idx % 2 === 0 ? 'rgba(0,60,140,0.12)' : 'rgba(0,40,100,0.06)';
-
-    // Stage 進度條設定
-    var barPct   = isAlert ? '35%' : '70%';
-    var barColor = isAlert
-      ? 'linear-gradient(90deg,#ff4444,#ff8844)'
-      : 'linear-gradient(90deg,#ff4444,#44aaff,#44dd88)';
-    var stageLabel = stage;
-
-    var row = document.createElement('div');
-    row.className = 'fis-anim fis-row-hover';
-    row.style.cssText =
-      'display:flex;align-items:center;padding:10px 18px;' +
-      'background:' + bg + ';border-bottom:1px solid rgba(0,120,200,0.1);' +
-      'animation-delay:' + (0.08 + idx * 0.06) + 's;transition:background 0.2s';
-
-    // 名稱欄
-    var nameCell = document.createElement('div');
-    nameCell.style.cssText = 'flex:2;line-height:1.3';
-    nameCell.innerHTML =
-      '<span style="font-weight:700;font-size:13px;color:#c8e8ff">' + (idx+1) + '. ' + lk.name + '</span>' +
-      '<br><span style="font-size:9px;color:rgba(150,190,240,0.45)">' + lk.en + '</span>';
-    row.appendChild(nameCell);
-
-    // 狀態燈欄
-    var statusCell = document.createElement('div');
-    statusCell.style.cssText = 'flex:1.5;display:flex;align-items:center;justify-content:center;gap:5px';
-    statusCell.innerHTML =
-      '<span style="width:8px;height:8px;border-radius:50%;flex-shrink:0;display:inline-block;' +
-      'background:' + color + ';box-shadow:0 0 8px ' + color + '"></span>' +
-      '<span style="color:' + color + ';font-size:11px;font-weight:700;text-shadow:0 0 5px ' + color + ';white-space:nowrap">' + status + '</span>';
-    row.appendChild(statusCell);
-
-    // Stage 進度條欄
-    var stageCell = document.createElement('div');
-    stageCell.style.cssText = 'flex:1.2;padding:0 4px';
-    stageCell.innerHTML =
-      '<div style="font-size:10px;color:rgba(180,210,255,0.6);text-align:center;margin-bottom:3px">' + stageLabel + '</div>' +
-      '<div style="height:5px;border-radius:3px;background:rgba(255,255,255,0.08);overflow:hidden">' +
-        '<div style="height:100%;width:' + barPct + ';background:' + barColor + ';border-radius:3px;transition:width 0.6s ease"></div>' +
-      '</div>';
-    row.appendChild(stageCell);
-    card.appendChild(row);
+function compress(file){
+  return new Promise(res=>{
+    const reader=new FileReader();
+    reader.onload=e=>{
+      const img=new Image();
+      img.onload=()=>{
+        const canvas=document.createElement('canvas');
+        let w=img.width,h=img.height,max=1200;
+        if(w>max||h>max){if(w>h){h=Math.round(h*max/w);w=max;}else{w=Math.round(w*max/h);h=max;}}
+        canvas.width=w;canvas.height=h;canvas.getContext('2d').drawImage(img,0,0,w,h);
+        let lo=0.1,hi=0.92,result=canvas.toDataURL('image/webp',0.8);
+        for(let i=0;i<8;i++){const mid=(lo+hi)/2,data=canvas.toDataURL('image/webp',mid),bytes=Math.round((data.length-22)*3/4);if(bytes>500*1024)hi=mid;else{lo=mid;result=data;}}
+        res(result);
+      };img.src=e.target.result;
+    };reader.readAsDataURL(file);
   });
+}
 
-  /* ── 三個建議框 ── */
-  var recsWrap = document.createElement('div');
-  recsWrap.className = 'fis-anim';
-  recsWrap.style.cssText =
-    'padding:12px 16px;' +
-    'background:rgba(4,11,24,0.85);' +
-    'border-top:1px solid rgba(0,150,255,0.18);' +
-    'display:flex;flex-direction:column;gap:8px;' +
-    'animation-delay:0.45s';
+async function uploadFIS(){
+  if(!fisPhotos.length)return;
+  const btn=document.getElementById('btnFISUpload');
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span>上載分析中...';
+  try{
+    const r=await fetch(API+'/api/fis-step1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({images:fisPhotos,userId:UID})});
+    const d=await r.json();
+    document.getElementById('fisAIText').textContent=d.result||'分析完成';
+    document.getElementById('fisAIBox').classList.add('show');
+    showToast('體態分析完成 ✓');
+  }catch(e){showToast('上載失敗，請重試');}
+  finally{btn.disabled=false;btn.innerHTML='上載並分析體態';}
+}
 
-  recKeys.forEach(function(rk, ri) {
-    var box = document.createElement('div');
-    box.className = 'fis-anim';
-    box.style.cssText =
-      'background:rgba(0,80,200,0.1);' +
-      'border:1px solid rgba(0,150,255,0.2);' +
-      'border-radius:10px;padding:10px 14px;' +
-      'display:flex;gap:10px;align-items:flex-start;' +
-      'backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);' +
-      'animation-delay:' + (0.5 + ri * 0.08) + 's;' +
-      'transition:box-shadow 0.2s';
-
-    var icon = document.createElement('span');
-    icon.style.cssText = 'font-size:15px;flex-shrink:0;padding-top:2px';
-    icon.textContent = rk.icon;
-
-    var textWrap = document.createElement('div');
-    textWrap.style.cssText = 'flex:1;min-width:0';
-
-    var lbl = document.createElement('div');
-    lbl.style.cssText =
-      'font-size:9px;color:#44aaff;font-weight:700;letter-spacing:1.5px;margin-bottom:4px;text-transform:uppercase';
-    lbl.textContent = rk.label;
-
-    var bodyEl = document.createElement('div');
-    bodyEl.style.cssText =
-      'font-size:12px;color:#c0dcf8;line-height:1.65;word-break:break-word;' +
-      'text-shadow:0 0 3px rgba(0,150,255,0.2)';
-    bodyEl.innerHTML = md(recs[rk.key] || '—');
-
-    textWrap.appendChild(lbl);
-    textWrap.appendChild(bodyEl);
-    box.appendChild(icon);
-    box.appendChild(textWrap);
-    recsWrap.appendChild(box);
-  });
-
-  card.appendChild(recsWrap);
-
-  /* ── 免責聲明 ── */
-  var disc = document.createElement('div');
-  disc.style.cssText =
-    'text-align:center;padding:8px 16px;font-size:10px;' +
-    'color:rgba(100,140,190,0.5);' +
-    'background:rgba(4,11,24,0.9);' +
-    'border-top:1px solid rgba(0,100,180,0.12);letter-spacing:0.5px';
-  disc.textContent = '🛡️ 本報告為教育性體態參考，並非醫療診斷 · FIS體態特徵訓練系統';
-  card.appendChild(disc);
-
-  imageResult.appendChild(card);
-  card.scrollIntoView({behavior:'smooth'});
-
-  // 自動儲存測試結果落 D1
-  if (window.FIS_USER_ID && fisParsedData) {
-    fetch(API_BASE + '/api/fascia-test/save', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        userId: window.FIS_USER_ID,
-        parsed: fisParsedData
-      })
-    }).then(function(r) { return r.json(); })
-      .then(function(d) {
-        if (d.success) {
-          console.log('FIS test saved:', d.testId);
-        }
-      }).catch(function(e) {
-        console.warn('Save failed:', e.message);
-      });
+function editName(){
+  const n=prompt('設定你的訓練員名稱：');
+  if(n&&n.trim()){
+    const name=n.trim().substring(0,20);
+    localStorage.setItem('fis_display_name',name);
+    document.getElementById('uname').textContent=name;
+    if(UID)fetch(API+'/api/user/update-name',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:UID,newName:name})}).catch(()=>{});
   }
 }
 
-function downloadImage() {
-  var img = document.getElementById('fisImage');
-  if (!img.src) return;
-  var a = document.createElement('a');
-  a.href = img.src;
-  a.download = 'FIS-report.svg';
-  a.click();
-}
+let toastTimer;
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2500);}
 
-async function analyzeProgress() {
-  if (!ratings.r1 || !ratings.r2 || !ratings.r3) { alert('Please complete all three indicators'); return; }
-  var result = document.getElementById('progressResult');
-  var resultText = document.getElementById('progressResultText');
-  result.classList.add('show');
-  resultText.innerHTML = '<div class="progress-bar-wrap"><div class="progress-bar-fill" id="pb-prog"></div></div><div class="progress-text" id="pt-prog">0%</div>';
-  startProgress('pb-prog', 'pt-prog', 10000);
-  try {
-    var res = await fetch(API_BASE + '/api/progress', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({rating: ratings.r1, backPain: ratings.r2, tensionSpeed: ratings.r3}) });
-    var data = await res.json();
-    stopProgress('pb-prog', 'pt-prog');
-    var aiResult = data.result || 'Analysis failed, please try again.';
-    resultText.textContent = aiResult;
-
-    // AI 分析完成後自動儲存落 D1（包含 AI 建議）
-    if (window.FIS_USER_ID) {
-      fetch(API_BASE + '/api/progress/save', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-          userId: window.FIS_USER_ID,
-          muscleActivation: parseInt(ratings.r1) || 1,
-          backCompensation: ratings.r2 === '有' ? '有' : ratings.r2 === '輕微' ? '輕微' : '無',
-          tensionSpeed: ratings.r3 || '5次後',
-          notes: aiResult
-        })
-      }).then(r=>r.json()).then(d=>{ if(d.success) console.log('Progress auto-saved:', d.logId); })
-        .catch(e=>console.warn('Progress save failed:', e.message));
-      // Cache locally for mini-chart routing logic
-      cacheProgressLog(parseInt(ratings.r1) || 1);
-    }
-  } catch(e) { stopProgress('pb-prog', 'pt-prog'); resultText.textContent = 'Service temporarily unavailable, please try again later.'; }
-}
-
-async function analyzePain() {
-  var symptom = document.getElementById('symptomInput').value.trim();
-  if (!symptom) { alert('Please describe your symptoms'); return; }
-  if (!selectedPart) { alert('Please select a training body part'); return; }
-  var result = document.getElementById('painResult');
-  var resultText = document.getElementById('painResultText');
-  result.classList.add('show');
-  resultText.innerHTML = '<div class="progress-bar-wrap"><div class="progress-bar-fill" id="pb-pain"></div></div><div class="progress-text" id="pt-pain">0%</div>';
-  startProgress('pb-pain', 'pt-pain', 10000);
-  try {
-    var res = await fetch(API_BASE + '/api/pain', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({bodyPart: selectedPart, symptom: symptom}) });
-    var data = await res.json();
-    stopProgress('pb-pain', 'pt-pain');
-    var aiResult = data.result || 'Diagnosis failed, please try again.';
-    resultText.textContent = aiResult;
-
-    // AI 分析完成後自動儲存落 D1
-    if (window.FIS_USER_ID) {
-      fetch(API_BASE + '/api/pain/save', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-          userId: window.FIS_USER_ID,
-          bodyPart: selectedPart,
-          symptomDescription: symptom,
-          aiDiagnosis: aiResult
-        })
-      }).then(r=>r.json()).then(d=>{ if(d.success) console.log('Pain auto-saved:', d.diagnosisId); })
-        .catch(e=>console.warn('Pain save failed:', e.message));
-    }
-  } catch(e) { stopProgress('pb-pain', 'pt-pain'); resultText.textContent = 'Service temporarily unavailable, please try again later.'; }
-}
-
-function saveRecord() {
-  if (!ratings.r1 || !ratings.r2 || !ratings.r3) return;
-  var record = { date: new Date().toLocaleDateString('zh-HK'), r1: ratings.r1, r2: ratings.r2, r3: ratings.r3 };
-  try { var history = JSON.parse(localStorage.getItem('fis_history') || '[]'); history.unshift(record); if (history.length > 20) { history.pop(); } localStorage.setItem('fis_history', JSON.stringify(history)); } catch(e) {}
-  loadHistory();
-  alert('Record saved');
-}
-
-var progressTimers = {};
-function startProgress(barId, textId, duration) {
-  if (progressTimers[barId]) { clearInterval(progressTimers[barId]); }
-  var bar = document.getElementById(barId); var txt = document.getElementById(textId);
-  if (!bar || !txt) return;
-  var start = Date.now(); var maxPct = 92;
-  progressTimers[barId] = setInterval(function() {
-    var elapsed = Date.now() - start;
-    var pct = Math.min(maxPct, Math.floor((elapsed / duration) * maxPct));
-    if (bar) { bar.style.width = pct + '%'; } if (txt) { txt.textContent = pct + '%'; }
-    if (pct >= maxPct) { clearInterval(progressTimers[barId]); }
-  }, 300);
-}
-function stopProgress(barId, textId) {
-  if (progressTimers[barId]) { clearInterval(progressTimers[barId]); }
-  var bar = document.getElementById(barId); var txt = document.getElementById(textId);
-  if (bar) { bar.style.width = '100%'; } if (txt) { txt.textContent = '100%'; }
-}
-
-
-// ═══════════════════════════════════════════════════════════
-// DATA-LOG: Smart init — banner + inline weekly + mini chart
-// ═══════════════════════════════════════════════════════════
-function initDataLog() {
-  checkFunctionalBanner();
-  checkInlineWeekly();
-}
-
-function getThisWeekProgressLogs() {
-  var now = new Date();
-  var monday = new Date(now);
-  monday.setDate(now.getDate() - ((now.getDay() + 6) % 7));
-  monday.setHours(0,0,0,0);
-  try {
-    var logs = JSON.parse(localStorage.getItem('fis_progress_history') || '[]');
-    return logs.filter(function(l){ return new Date(l.date || l.logged_at) >= monday; });
-  } catch(e) { return []; }
-}
-
-function getLastWeekProgressLogs() {
-  var now = new Date();
-  var thisMonday = new Date(now);
-  thisMonday.setDate(now.getDate() - ((now.getDay() + 6) % 7));
-  thisMonday.setHours(0,0,0,0);
-  var lastMonday = new Date(thisMonday);
-  lastMonday.setDate(thisMonday.getDate() - 7);
-  try {
-    var logs = JSON.parse(localStorage.getItem('fis_progress_history') || '[]');
-    return logs.filter(function(l){
-      var d = new Date(l.date || l.logged_at);
-      return d >= lastMonday && d < thisMonday;
-    });
-  } catch(e) { return []; }
-}
-
-function checkFunctionalBanner() {
-  var banner = document.getElementById('functional-banner');
-  if (!banner) return;
-  var lastFunctional = localStorage.getItem('fis_last_functional_date');
-  var now = new Date();
-  // Show if: no functional test ever, OR last one was >28 days ago
-  // AND user has ≥4 total progress logs (has been using the app)
-  try {
-    var allLogs = JSON.parse(localStorage.getItem('fis_progress_history') || '[]');
-    if (allLogs.length < 4) { banner.style.display = 'none'; return; }
-    var shouldShow = false;
-    if (!lastFunctional) {
-      shouldShow = true;
-    } else {
-      var daysSince = (now - new Date(lastFunctional)) / (1000*60*60*24);
-      if (daysSince >= 28) shouldShow = true;
-    }
-    banner.style.display = shouldShow ? 'flex' : 'none';
-  } catch(e) { banner.style.display = 'none'; }
-}
-
-function checkInlineWeekly() {
-  var section = document.getElementById('inline-weekly-section');
-  if (!section) return;
-  var now = new Date();
-  var dayOfWeek = now.getDay(); // 0=Sun, 6=Sat
-  var isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
-  var thisWeekLogs = getThisWeekProgressLogs();
-  var shouldShow = (isWeekend && thisWeekLogs.length >= 2) || (thisWeekLogs.length >= 4);
-  if (shouldShow) {
-    section.style.display = 'block';
-    renderInlineMiniChart();
-  } else {
-    section.style.display = 'none';
-  }
-}
-
-function renderInlineMiniChart() {
-  var chartCard = document.getElementById('inline-chart-card');
-  if (!chartCard) return;
-  var thisWeek = getThisWeekProgressLogs();
-  var lastWeek = getLastWeekProgressLogs();
-  if (thisWeek.length === 0 || lastWeek.length === 0) {
-    chartCard.style.display = 'none'; return;
-  }
-  function avg(arr) {
-    return arr.reduce(function(s,l){ return s + (l.muscle_activation || l.activation || 0); }, 0) / arr.length;
-  }
-  var prevAvg = avg(lastWeek);
-  var currAvg = avg(thisWeek);
-  var prevStr = prevAvg.toFixed(1);
-  var currStr = currAvg.toFixed(1);
-  var delta = (currAvg - prevAvg).toFixed(1);
-  var pct = Math.round((parseFloat(delta) / prevAvg) * 100);
-
-  document.getElementById('inline-val-prev').textContent = prevStr;
-  document.getElementById('inline-val-curr').textContent = currStr;
-  document.getElementById('inline-bar-prev').style.height = Math.round((prevAvg / 4) * 100) + '%';
-  document.getElementById('inline-bar-curr').style.height = Math.round((currAvg / 4) * 100) + '%';
-
-  var deltaEl = document.getElementById('inline-chart-delta');
-  if (parseFloat(delta) >= 0) {
-    deltaEl.textContent = '▲ +' + delta + ' 分 / 進步 ' + pct + '%';
-    deltaEl.style.color = '#2ed573';
-  } else {
-    deltaEl.textContent = '▼ ' + delta + ' 分 / 下跌 ' + Math.abs(pct) + '%';
-    deltaEl.style.color = '#ff4757';
-  }
-  chartCard.style.display = 'block';
-}
-
-// ═══════════════════════════════════════════════════════════
-// COLLAPSIBLE weekly fields
-// ═══════════════════════════════════════════════════════════
-function toggleWeeklyField(collapseId, toggleBtnId) {
-  var el = document.getElementById(collapseId);
-  var arrowId = toggleBtnId.replace('-btn', '-arrow');
-  var arrow = document.getElementById(arrowId);
-  var isOpen = el.style.maxHeight !== '0px' && el.style.maxHeight !== '';
-  if (isOpen) {
-    el.style.maxHeight = '0px';
-    el.style.opacity = '0';
-    if (arrow) arrow.style.transform = 'rotate(0deg)';
-  } else {
-    el.style.maxHeight = '200px';
-    el.style.opacity = '1';
-    if (arrow) arrow.style.transform = 'rotate(90deg)';
-  }
-}
-
-// ═══════════════════════════════════════════════════════════
-// LEG TIMER
-// ═══════════════════════════════════════════════════════════
-var legTimers = {
-  left:  { running: false, start: null, elapsed: 0, interval: null },
-  right: { running: false, start: null, elapsed: 0, interval: null }
-};
-
-function toggleLegTimer(side) {
-  var t = legTimers[side];
-  var card = document.getElementById('timer-card-' + side);
-  var display = document.getElementById('timer-display-' + side);
-  var status = document.getElementById('timer-status-' + side);
-  var resetBtn = document.getElementById('timer-reset-' + side);
-  var input = document.getElementById('func' + (side === 'left' ? 'Left' : 'Right') + 'Sec');
-
-  // If already done, ignore tap (use reset button instead)
-  if (card.dataset.state === 'done') return;
-
-  if (card.dataset.state !== 'running') {
-    // START
-    t.running = true;
-    t.start = Date.now() - (t.elapsed * 1000);
-    card.dataset.state = 'running';
-    card.style.borderColor = 'rgba(255,200,50,0.8)';
-    card.style.background = 'rgba(255,200,50,0.08)';
-    status.textContent = '點擊停止';
-    status.style.color = 'var(--gold)';
-    t.interval = setInterval(function() {
-      t.elapsed = (Date.now() - t.start) / 1000;
-      display.textContent = t.elapsed.toFixed(1);
-    }, 100);
-  } else {
-    // STOP
-    clearInterval(t.interval);
-    t.running = false;
-    t.elapsed = (Date.now() - t.start) / 1000;
-    var finalSec = t.elapsed.toFixed(1);
-    display.textContent = finalSec;
-    display.style.color = '#2ed573';
-    input.value = finalSec;
-    card.dataset.state = 'done';
-    card.style.borderColor = 'rgba(46,213,115,0.6)';
-    card.style.background = 'rgba(46,213,115,0.06)';
-    status.textContent = finalSec + ' 秒 ✓';
-    status.style.color = '#2ed573';
-    if (resetBtn) resetBtn.style.opacity = '1';
-  }
-}
-
-function resetLegTimer(side) {
-  var t = legTimers[side];
-  clearInterval(t.interval);
-  t.running = false; t.elapsed = 0; t.start = null;
-  var card = document.getElementById('timer-card-' + side);
-  var display = document.getElementById('timer-display-' + side);
-  var status = document.getElementById('timer-status-' + side);
-  var resetBtn = document.getElementById('timer-reset-' + side);
-  var input = document.getElementById('func' + (side === 'left' ? 'Left' : 'Right') + 'Sec');
-  display.textContent = '0.0';
-  display.style.color = 'var(--gold)';
-  status.textContent = '點擊開始';
-  status.style.color = 'var(--text-dim)';
-  card.dataset.state = '';
-  card.style.borderColor = 'rgba(255,200,50,0.25)';
-  card.style.background = 'rgba(0,0,0,0.25)';
-  if (resetBtn) resetBtn.style.opacity = '0';
-  input.value = '';
-}
-
-// ═══════════════════════════════════════════════════════════
-// Cache progress log locally for mini-chart
-// ═══════════════════════════════════════════════════════════
-function cacheProgressLog(muscleActivation) {
-  try {
-    var logs = JSON.parse(localStorage.getItem('fis_progress_history') || '[]');
-    logs.unshift({ logged_at: new Date().toISOString(), muscle_activation: muscleActivation });
-    if (logs.length > 50) logs = logs.slice(0,50);
-    localStorage.setItem('fis_progress_history', JSON.stringify(logs));
-  } catch(e) {}
-}
-
-function saveWeekly() {
-  var score = document.getElementById('weeklyScore').value;
-  var improve = document.getElementById('weeklyImprove') ? document.getElementById('weeklyImprove').value.trim() : '';
-  var next = document.getElementById('weeklyImproveNext') ? document.getElementById('weeklyImproveNext').value.trim() : '';
-  var record = { date: new Date().toLocaleDateString('zh-HK'), score: score, improve: improve, next: next };
-  try {
-    var history = JSON.parse(localStorage.getItem('fis_weekly_history') || '[]');
-    history.unshift(record); if (history.length > 20) history.pop();
-    localStorage.setItem('fis_weekly_history', JSON.stringify(history));
-  } catch(e) {}
-  if (window.FIS_USER_ID) {
-    fetch(API_BASE + '/api/weekly/save', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({
-        userId: window.FIS_USER_ID,
-        score: parseInt(score),
-        improvement: improve,
-        nextFocus: next,
-        weekDate: new Date().toISOString().substring(0,10)
-      })
-    }).then(function(r){ return r.json(); })
-      .then(function(d){ if(d.success) console.log('Weekly saved:', d.assessmentId); })
-      .catch(function(e){ console.warn('Weekly save failed:', e.message); });
-  }
-  var el = document.getElementById('weeklyResult');
-  var txt = document.getElementById('weeklyResultText');
-  if (el && txt) {
-    txt.textContent = '本週評分：' + score + '/10　最大改善：' + (improve||'未填寫') + '　下週重點：' + (next||'未填寫');
-    el.style.display = 'block';
-  }
-}
-
-function loadWeeklyCompare() {
-  var el = document.getElementById('weeklyCompareText');
-  if (!el) return;
-  if (!window.FIS_USER_ID) { el.textContent = '請先完成登入'; return; }
-  fetch(API_BASE + '/api/progress/history?userId=' + window.FIS_USER_ID)
-    .then(function(r){ return r.json(); })
-    .then(function(d) {
-      var logs = d.records || [];
-      if (logs.length < 2) { el.textContent = '需要最少兩次訓練紀錄才能進行對比。'; return; }
-      var latest = logs[0], prev = logs[1];
-      var diff = (latest.muscle_activation || 0) - (prev.muscle_activation || 0);
-      var arrow = diff > 0 ? '↑' : diff < 0 ? '↓' : '→';
-      var color = diff > 0 ? '#2ed573' : diff < 0 ? '#ff4757' : '#ffc845';
-      el.innerHTML =
-        '<div style="display:flex;justify-content:space-between;margin-bottom:12px">' +
-        '<div style="text-align:center"><div style="font-size:11px;color:rgba(180,210,255,0.6)">上次</div><div style="font-size:28px;font-family:Bebas Neue,sans-serif;color:#ffc845">' + (prev.muscle_activation||'—') + '/4</div><div style="font-size:10px;color:rgba(180,210,255,0.5)">' + (prev.logged_at||'').substring(0,10) + '</div></div>' +
-        '<div style="font-size:36px;color:' + color + ';align-self:center">' + arrow + '</div>' +
-        '<div style="text-align:center"><div style="font-size:11px;color:rgba(180,210,255,0.6)">今次</div><div style="font-size:28px;font-family:Bebas Neue,sans-serif;color:#ffc845">' + (latest.muscle_activation||'—') + '/4</div><div style="font-size:10px;color:rgba(180,210,255,0.5)">' + (latest.logged_at||'').substring(0,10) + '</div></div>' +
-        '</div>' +
-        '<div style="font-size:12px;color:rgba(180,210,255,0.7)">代償：' + (latest.back_compensation||'—') + '　張力速度：' + (latest.tension_speed||'—') + '</div>';
-    }).catch(function(){ el.textContent = '載入失敗，請重試。'; });
-}
-
-function saveFunctional() {
-  var left = document.getElementById('funcLeftSec').value;
-  var right = document.getElementById('funcRightSec').value;
-  var jc = document.querySelector('.toggle-btn[data-group="jc"].active');
-  var breath = document.querySelector('.toggle-btn[data-group="breath"].active');
-  if (!left || !right) { alert('請先完成左右腳計時（點擊計時器開始/停止）'); return; }
-  var jcVal = jc ? parseInt(jc.getAttribute('data-val')) : null;
-  var breathVal = breath ? breath.getAttribute('data-val') : null;
-  var record = {
-    date: new Date().toLocaleDateString('zh-HK'),
-    leftSec: left, rightSec: right,
-    jcLevel: jcVal || '—',
-    breathing: breathVal || '—'
-  };
-  try {
-    var history = JSON.parse(localStorage.getItem('fis_functional_history') || '[]');
-    history.unshift(record); if (history.length > 20) history.pop();
-    localStorage.setItem('fis_functional_history', JSON.stringify(history));
-    // Store date for 4-week banner logic
-    localStorage.setItem('fis_last_functional_date', new Date().toISOString());
-  } catch(e) {}
-  // 儲存落 D1
-  if (window.FIS_USER_ID) {
-    fetch(API_BASE + '/api/functional/save', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({
-        userId: window.FIS_USER_ID,
-        singleLegLeft: parseFloat(left) || null,
-        singleLegRight: parseFloat(right) || null,
-        jeffersonCurlLevel: jcVal,
-        breathingPattern: breathVal
-      })
-    }).then(function(r){ return r.json(); })
-      .then(function(d){ if(d.success) console.log('Functional saved:', d.testId); })
-      .catch(function(e){ console.warn('Functional save failed:', e.message); });
-  }
-  var el = document.getElementById('functionalResult');
-  var txt = document.getElementById('functionalResultText');
-  if (el && txt) {
-    var diff = left && right ? Math.abs(parseInt(left) - parseInt(right)) : null;
-    txt.innerHTML = '左腳：<strong>' + (left||'—') + '秒</strong>　右腳：<strong>' + (right||'—') + '秒</strong>' +
-      (diff !== null ? '　左右差：<strong style="color:' + (diff > 5 ? '#ff4757' : '#2ed573') + '">' + diff + '秒</strong>' : '') +
-      '<br>Jefferson Curl：Level <strong>' + record.jcLevel + '</strong>　呼吸模式：<strong>' + record.breathing + '</strong>';
-    el.style.display = 'block';
-  }
-}
-
-async function load12WeekReport() {
-  var el = document.getElementById('report12Text');
-  var title = document.querySelector('#report12Section .ai-result-title');
-  if (!el) return;
-  if (!window.FIS_USER_ID) { el.textContent = '請先完成登入'; return; }
-  el.textContent = '正在從數據庫讀取你的訓練紀錄...';
-  try {
-    var res = await fetch(API_BASE + '/api/progress/history?userId=' + window.FIS_USER_ID);
-    var data = await res.json();
-    var logs = data.records || [];
-    if (logs.length === 0) { el.textContent = '尚無訓練紀錄，請先完成至少一次訓練日誌。'; return; }
-    if (title) title.textContent = '📊 12星期終極對比報告（共 ' + logs.length + ' 次訓練）';
-    var first = logs[logs.length-1], last = logs[0];
-    var avg = Math.round((logs.reduce(function(s,l){ return s+(l.muscle_activation||0); },0)/logs.length)*10)/10;
-    var compRate = Math.round(logs.filter(function(l){ return l.back_compensation==='有'; }).length/logs.length*100);
-    var diff = (last.muscle_activation||0) - (first.muscle_activation||0);
-    el.innerHTML =
-      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">' +
-      '<div style="background:rgba(0,0,0,0.2);border-radius:10px;padding:14px;text-align:center"><div style="font-size:10px;color:rgba(180,210,255,0.6)">訓練次數</div><div style="font-size:32px;font-family:Bebas Neue,sans-serif;color:#ffc845">' + logs.length + '</div></div>' +
-      '<div style="background:rgba(0,0,0,0.2);border-radius:10px;padding:14px;text-align:center"><div style="font-size:10px;color:rgba(180,210,255,0.6)">平均發力感</div><div style="font-size:32px;font-family:Bebas Neue,sans-serif;color:#ffc845">' + avg + '/4</div></div>' +
-      '<div style="background:rgba(0,0,0,0.2);border-radius:10px;padding:14px;text-align:center"><div style="font-size:10px;color:rgba(180,210,255,0.6)">代償率</div><div style="font-size:32px;font-family:Bebas Neue,sans-serif;color:' + (compRate>30?'#ff4757':'#2ed573') + '">' + compRate + '%</div></div>' +
-      '<div style="background:rgba(0,0,0,0.2);border-radius:10px;padding:14px;text-align:center"><div style="font-size:10px;color:rgba(180,210,255,0.6)">整體進步</div><div style="font-size:32px;font-family:Bebas Neue,sans-serif;color:' + (diff>0?'#2ed573':diff<0?'#ff4757':'#ffc845') + '">' + (diff>0?'+':'') + diff + '</div></div>' +
-      '</div>' +
-      '<div style="font-size:12px;color:rgba(180,210,255,0.7);margin-bottom:8px">首次訓練：' + (first.logged_at||'').substring(0,10) + '　最近訓練：' + (last.logged_at||'').substring(0,10) + '</div>' +
-      '<div style="font-size:12px;color:rgba(180,210,255,0.7)">首次發力感：' + (first.muscle_activation||'—') + '/4　最近發力感：' + (last.muscle_activation||'—') + '/4</div>';
-  } catch(e) { el.textContent = '載入失敗：' + e.message; }
-}
-
-async function loadHistory() {
-  var section = document.getElementById('historySection');
-  var list = document.getElementById('historyList');
-  if (!section || !list) return;
-
-  // 從 D1 讀取歷史紀錄
-  if (window.FIS_USER_ID) {
-    try {
-      var res = await fetch(API_BASE + '/api/progress/history?userId=' + window.FIS_USER_ID);
-      var data = await res.json();
-      var records = data.records || [];
-      if (records.length === 0) { section.style.display = 'none'; return; }
-      section.style.display = 'block';
-      var html = '';
-      for (var i = 0; i < records.length; i++) {
-        var r = records[i];
-        var date = r.logged_at ? r.logged_at.substring(0, 10) : '—';
-        var activation = r.muscle_activation || '—';
-        var back = r.back_compensation || '—';
-        var tension = r.tension_speed || '—';
-        var isAlert = activation <= 2;
-        html += '<div class="history-item">' +
-          '<div class="history-date">' + date + '</div>' +
-          '<div class="history-scores">' +
-          '<span>發力感: <strong style="color:' + (isAlert ? '#ff6666' : 'var(--gold)') + '">' + activation + '/4</strong></span> ' +
-          '<span>腰部代償: <strong>' + back + '</strong></span> ' +
-          '<span>張力速度: <strong>' + tension + '</strong></span>' +
-          '</div>' +
-          (r.notes ? '<div style="font-size:11px;color:var(--text-dim);margin-top:4px;line-height:1.4">' + r.notes.substring(0, 80) + (r.notes.length > 80 ? '...' : '') + '</div>' : '') +
-          '</div>';
-      }
-      list.innerHTML = html;
-      return;
-    } catch(e) { console.warn('History fetch failed:', e.message); }
-  }
-
-  // Fallback: localStorage
-  try {
-    var history = JSON.parse(localStorage.getItem('fis_history') || '[]');
-    if (history.length === 0) { section.style.display = 'none'; return; }
-    section.style.display = 'block';
-    var html = '';
-    for (var i = 0; i < history.length; i++) {
-      var r = history[i];
-      html += '<div class="history-item"><div class="history-date">' + r.date + '</div><div class="history-scores"><span>Activation: <strong style="color:var(--gold)">' + r.r1 + '/4</strong></span> <span>Compensation: <strong>' + r.r2 + '</strong></span> <span>Tension: <strong>' + r.r3 + '</strong></span></div></div>';
-    }
-    list.innerHTML = html;
-  } catch(e) {}
-}
-
-window.addEventListener('DOMContentLoaded', function() {
-  bindAll();
-  try { if (localStorage.getItem('fis_agreed') === '1') { goTo('home'); } } catch(e) {}
-});
+document.addEventListener('DOMContentLoaded',init);
 </script>
 </body>
 </html>
