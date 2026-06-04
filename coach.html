@@ -381,7 +381,11 @@
 
   <!-- Search -->
   <div class="search-section">
-    <div class="search-label">🔍 學員查詢</div>
+    <div class="search-label">🔐 教練認證 + 學員查詢</div>
+    <div class="search-row" style="margin-bottom:10px">
+      <input class="search-input" id="coachKeyInput" type="password"
+        placeholder="輸入教練密鑰（Coach Key）">
+    </div>
     <div class="search-row">
       <input class="search-input" id="userIdInput" type="text"
         placeholder="輸入學員 User ID（例如：usr_155de0661c1640ba）"
@@ -510,8 +514,16 @@ async function loadUser() {
   document.getElementById('loading').style.display = 'block';
 
   try {
-    const res = await fetch(API + '/api/coach/user-summary?user_id=' + encodeURIComponent(userId));
+    const coachKey = document.getElementById('coachKeyInput').value.trim();
+    if (!coachKey) { showError('請輸入教練密鑰'); document.getElementById('loading').style.display='none'; return; }
+
+    const res = await fetch(API + '/api/coach/user-summary', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: userId, coach_key: coachKey })
+    });
     const data = await res.json();
+    if (res.status === 403) { showError('❌ 教練密鑰錯誤，拒絕存取'); document.getElementById('loading').style.display='none'; return; }
     document.getElementById('loading').style.display = 'none';
 
     if (data.error) { showError('錯誤：' + data.error); return; }
