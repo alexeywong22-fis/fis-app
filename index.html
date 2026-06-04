@@ -891,6 +891,21 @@ async function analyzeProgress() {
   startProgress('pb-prog', 'pt-prog', 10000);
   try {
     var res = await fetch(API_BASE + '/api/progress', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({rating: ratings.r1, backPain: ratings.r2, tensionSpeed: ratings.r3}) });
+
+    // 儲存訓練日誌落 D1
+    if (window.FIS_USER_ID) {
+      fetch(API_BASE + '/api/progress/save', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          userId: window.FIS_USER_ID,
+          muscleActivation: parseInt(ratings.r1) || 1,
+          backCompensation: ratings.r2 === '有' ? '有' : ratings.r2 === '輕微' ? '輕微' : '無',
+          tensionSpeed: ratings.r3 || '5次後'
+        })
+      }).then(r=>r.json()).then(d=>{ if(d.success) console.log('Progress saved:', d.logId); })
+        .catch(e=>console.warn('Progress save failed:', e.message));
+    }
     var data = await res.json();
     stopProgress('pb-prog', 'pt-prog');
     resultText.textContent = data.result || 'Analysis failed, please try again.';
@@ -908,6 +923,22 @@ async function analyzePain() {
   startProgress('pb-pain', 'pt-pain', 10000);
   try {
     var res = await fetch(API_BASE + '/api/pain', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({bodyPart: selectedPart, symptom: symptom}) });
+    var painData = await res.json();
+
+    // 儲存痛點診斷落 D1
+    if (window.FIS_USER_ID) {
+      fetch(API_BASE + '/api/pain/save', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          userId: window.FIS_USER_ID,
+          bodyPart: selectedPart,
+          symptomDescription: symptom,
+          aiDiagnosis: painData.result || null
+        })
+      }).then(r=>r.json()).then(d=>{ if(d.success) console.log('Pain saved:', d.diagnosisId); })
+        .catch(e=>console.warn('Pain save failed:', e.message));
+    }
     var data = await res.json();
     stopProgress('pb-pain', 'pt-pain');
     resultText.textContent = data.result || 'Diagnosis failed, please try again.';
