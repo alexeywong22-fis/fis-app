@@ -3,391 +3,381 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FIS 教練後台</title>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+HK:wght@300;400;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<title>FIS 教練後台 · 上帝視角</title>
 <style>
-  :root {
-    --bg: #04080f;
-    --surface: #0a1628;
-    --gold: #ffc845;
-    --gold-dim: rgba(255,200,69,0.3);
-    --cyan: #00d4ff;
-    --red: #ff4757;
-    --green: #2ed573;
-    --text: #c8e6ff;
-    --text-dim: rgba(180,210,255,0.5);
-    --border: rgba(0,150,255,0.2);
-  }
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body { background:var(--bg); color:var(--text); font-family:'Noto Sans HK',sans-serif; min-height:100vh; }
-
-  .header {
-    background:linear-gradient(90deg,#050d1a,#0d2545);
-    border-bottom:1px solid var(--border);
-    padding:16px 32px;
-    display:flex; align-items:center; justify-content:space-between;
-    position:sticky; top:0; z-index:100;
-  }
-  .brand { font-family:'Bebas Neue',sans-serif; font-size:24px; letter-spacing:4px; color:var(--gold); text-shadow:0 0 20px rgba(255,200,69,0.4); }
-  .brand-sub { font-size:11px; color:var(--text-dim); letter-spacing:2px; margin-top:2px; }
-  .status { display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text-dim); }
-  .dot { width:8px; height:8px; border-radius:50%; background:var(--green); box-shadow:0 0 8px var(--green); animation:pulse 2s infinite; }
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-
-  .container { max-width:1200px; margin:0 auto; padding:32px 24px; }
-
-  .card {
-    background:var(--surface);
-    border:1px solid var(--border);
-    border-radius:16px;
-    padding:24px;
-    margin-bottom:24px;
-  }
-  .label { font-size:10px; color:var(--cyan); letter-spacing:2px; font-weight:700; margin-bottom:12px; }
-
-  .input {
-    width:100%; background:rgba(0,0,0,0.4);
-    border:1px solid var(--border); border-radius:10px;
-    padding:12px 16px; color:var(--text);
-    font-family:'Noto Sans HK',sans-serif; font-size:13px;
-    outline:none; margin-bottom:10px; transition:border-color 0.2s;
-  }
-  .input:focus { border-color:var(--cyan); }
-  .input::placeholder { color:var(--text-dim); }
-  .input[type=password] { letter-spacing:2px; }
-
-  .btn {
-    background:var(--gold); color:#000;
-    border:none; border-radius:10px;
-    padding:12px 28px; font-size:13px; font-weight:700;
-    cursor:pointer; transition:all 0.2s; width:100%;
-  }
-  .btn:hover { background:#ffda6b; }
-  .btn-ghost {
-    background:transparent; color:var(--text);
-    border:1px solid var(--border); border-radius:8px;
-    padding:8px 16px; font-size:12px; cursor:pointer;
-  }
-  .btn-ghost:hover { border-color:var(--cyan); }
-
-  .error {
-    background:rgba(255,71,87,0.1); border:1px solid rgba(255,71,87,0.3);
-    border-radius:12px; padding:14px 18px; color:var(--red);
-    font-size:13px; margin-bottom:16px; display:none;
-  }
-
-  #loading { display:none; text-align:center; padding:60px; color:var(--text-dim); font-size:13px; letter-spacing:2px; }
-  .loader { width:40px; height:40px; border:2px solid var(--border); border-top-color:var(--cyan); border-radius:50%; animation:spin 0.8s linear infinite; margin:0 auto 16px; }
-  @keyframes spin { to { transform:rotate(360deg); } }
-  @keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:none} }
-
-  /* User grid */
-  .user-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:16px; }
-  .user-card {
-    background:var(--surface); border:1px solid var(--border);
-    border-radius:14px; padding:20px; cursor:pointer;
-    transition:border-color 0.2s, transform 0.2s;
-    animation:fadeUp 0.3s ease both;
-  }
-  .user-card:hover { border-color:var(--cyan); transform:translateY(-2px); }
-  .user-avatar {
-    width:44px; height:44px; border-radius:50%;
-    background:linear-gradient(135deg,var(--cyan),#4466ff);
-    display:flex; align-items:center; justify-content:center;
-    font-family:'Bebas Neue',sans-serif; font-size:20px; color:#fff;
-    flex-shrink:0;
-  }
-  .user-card-header { display:flex; align-items:center; gap:12px; margin-bottom:14px; }
-  .user-card-name { font-weight:700; color:var(--text); font-size:14px; }
-  .user-card-id { font-family:'JetBrains Mono',monospace; font-size:9px; color:var(--text-dim); }
-  .stat-row { display:flex; gap:8px; }
-  .stat { flex:1; text-align:center; }
-  .stat-num { font-family:'Bebas Neue',sans-serif; font-size:24px; }
-  .stat-lbl { font-size:9px; color:var(--text-dim); margin-top:2px; }
-  .user-card-footer { margin-top:12px; font-size:10px; color:var(--text-dim); border-top:1px solid rgba(255,255,255,0.05); padding-top:10px; }
-
-  /* Summary cards */
-  .summary-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:16px; margin-bottom:24px; }
-  .summary-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:20px; text-align:center; }
-  .summary-num { font-family:'Bebas Neue',sans-serif; font-size:40px; line-height:1; color:var(--gold); text-shadow:0 0 20px rgba(255,200,69,0.3); }
-  .summary-lbl { font-size:10px; color:var(--text-dim); letter-spacing:1px; margin-top:6px; }
-  .summary-sub { font-size:12px; color:var(--cyan); margin-top:4px; font-weight:700; }
-
-  /* Detail sections */
-  .detail-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:20px; }
-  @media(max-width:700px) { .detail-grid { grid-template-columns:1fr; } }
-  .section { background:var(--surface); border:1px solid var(--border); border-radius:14px; overflow:hidden; margin-bottom:20px; }
-  .section-hd { padding:12px 18px; background:rgba(0,80,180,0.2); border-bottom:1px solid var(--border); display:flex; align-items:center; gap:8px; }
-  .badge { font-family:'Bebas Neue',sans-serif; font-size:12px; letter-spacing:2px; color:var(--gold); background:rgba(255,200,69,0.1); border:1px solid var(--gold-dim); border-radius:6px; padding:2px 8px; }
-  .section-title { font-size:13px; font-weight:700; }
-  .section-bd { padding:14px 18px; }
-
-  .row { display:flex; align-items:center; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.05); }
-  .row:last-child { border-bottom:none; }
-  .row-label { font-size:12px; color:var(--text-dim); }
-  .pill { font-size:11px; font-weight:700; padding:3px 10px; border-radius:20px; }
-  .pill-red { background:rgba(255,71,87,0.15); color:var(--red); border:1px solid rgba(255,71,87,0.3); }
-  .pill-green { background:rgba(46,213,115,0.15); color:var(--green); border:1px solid rgba(46,213,115,0.3); }
-
-  .log-item { display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.05); }
-  .log-item:last-child { border-bottom:none; }
-  .log-date { font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--text-dim); width:80px; flex-shrink:0; }
-  .log-num { font-size:13px; font-weight:900; width:30px; text-align:center; }
-  .bar-wrap { flex:1; height:5px; background:rgba(255,255,255,0.08); border-radius:3px; overflow:hidden; }
-  .bar { height:100%; border-radius:3px; }
-  .tags { display:flex; gap:4px; flex-shrink:0; }
-  .tag { font-size:9px; padding:2px 6px; border-radius:4px; font-weight:700; }
-  .tag-r { background:rgba(255,71,87,0.2); color:var(--red); }
-  .tag-g { background:rgba(46,213,115,0.15); color:var(--green); }
-  .tag-y { background:rgba(255,200,69,0.15); color:var(--gold); }
-
-  .empty { text-align:center; padding:24px; color:var(--text-dim); font-size:12px; }
-
-  .user-hd { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:20px 24px; margin-bottom:20px; display:flex; align-items:center; gap:16px; }
-  .user-hd-avatar { width:52px; height:52px; border-radius:50%; background:linear-gradient(135deg,var(--cyan),#4466ff); display:flex; align-items:center; justify-content:center; font-family:'Bebas Neue',sans-serif; font-size:22px; color:#fff; flex-shrink:0; }
+:root{
+  --bg:#080c18;--bg2:#0d1425;--card:#111827;--card2:#1a2235;
+  --gold:#f5c842;--gold2:#c9a030;--green:#22d3a0;--red:#f56565;
+  --text:#e2e8f4;--dim:#64748b;--border:rgba(245,200,66,0.15);--r:12px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Noto Serif TC','Hiragino Sans GB',serif;min-height:100vh}
+/* Layout */
+.layout{display:grid;grid-template-columns:280px 1fr;min-height:100vh}
+@media(max-width:768px){.layout{grid-template-columns:1fr;}}
+/* Sidebar */
+.sidebar{background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column}
+.sidebar-header{padding:28px 20px 20px;border-bottom:1px solid var(--border)}
+.sidebar-tag{font-size:9px;letter-spacing:3px;color:var(--gold);font-family:'DM Mono',monospace;margin-bottom:6px}
+.sidebar-title{font-size:20px;font-weight:900;color:#fff}
+.sidebar-sub{font-size:11px;color:var(--dim);margin-top:3px}
+/* Auth box */
+.auth-box{margin:16px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:14px}
+.auth-label{font-size:9px;letter-spacing:2px;color:var(--gold);font-family:'DM Mono',monospace;margin-bottom:8px}
+.auth-input{width:100%;background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-family:inherit;font-size:13px;outline:none;margin-bottom:8px}
+.auth-input:focus{border-color:var(--gold)}
+.auth-btn{width:100%;background:var(--gold);color:#080c18;border:none;border-radius:8px;padding:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
+.auth-status{font-size:11px;margin-top:6px;text-align:center}
+.auth-ok{color:var(--green)}.auth-fail{color:var(--red)}
+/* User list */
+.user-list{flex:1;overflow-y:auto;padding:8px}
+.user-list-label{font-size:9px;letter-spacing:2px;color:var(--dim);font-family:'DM Mono',monospace;padding:8px 8px 6px}
+.user-item{padding:10px 12px;border-radius:8px;cursor:pointer;transition:background .15s;margin-bottom:2px;display:flex;align-items:center;gap:10px}
+.user-item:hover{background:rgba(245,200,66,0.06)}
+.user-item.active{background:rgba(245,200,66,0.1);border:1px solid rgba(245,200,66,0.25)}
+.user-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold2));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#080c18;flex-shrink:0}
+.user-item-name{font-size:13px;font-weight:700}
+.user-item-meta{font-size:10px;color:var(--dim);margin-top:1px}
+.user-item-dot{width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0;margin-left:auto}
+/* Main panel */
+.main{overflow-y:auto;padding:28px}
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;min-height:60vh;color:var(--dim);text-align:center;gap:12px}
+.empty-icon{font-size:48px;opacity:.4}
+.empty-text{font-size:14px}
+/* Student detail */
+.detail-header{margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.detail-name{font-size:24px;font-weight:900;color:#fff}
+.detail-id{font-size:11px;color:var(--dim);font-family:'DM Mono',monospace;margin-top:3px}
+.badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.badge{padding:4px 10px;border-radius:20px;font-size:11px;font-family:'DM Mono',monospace;font-weight:600}
+.badge-gold{background:rgba(245,200,66,0.12);color:var(--gold);border:1px solid rgba(245,200,66,0.25)}
+.badge-green{background:rgba(34,211,160,0.1);color:var(--green);border:1px solid rgba(34,211,160,0.2)}
+.badge-red{background:rgba(245,101,101,0.1);color:var(--red);border:1px solid rgba(245,101,101,0.2)}
+/* Stats row */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-bottom:24px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:14px}
+.stat-num{font-size:28px;font-weight:900;color:var(--gold);font-family:'DM Mono',monospace;line-height:1}
+.stat-label{font-size:10px;color:var(--dim);letter-spacing:1px;margin-top:4px}
+/* Section */
+.section{margin-bottom:28px}
+.section-title{font-size:11px;letter-spacing:2.5px;color:var(--gold);font-family:'DM Mono',monospace;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+/* Split screen photos */
+.split-screen{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.split-side{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.split-label{padding:8px 12px;font-size:10px;letter-spacing:2px;color:var(--dim);font-family:'DM Mono',monospace;border-bottom:1px solid var(--border)}
+.split-photos{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:8px}
+.split-photo{aspect-ratio:3/4;border-radius:6px;object-fit:cover;background:var(--card2);border:1px solid var(--border);width:100%}
+.no-photo{aspect-ratio:3/4;display:flex;align-items:center;justify-content:center;color:var(--dim);font-size:11px;background:var(--card2);border-radius:6px;border:1px dashed rgba(255,255,255,0.08)}
+/* Trend chart */
+.chart-wrap{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px}
+.chart-bars-row{display:flex;gap:6px;align-items:flex-end;height:80px;margin-bottom:8px}
+.trend-bar-group{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px}
+.trend-bar-wrap{width:100%;display:flex;align-items:flex-end;height:64px}
+.trend-bar{width:100%;border-radius:3px 3px 0 0;transition:height .8s ease;min-height:2px}
+.trend-date{font-size:8px;color:var(--dim);font-family:'DM Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;text-align:center}
+.trend-val{font-size:9px;color:var(--gold);font-family:'DM Mono',monospace}
+/* Pain hotspots */
+.hotspot-list{display:flex;flex-direction:column;gap:8px}
+.hotspot-item{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 14px}
+.hotspot-part{flex:1;font-size:13px}
+.hotspot-bar-wrap{width:80px;height:4px;background:rgba(255,255,255,0.07);border-radius:2px;overflow:hidden}
+.hotspot-bar{height:100%;background:var(--red);border-radius:2px}
+.hotspot-count{font-size:11px;color:var(--dim);font-family:'DM Mono',monospace;min-width:30px;text-align:right}
+/* Log table */
+.log-table{width:100%;border-collapse:collapse;font-size:12px}
+.log-table th{text-align:left;padding:8px 10px;font-size:9px;letter-spacing:1.5px;color:var(--dim);font-family:'DM Mono',monospace;border-bottom:1px solid var(--border);font-weight:600}
+.log-table td{padding:8px 10px;border-bottom:1px solid rgba(255,255,255,0.04);vertical-align:middle}
+.log-table tr:last-child td{border-bottom:none}
+.log-table tr:hover td{background:rgba(245,200,66,0.03)}
+.pill{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-family:'DM Mono',monospace}
+.pill-gold{background:rgba(245,200,66,0.12);color:var(--gold)}
+.pill-green{background:rgba(34,211,160,0.1);color:var(--green)}
+.pill-red{background:rgba(245,101,101,0.1);color:var(--red)}
+/* Loading */
+.loading{display:flex;align-items:center;justify-content:center;padding:40px;color:var(--dim)}
+.spinner{display:inline-block;width:20px;height:20px;border:2px solid rgba(245,200,66,0.2);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;margin-right:10px}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* Toast */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--card2);border:1px solid var(--gold);border-radius:8px;padding:10px 18px;font-size:13px;color:var(--gold);opacity:0;transition:all .3s;z-index:999}
+.toast.show{opacity:1}
+/* Scrollbar */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(245,200,66,0.2);border-radius:2px}
 </style>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 </head>
 <body>
 
-<div class="header">
-  <div>
-    <div class="brand">FIS COACH</div>
-    <div class="brand-sub">FASCIAL INTEGRATION SYSTEM — 教練後台</div>
-  </div>
-  <div class="status"><div class="dot"></div><span>系統運行中</span></div>
+<div class="layout">
+  <!-- ── Sidebar ── -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-tag">FIS · COACH DASHBOARD</div>
+      <div class="sidebar-title">上帝視角</div>
+      <div class="sidebar-sub">教練安全管理後台</div>
+    </div>
+
+    <!-- Auth -->
+    <div class="auth-box">
+      <div class="auth-label">教 練 密 鑰</div>
+      <input class="auth-input" type="password" id="coachKey" placeholder="輸入 Coach Key..." value="">
+      <button class="auth-btn" onclick="loadUsers()">登入 · 載入學員</button>
+      <div class="auth-status" id="authStatus"></div>
+    </div>
+
+    <div class="user-list-label">學 員 列 表</div>
+    <div class="user-list" id="userList">
+      <div style="padding:12px;font-size:12px;color:var(--dim);text-align:center">請先輸入密鑰登入</div>
+    </div>
+  </aside>
+
+  <!-- ── Main ── -->
+  <main class="main" id="mainPanel">
+    <div class="empty-state">
+      <div class="empty-icon">🔐</div>
+      <div class="empty-text">輸入教練密鑰並選擇學員<br>查看詳細訓練數據</div>
+    </div>
+  </main>
 </div>
 
-<div class="container">
-  <div class="error" id="errBox"></div>
-  <div id="loading"><div class="loader"></div>載入中...</div>
-
-  <!-- 登入 -->
-  <div id="loginView">
-    <div class="card" style="max-width:480px;margin:60px auto">
-      <div class="label">🔐 教練登入</div>
-      <input class="input" id="inUser" type="text" placeholder="教練用戶名">
-      <input class="input" id="inPass" type="password" placeholder="教練密碼">
-      <button class="btn" id="loginBtn">登入</button>
-    </div>
-  </div>
-
-  <!-- 學員列表 -->
-  <div id="listView" style="display:none">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-      <div class="label" style="margin:0">👥 所有學員</div>
-      <button class="btn-ghost" id="logoutBtn">登出</button>
-    </div>
-    <div class="user-grid" id="userGrid"></div>
-  </div>
-
-  <!-- 學員詳情 -->
-  <div id="detailView" style="display:none">
-    <div style="margin-bottom:16px">
-      <button class="btn-ghost" id="backBtn">← 返回學員列表</button>
-    </div>
-    <div class="user-hd" id="detailHd"></div>
-    <div class="summary-grid" id="detailSummary"></div>
-    <div class="detail-grid">
-      <div class="section" id="detailFascia"></div>
-      <div class="section" id="detailHotspot"></div>
-    </div>
-    <div class="section" id="detailLogs"></div>
-    <div class="section" id="detailPain"></div>
-  </div>
-</div>
+<div class="toast" id="toast"></div>
 
 <script>
-var API = 'https://fis-app.alexeywong22.workers.dev';
-var _u = '', _p = '';
+const API='https://fis-app.alexeywong22.workers.dev';
+let coachKey='';
+let currentUserId=null;
 
-var fasciaNames = {
-  deep_front_line: '深前線',
-  lateral_line: '側線',
-  spiral_line: '螺旋線',
-  superficial_back_line: '淺背線',
-  superficial_front_line: '淺前線'
-};
-
-function show(id) {
-  ['loginView','listView','detailView'].forEach(function(v) {
-    document.getElementById(v).style.display = v === id ? 'block' : 'none';
-  });
-}
-function showErr(msg) {
-  var el = document.getElementById('errBox');
-  el.textContent = msg; el.style.display = 'block';
-  setTimeout(function(){ el.style.display='none'; }, 4000);
-}
-function loading(on) { document.getElementById('loading').style.display = on ? 'block' : 'none'; }
-
-// ── 登入 ──
-document.getElementById('loginBtn').addEventListener('click', function() {
-  var u = document.getElementById('inUser').value.trim();
-  var p = document.getElementById('inPass').value.trim();
-  if (!u || !p) { showErr('請輸入用戶名和密碼'); return; }
-  loading(true);
-  fetch(API + '/api/coach/login', {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ username:u, password:p })
-  }).then(function(r){ return r.json(); }).then(function(d) {
-    loading(false);
-    if (d.error) { showErr('❌ 用戶名或密碼錯誤'); return; }
-    _u = u; _p = p;
-    show('listView');
-    loadAllUsers();
-  }).catch(function(e){ loading(false); showErr('網絡錯誤：'+e.message); });
+// ── Init: restore saved key ──────────────────────────────
+window.addEventListener('DOMContentLoaded',()=>{
+  const saved=localStorage.getItem('fis_coach_key');
+  if(saved){document.getElementById('coachKey').value=saved;coachKey=saved;}
 });
 
-// 按 Enter 登入
-document.getElementById('inPass').addEventListener('keydown', function(e) {
-  if (e.key === 'Enter') document.getElementById('loginBtn').click();
-});
-
-// ── 登出 ──
-document.getElementById('logoutBtn').addEventListener('click', function() {
-  _u = ''; _p = '';
-  show('loginView');
-});
-
-// ── 返回列表 ──
-document.getElementById('backBtn').addEventListener('click', function() {
-  show('listView');
-});
-
-// ── 所有學員 ──
-function loadAllUsers() {
-  loading(true);
-  fetch(API + '/api/coach/users', {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ username:_u, password:_p })
-  }).then(function(r){ return r.json(); }).then(function(d) {
-    loading(false);
-    var users = d.users || [];
-    var grid = document.getElementById('userGrid');
-    if (users.length === 0) { grid.innerHTML = '<div class="empty">尚無學員</div>'; return; }
-    grid.innerHTML = '';
-    users.forEach(function(u, i) {
-      var card = document.createElement('div');
-      card.className = 'user-card';
-      card.style.animationDelay = (i * 0.05) + 's';
-      card.innerHTML =
-        '<div class="user-card-header">' +
-          '<div class="user-avatar">' + (u.name||'U').substring(0,1).toUpperCase() + '</div>' +
-          '<div><div class="user-card-name">' + (u.name||'未命名') + '</div>' +
-          '<div class="user-card-id">' + u.id + '</div></div>' +
-        '</div>' +
-        '<div class="stat-row">' +
-          '<div class="stat"><div class="stat-num" style="color:var(--gold)">' + (u.fascia_count||0) + '</div><div class="stat-lbl">FIS測試</div></div>' +
-          '<div class="stat"><div class="stat-num" style="color:var(--cyan)">' + (u.log_count||0) + '</div><div class="stat-lbl">訓練日誌</div></div>' +
-          '<div class="stat"><div class="stat-num" style="color:var(--red)">' + (u.pain_count||0) + '</div><div class="stat-lbl">痛點</div></div>' +
-        '</div>' +
-        '<div class="user-card-footer">最後活躍：' + ((u.last_active||'').substring(0,10)||'從未') + '</div>';
-      card.addEventListener('click', function(){ loadDetail(u.id); });
-      grid.appendChild(card);
+// ── Load user list ───────────────────────────────────────
+async function loadUsers(){
+  coachKey=document.getElementById('coachKey').value.trim();
+  if(!coachKey){showToast('請輸入教練密鑰');return;}
+  const status=document.getElementById('authStatus');
+  status.textContent='驗證中...';status.className='auth-status';
+  try{
+    const r=await fetch(API+'/api/coach/users',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({username:'alexeywong22',password:coachKey})
     });
-  }).catch(function(e){ loading(false); showErr('載入失敗：'+e.message); });
+    const d=await r.json();
+    if(!d.success){status.textContent='❌ 密鑰錯誤';status.className='auth-status auth-fail';return;}
+    localStorage.setItem('fis_coach_key',coachKey);
+    status.textContent='✅ 已驗證';status.className='auth-status auth-ok';
+    renderUserList(d.users||[]);
+  }catch(e){status.textContent='❌ 連線失敗';status.className='auth-status auth-fail';}
 }
 
-// ── 學員詳情 ──
-function loadDetail(userId) {
-  loading(true);
-  fetch(API + '/api/coach/user-summary', {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ user_id:userId, username:_u, password:_p })
-  }).then(function(r){ return r.json(); }).then(function(d) {
-    loading(false);
-    if (d.error) { showErr('錯誤：'+d.error); return; }
-    renderDetail(d);
-    show('detailView');
-  }).catch(function(e){ loading(false); showErr('網絡錯誤：'+e.message); });
+function renderUserList(users){
+  const list=document.getElementById('userList');
+  if(!users.length){list.innerHTML='<div style="padding:12px;font-size:12px;color:var(--dim);text-align:center">暫無學員</div>';return;}
+  list.innerHTML=users.map(u=>{
+    const initial=(u.name||'?').substring(0,1).toUpperCase();
+    const lastActive=u.last_active?(new Date(u.last_active)).toLocaleDateString('zh-HK'):'未有記錄';
+    const isActive=u.log_count>0;
+    return `<div class="user-item" id="ui-${u.id}" onclick="loadStudent('${u.id}','${u.name}')">
+      <div class="user-avatar">${initial}</div>
+      <div style="flex:1;min-width:0">
+        <div class="user-item-name">${u.name||u.id.substring(0,12)}</div>
+        <div class="user-item-meta">日誌 ${u.log_count} · 測試 ${u.fascia_count} · 痛點 ${u.pain_count}</div>
+      </div>
+      ${isActive?'<div class="user-item-dot"></div>':''}
+    </div>`;
+  }).join('');
 }
 
-function renderDetail(data) {
-  var u = data.user, s = data.summary, f = data.fisData, pr = data.progressData, pa = data.painData;
-
-  // Header
-  document.getElementById('detailHd').innerHTML =
-    '<div class="user-hd-avatar">' + (u.name||'U').substring(0,1).toUpperCase() + '</div>' +
-    '<div><div style="font-size:18px;font-weight:900">' + (u.name||u.id) + '</div>' +
-    '<div style="font-family:JetBrains Mono,monospace;font-size:10px;color:var(--text-dim);margin-top:2px">' + u.id + '</div>' +
-    '<div style="font-size:11px;color:var(--text-dim);margin-top:4px">加入：' + (u.created_at||'').substring(0,10) + '</div></div>';
-
-  // Summary
-  var avg = s.avgMuscleActivation;
-  var sub = avg >= 3 ? '狀態良好' : avg >= 2 ? '需要改善' : '需要關注';
-  document.getElementById('detailSummary').innerHTML =
-    card40(s.totalFasciaTests||0, 'FIS 測試') +
-    card40(s.totalProgressLogs||0, '訓練日誌') +
-    card40(avg ? avg+'/4' : '—', '平均發力感', sub) +
-    card40(s.backCompensationRate||'—', '腰部代償率') +
-    card40(s.totalPainDiagnoses||0, '痛點診斷');
-
-  // Fascia
-  var fHtml = '<div class="section-hd"><div class="badge">FIS</div><div class="section-title">最新筋膜線評估</div></div><div class="section-bd">';
-  if (f.latest) {
-    Object.keys(fasciaNames).forEach(function(k) {
-      var v = f.latest[k];
-      var isAlert = v === 1;
-      var label = isAlert ? '優先關注' : v === 2 ? '狀態良好' : '未測試';
-      var cls = isAlert ? 'pill-red' : v === 2 ? 'pill-green' : '';
-      fHtml += '<div class="row"><span class="row-label">' + fasciaNames[k] + '</span><span class="pill ' + cls + '">' + label + '</span></div>';
+// ── Load student detail ──────────────────────────────────
+async function loadStudent(userId,userName){
+  currentUserId=userId;
+  // Highlight in sidebar
+  document.querySelectorAll('.user-item').forEach(el=>el.classList.remove('active'));
+  const el=document.getElementById('ui-'+userId);
+  if(el)el.classList.add('active');
+  // Show loading
+  document.getElementById('mainPanel').innerHTML='<div class="loading"><span class="spinner"></span>載入學員數據...</div>';
+  try{
+    const r=await fetch(API+'/api/coach/user-summary-v2',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({coach_key:coachKey,user_id:userId})
     });
-  } else { fHtml += '<div class="empty">尚無測試紀錄</div>'; }
-  fHtml += '</div>';
-  document.getElementById('detailFascia').innerHTML = fHtml;
-
-  // Hotspots
-  var hHtml = '<div class="section-hd"><div class="badge">RX</div><div class="section-title">痛點熱區</div></div><div class="section-bd">';
-  if (pa.hotspots && pa.hotspots.length > 0) {
-    pa.hotspots.forEach(function(h, i) {
-      hHtml += '<div class="row"><span style="color:var(--text-dim);font-size:18px;font-family:Bebas Neue,sans-serif">' + (i+1) + '</span><span class="row-label" style="flex:1;margin:0 12px">' + h.part + '</span><span style="color:var(--red);font-weight:700">' + h.count + '次</span></div>';
-    });
-  } else { hHtml += '<div class="empty">尚無痛點紀錄</div>'; }
-  hHtml += '</div>';
-  document.getElementById('detailHotspot').innerHTML = hHtml;
-
-  // Logs
-  var logs = pr.logs || [];
-  var lHtml = '<div class="section-hd"><div class="badge">DATA</div><div class="section-title">訓練日誌（最近20次）</div></div><div class="section-bd">';
-  if (logs.length > 0) {
-    logs.forEach(function(l) {
-      var act = l.muscle_activation || 0;
-      var pct = (act/4)*100;
-      var col = act >= 3 ? '#2ed573' : act >= 2 ? '#ffc845' : '#ff4757';
-      var compTag = l.back_compensation === '有' ? '<span class="tag tag-r">代償有</span>' : l.back_compensation === '輕微' ? '<span class="tag tag-y">代償輕微</span>' : '<span class="tag tag-g">代償無</span>';
-      var tensCol = l.tension_speed === '1-2次' ? 'tag-g' : l.tension_speed === '3次後' ? 'tag-y' : 'tag-r';
-      lHtml += '<div class="log-item">' +
-        '<div class="log-date">' + (l.logged_at||'').substring(0,10) + '</div>' +
-        '<div class="log-num" style="color:' + col + '">' + act + '</div>' +
-        '<div class="bar-wrap"><div class="bar" style="width:' + pct + '%;background:' + col + '"></div></div>' +
-        '<div class="tags">' + compTag + '<span class="tag ' + tensCol + '">' + (l.tension_speed||'—') + '</span></div>' +
-        '</div>';
-    });
-  } else { lHtml += '<div class="empty">尚無訓練紀錄</div>'; }
-  lHtml += '</div>';
-  document.getElementById('detailLogs').innerHTML = lHtml;
-
-  // Pain
-  var diag = pa.diagnoses || [];
-  var pHtml = '<div class="section-hd"><div class="badge">RX</div><div class="section-title">痛點診斷歷史</div></div>';
-  if (diag.length > 0) {
-    diag.forEach(function(p) {
-      var sc = p.status === 'resolved' ? 'pill-green' : 'pill-red';
-      var sl = p.status === 'resolved' ? '已解決' : '追蹤中';
-      pHtml += '<div style="padding:12px 18px;border-bottom:1px solid rgba(255,255,255,0.05);display:flex;gap:12px;align-items:flex-start">' +
-        '<div style="font-family:JetBrains Mono,monospace;font-size:10px;color:var(--text-dim);width:80px;flex-shrink:0;padding-top:2px">' + (p.reported_at||'').substring(0,10) + '</div>' +
-        '<div style="font-size:12px;font-weight:700;color:var(--red);width:60px;flex-shrink:0">' + (p.body_part||'—') + '</div>' +
-        '<div style="flex:1;font-size:11px;color:var(--text-dim);line-height:1.5">' + (p.symptom_description||'') + '</div>' +
-        '<span class="pill ' + sc + '">' + sl + '</span>' +
-        '</div>';
-    });
-  } else { pHtml += '<div class="empty">尚無痛點診斷</div>'; }
-  document.getElementById('detailPain').innerHTML = pHtml;
+    if(r.status===403){document.getElementById('mainPanel').innerHTML='<div class="empty-state"><div class="empty-icon">🔐</div><div class="empty-text">密鑰驗證失敗<br>請重新登入</div></div>';return;}
+    const d=await r.json();
+    renderStudent(d);
+  }catch(e){document.getElementById('mainPanel').innerHTML='<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-text">載入失敗，請重試</div></div>';}
 }
 
-function card40(num, lbl, sub) {
-  return '<div class="summary-card"><div class="summary-num">' + num + '</div><div class="summary-lbl">' + lbl + '</div>' + (sub ? '<div class="summary-sub">' + sub + '</div>' : '') + '</div>';
+function renderStudent(d){
+  const u=d.user||{};
+  const s=d.summary||{};
+  const fis=d.fisSection||{};
+  const data=d.dataSection||{};
+  const rx=d.rxSection||{};
+  const weekly=d.weeklySection||{};
+
+  // Compensation pill
+  const compRate=parseInt(s.backCompensationRate)||0;
+  const compClass=compRate>50?'badge-red':compRate>20?'badge-gold':'badge-green';
+
+  let html=`
+  <div class="detail-header">
+    <div>
+      <div class="detail-name">${u.name||'未命名學員'}</div>
+      <div class="detail-id">${u.id}</div>
+      <div class="badges">
+        <span class="badge badge-gold">🏋️ ${s.totalTrainingDays||0} 實質訓練日</span>
+        <span class="badge badge-green">⚡ 發力 ${s.avgMuscleActivation||'—'}/4</span>
+        <span class="badge ${compClass}">腰代償 ${s.backCompensationRate||'—'}</span>
+      </div>
+    </div>
+    <div style="font-size:11px;color:var(--dim);text-align:right">
+      加入：${(u.created_at||'').substring(0,10)}<br>
+      <span style="color:var(--green)">FIS測試 ${s.totalFunctionalTests}</span> · 痛點 ${s.totalPainDiagnoses}
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-num">${s.totalTrainingDays||0}</div><div class="stat-label">實質訓練日</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--green)">${s.avgMuscleActivation||'—'}</div><div class="stat-label">平均發力感</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:${compRate>30?'var(--red)':'var(--green)'}">${s.backCompensationRate||'—'}</div><div class="stat-label">腰代償率</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:#a78bfa">${s.totalFunctionalTests||0}</div><div class="stat-label">FIS 測試次數</div></div>
+  </div>`;
+
+  // ── Split-screen photos ──────────────────────────────
+  const baseline=fis.baseline;
+  const latest=fis.latest;
+  if(baseline||latest){
+    html+=`<div class="section"><div class="section-title">01 · FIS 體態相片對比</div>
+    <div class="split-screen">
+      <div class="split-side">
+        <div class="split-label">基準（第 ${baseline?.training_day_index||'—'} 天）</div>
+        <div class="split-photos">
+          ${photoEl(baseline?.photo_front_url,'正')}
+          ${photoEl(baseline?.photo_side_url,'側')}
+          ${photoEl(baseline?.photo_back_url,'背')}
+        </div>
+      </div>
+      <div class="split-side">
+        <div class="split-label">最新（第 ${latest?.training_day_index||'—'} 天）</div>
+        <div class="split-photos">
+          ${photoEl(latest?.photo_front_url,'正')}
+          ${photoEl(latest?.photo_side_url,'側')}
+          ${photoEl(latest?.photo_back_url,'背')}
+        </div>
+      </div>
+    </div>`;
+    // FIS metrics comparison
+    if(baseline&&latest){
+      html+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
+        <div class="chart-wrap">
+          <div class="section-title" style="margin-bottom:10px">單腳站立（秒）</div>
+          ${metricRow('左腳',baseline.single_leg_left,latest.single_leg_left,'s')}
+          ${metricRow('右腳',baseline.single_leg_right,latest.single_leg_right,'s')}
+        </div>
+        <div class="chart-wrap">
+          <div class="section-title" style="margin-bottom:10px">Jefferson Curl</div>
+          ${metricRow('級別',baseline.jefferson_curl_level,latest.jefferson_curl_level,'')}
+        </div>
+      </div>`;
+    }
+    html+='</div>';
+  }
+
+  // ── Activation trend chart ───────────────────────────
+  const logs=(data.logs||[]).slice(0,10).reverse();
+  if(logs.length>0){
+    html+=`<div class="section"><div class="section-title">02 · DATA 發力感趨勢</div>
+    <div class="chart-wrap">
+      <div class="chart-bars-row">
+        ${logs.map(l=>{
+          const h=Math.round((l.muscle_activation/4)*100);
+          const col=l.muscle_activation>=3?'var(--green)':l.muscle_activation===2?'var(--gold)':'var(--red)';
+          const dt=(l.logged_at||'').substring(5,10);
+          return `<div class="trend-bar-group">
+            <div class="trend-bar-wrap"><div class="trend-bar" style="height:${h}%;background:${col}"></div></div>
+            <div class="trend-date">${dt}</div>
+            <div class="trend-val">${l.muscle_activation}</div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+    // Log table (last 10)
+    html+=`<div style="margin-top:14px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden">
+      <table class="log-table">
+        <thead><tr><th>日期</th><th>發力感</th><th>腰代償</th><th>張力速度</th><th>AI 建議</th></tr></thead>
+        <tbody>
+          ${logs.slice().reverse().slice(0,8).map(l=>{
+            const compPill=l.back_compensation==='有'?'pill-red':l.back_compensation==='無'?'pill-green':'pill-gold';
+            return `<tr>
+              <td style="font-family:'DM Mono',monospace;font-size:11px">${(l.logged_at||'').substring(0,10)}</td>
+              <td><span class="pill ${l.muscle_activation>=3?'pill-green':l.muscle_activation===2?'pill-gold':'pill-red'}">${l.muscle_activation}/4</span></td>
+              <td><span class="pill ${compPill}">${l.back_compensation||'—'}</span></td>
+              <td style="font-size:11px;color:var(--dim)">${l.tension_speed||'—'}</td>
+              <td style="font-size:11px;color:var(--dim);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${(l.notes||'').substring(0,60)||'—'}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div></div>`;
+  }
+
+  // ── Pain hotspots ────────────────────────────────────
+  const hotspots=rx.hotspots||[];
+  const maxCount=hotspots[0]?.count||1;
+  if(hotspots.length>0){
+    html+=`<div class="section"><div class="section-title">03 · RX 痛點熱點</div>
+    <div class="hotspot-list">
+      ${hotspots.map(h=>`<div class="hotspot-item">
+        <div style="font-size:16px">🔴</div>
+        <div class="hotspot-part">${h.part}</div>
+        <div class="hotspot-bar-wrap"><div class="hotspot-bar" style="width:${Math.round(h.count/maxCount*100)}%"></div></div>
+        <div class="hotspot-count">${h.count}次</div>
+      </div>`).join('')}
+    </div></div>`;
+  }
+
+  // ── Weekly assessments ───────────────────────────────
+  const assessments=weekly.assessments||[];
+  if(assessments.length>0){
+    html+=`<div class="section"><div class="section-title">每週自評記錄</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      ${assessments.slice(0,4).map(a=>`<div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;display:flex;align-items:center;gap:12px">
+        <div style="font-size:11px;color:var(--dim);font-family:'DM Mono',monospace;min-width:80px">${a.week_date}</div>
+        <div style="font-size:24px;font-weight:900;color:var(--gold);font-family:'DM Mono',monospace">${a.score}</div>
+        <div style="flex:1">
+          ${a.improvement?`<div style="font-size:12px;color:var(--green)">✅ ${a.improvement}</div>`:''}
+          ${a.next_focus?`<div style="font-size:12px;color:var(--dim)">→ ${a.next_focus}</div>`:''}
+        </div>
+      </div>`).join('')}
+    </div></div>`;
+  }
+
+  document.getElementById('mainPanel').innerHTML=html;
 }
+
+function photoEl(url,label){
+  if(url) return `<img class="split-photo" src="${url}" alt="${label}面" loading="lazy" onerror="this.style.display='none'">`;
+  return `<div class="no-photo">${label}面</div>`;
+}
+
+function metricRow(label,before,after,unit){
+  const b=before??'—',a=after??'—';
+  const diff=(typeof before==='number'&&typeof after==='number')?Math.round((after-before)*10)/10:null;
+  const col=diff>0?'var(--green)':diff<0?'var(--red)':'var(--dim)';
+  return `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;font-size:12px">
+    <span style="color:var(--dim)">${label}</span>
+    <span style="font-family:'DM Mono',monospace">${b}${unit} → <strong style="color:var(--gold)">${a}${unit}</strong></span>
+    ${diff!==null?`<span style="font-size:11px;color:${col}">${diff>0?'+':''}${diff}${unit}</span>`:''}
+  </div>`;
+}
+
+let toastTimer;
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2500);}
 </script>
 </body>
 </html>
