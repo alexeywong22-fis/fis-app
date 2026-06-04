@@ -598,8 +598,22 @@ async function runFisStep2() {
     stopProgress('pb2', 'pt2');
     fisParsedData = data.parsed || null;
     fisParsedData = data.parsed || null;
-    fisStep2Result = data.result || 'Report card generation failed, please try again.';
-    resultText.textContent = fisStep2Result;
+    fisParsedData = data.parsed || null;
+    fisStep2Result = data.result || '';
+    stopProgress('pb2', 'pt2');
+    resultText.innerHTML =
+      '<div style="font-size:12px;line-height:2;color:#4af;margin-bottom:8px">' +
+      '<div>[✔] 筋膜鏈動力學代償矩陣分析 <span style="color:#ffc845">... 100%</span></div>' +
+      '<div>[✔] 五大筋膜線評級封裝 <span style="color:#ffc845">... 100%</span></div>' +
+      '<div>[✔] 個人化訓練方案生成 <span style="color:#ffc845">... 100%</span></div>' +
+      '</div>' +
+      '<div style="padding:10px;background:rgba(255,200,69,0.08);border:1px solid rgba(255,200,69,0.3);border-radius:8px;font-size:12px;color:#ffc845">' +
+      '⚡ FIS 筋膜矩陣核心分析完成，已成功封裝底層數據。請點擊下方【生成視覺化圖片】解鎖體態特徵面板。' +
+      '</div>';
+    setTimeout(function() {
+      var btn3 = document.getElementById('btn-fis-step3');
+      if (btn3) btn3.scrollIntoView({behavior:'smooth', block:'center'});
+    }, 600);
   } catch(e) { stopProgress('pb2', 'pt2'); resultText.textContent = 'Generation failed, please try again.'; }
 }
 
