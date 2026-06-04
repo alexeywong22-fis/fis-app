@@ -624,55 +624,34 @@ async function runFisStep3() {
   card.style.cssText =
     'margin-top:12px;border-radius:14px;overflow:hidden;' +
     'border:1px solid rgba(0,150,255,0.35);' +
-    'font-family:"Noto Sans HK",sans-serif';
+    'font-family:"Noto Sans HK",sans-serif;background:#050d1a';
 
-  /* ── 標題 ── */
+  /* ── 標題（加高，預留 Logo 空間）── */
   var title = document.createElement('div');
   title.style.cssText =
     'background:linear-gradient(90deg,#0a1830,#0d2545);' +
-    'padding:11px 20px;text-align:center;' +
+    'min-height:72px;padding:16px 24px;' +
+    'display:flex;align-items:center;justify-content:center;' +
     'border-bottom:1px solid rgba(0,180,255,0.3);' +
-    'font-size:14px;font-weight:900;letter-spacing:3px;' +
-    'color:#ffc845;text-shadow:0 0 10px rgba(255,200,69,0.5)';
+    'font-size:15px;font-weight:900;letter-spacing:3px;' +
+    'color:#ffc845;text-shadow:0 0 10px rgba(255,200,69,0.5);' +
+    'text-align:center';
   title.textContent = 'FIS 體態特徵訓練優先次序參考';
   card.appendChild(title);
 
-  /* ── 主體：左圖 1/3 + 右欄 2/3，固定高度 ── */
-  var body = document.createElement('div');
-  body.style.cssText = 'display:flex;height:460px';
-
-  /* 左：人體圖，頂天立地 */
-  var imgCol = document.createElement('div');
-  imgCol.style.cssText =
-    'flex:0 0 33.333%;width:33.333%;min-width:33.333%;height:100%;overflow:hidden;' +
-    'flex-shrink:0;border-right:1px solid rgba(0,150,255,0.25)';
-  var img = document.createElement('img');
-  img.src = 'https://alexeywong22-fis.github.io/fis-app/body2.png';
-  img.style.cssText = 'width:100%;height:100%;object-fit:contain;object-position:center center;display:block;background:#030a14';
-  imgCol.appendChild(img);
-  body.appendChild(imgCol);
-
-  /* 右：上表 + 下建議框，flex-col */
-  var rightCol = document.createElement('div');
-  rightCol.style.cssText =
-    'flex:1;min-width:0;height:100%;display:flex;flex-direction:column;background:#050d1a;overflow:hidden';
-
-  /* ── 右上：筋膜線表格 ── */
-  var tableWrap = document.createElement('div');
-  tableWrap.style.cssText = 'flex:0 0 auto';
-
-  /* 表頭 */
+  /* ── 表頭（全寬）── */
   var thead = document.createElement('div');
   thead.style.cssText =
-    'display:flex;align-items:center;padding:4px 14px;' +
+    'display:flex;align-items:center;padding:8px 16px;' +
     'background:rgba(0,80,180,0.2);' +
     'border-bottom:1px solid rgba(0,150,255,0.3)';
   thead.innerHTML =
-    '<div style="flex:2;font-size:10px;color:rgba(180,220,255,0.65);font-weight:600;letter-spacing:1px">五大筋膜線狀態</div>' +
-    '<div style="flex:1.2;font-size:10px;color:rgba(180,220,255,0.65);font-weight:600;text-align:center">評估結果</div>' +
-    '<div style="flex:0.8;font-size:10px;color:rgba(180,220,255,0.65);font-weight:600;text-align:center">訓練起點</div>';
-  tableWrap.appendChild(thead);
+    '<div style="flex:2;font-size:11px;color:rgba(180,220,255,0.7);font-weight:600;letter-spacing:1px">五大筋膜線狀態</div>' +
+    '<div style="flex:1.2;font-size:11px;color:rgba(180,220,255,0.7);font-weight:600;text-align:center">評估結果</div>' +
+    '<div style="flex:0.8;font-size:11px;color:rgba(180,220,255,0.7);font-weight:600;text-align:center">訓練起點</div>';
+  card.appendChild(thead);
 
+  /* ── 五大筋膜線行 ── */
   lineKeys.forEach(function(lk, idx) {
     var d      = lines[lk.key] || {};
     var status = d.status || '—';
@@ -683,67 +662,66 @@ async function runFisStep3() {
 
     var row = document.createElement('div');
     row.style.cssText =
-      'display:flex;align-items:center;padding:5px 14px;' +
+      'display:flex;align-items:center;padding:10px 16px;' +
       'background:' + bg + ';border-bottom:1px solid rgba(0,120,200,0.1)';
 
     var nameCell = document.createElement('div');
-    nameCell.style.cssText = 'flex:2;color:#b8d8ff;line-height:1.25';
+    nameCell.style.cssText = 'flex:2;color:#b8d8ff;line-height:1.3';
     nameCell.innerHTML =
-      '<span style="font-weight:700;font-size:12px">' + (idx+1) + '. ' + lk.name + '</span>' +
-      '<br><span style="font-size:9px;color:rgba(150,190,240,0.5)">(' + lk.en + ')</span>';
+      '<span style="font-weight:700;font-size:13px">' + (idx+1) + '. ' + lk.name + '</span>' +
+      '<br><span style="font-size:10px;color:rgba(150,190,240,0.5)">(' + lk.en + ')</span>';
     row.appendChild(nameCell);
 
     var statusCell = document.createElement('div');
-    statusCell.style.cssText = 'flex:1.2;display:flex;align-items:center;justify-content:center;gap:4px';
+    statusCell.style.cssText = 'flex:1.2;display:flex;align-items:center;justify-content:center;gap:5px';
     statusCell.innerHTML =
-      '<span style="width:8px;height:8px;border-radius:50%;flex-shrink:0;display:inline-block;' +
-      'background:' + color + ';box-shadow:0 0 6px ' + color + '"></span>' +
-      '<span style="color:' + color + ';font-size:11px;font-weight:700;' +
-      'text-shadow:0 0 4px ' + color + ';white-space:nowrap">' + status + '</span>';
+      '<span style="width:9px;height:9px;border-radius:50%;flex-shrink:0;display:inline-block;' +
+      'background:' + color + ';box-shadow:0 0 7px ' + color + '"></span>' +
+      '<span style="color:' + color + ';font-size:12px;font-weight:700;' +
+      'text-shadow:0 0 5px ' + color + ';white-space:nowrap">' + status + '</span>';
     row.appendChild(statusCell);
 
     var stageCell = document.createElement('div');
     stageCell.style.cssText =
       'flex:0.8;text-align:center;color:' + color + ';' +
-      'font-size:11px;font-weight:700;text-shadow:0 0 4px ' + color;
+      'font-size:12px;font-weight:700;text-shadow:0 0 5px ' + color;
     stageCell.textContent = stage;
     row.appendChild(stageCell);
 
-    tableWrap.appendChild(row);
+    card.appendChild(row);
   });
-  rightCol.appendChild(tableWrap);
 
-  /* ── 右下：三個建議框，flex:1 填滿剩餘高度 ── */
+  /* ── 三個建議框 ── */
   var recsWrap = document.createElement('div');
   recsWrap.style.cssText =
-    'flex:1;overflow-y:auto;padding:6px 10px;' +
-    'background:#040b18;border-top:1px solid rgba(0,150,255,0.2);' +
-    'display:flex;flex-direction:column;gap:4px';
+    'padding:10px 14px;background:#040b18;' +
+    'border-top:1px solid rgba(0,150,255,0.2);' +
+    'display:flex;flex-direction:column;gap:6px';
 
   recKeys.forEach(function(rk) {
     var box = document.createElement('div');
     box.style.cssText =
       'background:rgba(0,80,180,0.12);' +
       'border:1px solid rgba(0,150,255,0.2);' +
-      'border-radius:7px;padding:6px 10px;' +
-      'display:flex;gap:6px;align-items:flex-start';
+      'border-radius:8px;padding:10px 14px;' +
+      'display:flex;gap:10px;align-items:flex-start';
 
     var icon = document.createElement('span');
-    icon.style.cssText = 'font-size:14px;flex-shrink:0;padding-top:1px';
+    icon.style.cssText = 'font-size:15px;flex-shrink:0;padding-top:2px';
     icon.textContent = rk.icon;
 
     var textWrap = document.createElement('div');
-    textWrap.style.cssText = 'flex:1;min-width:0;overflow:hidden';
+    textWrap.style.cssText = 'flex:1;min-width:0';
 
     var lbl = document.createElement('div');
     lbl.style.cssText =
-      'font-size:9px;color:#4a9eff;font-weight:700;letter-spacing:1px;margin-bottom:3px';
+      'font-size:10px;color:#4a9eff;font-weight:700;letter-spacing:1px;margin-bottom:4px';
     lbl.textContent = rk.label;
 
     var bodyEl = document.createElement('div');
     bodyEl.style.cssText =
-      'font-size:11px;color:#c8e6ff;line-height:1.5;word-break:break-word;' +
-      'text-shadow:0 0 3px rgba(0,150,255,0.25)';
+      'font-size:12px;color:#c8e6ff;line-height:1.6;' +
+      'word-break:break-word;text-shadow:0 0 3px rgba(0,150,255,0.25)';
     bodyEl.innerHTML = md(recs[rk.key] || '—');
 
     textWrap.appendChild(lbl);
@@ -753,14 +731,12 @@ async function runFisStep3() {
     recsWrap.appendChild(box);
   });
 
-  rightCol.appendChild(recsWrap);
-  body.appendChild(rightCol);
-  card.appendChild(body);
+  card.appendChild(recsWrap);
 
   /* ── 免責聲明 ── */
   var disc = document.createElement('div');
   disc.style.cssText =
-    'text-align:center;padding:7px;font-size:10px;' +
+    'text-align:center;padding:8px;font-size:10px;' +
     'color:rgba(120,160,210,0.55);background:#040b18;' +
     'border-top:1px solid rgba(0,100,180,0.15)';
   disc.textContent = '🛡️ 本圖為教育性體態參考，並非醫療診斷';
