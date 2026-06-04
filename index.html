@@ -362,6 +362,28 @@ textarea.sym { width: 100%; background: var(--bg3); border: 1px solid rgba(255,2
 
 <script>
 var API_BASE = 'https://fis-app.alexeywong22.workers.dev';
+
+  // ── 匿名用戶初始化 ────────────────────────────────────────
+  var FIS_USER_ID = localStorage.getItem('fis_user_id') || null;
+
+  async function initUser() {
+    try {
+      var res = await fetch(API_BASE + '/api/user/init', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: FIS_USER_ID })
+      });
+      var data = await res.json();
+      if (data.userId) {
+        FIS_USER_ID = data.userId;
+        localStorage.setItem('fis_user_id', FIS_USER_ID);
+        console.log(data.existing ? 'Existing user: ' + FIS_USER_ID : 'New user: ' + FIS_USER_ID);
+      }
+    } catch(e) {
+      console.warn('User init failed:', e.message);
+    }
+  }
+  initUser();
 var selectedFiles = [];
 var fisStep1Result = '';
 var fisStep2Result = '';
