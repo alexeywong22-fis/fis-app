@@ -384,6 +384,27 @@ var API_BASE = 'https://fis-app.alexeywong22.workers.dev';
     }
   }
   initUser();
+
+  // ── 顯示/更新用戶名 ──────────────────────────────────────────────────────
+  async function updateUsername(newName) {
+    if (!window.FIS_USER_ID) return;
+    try {
+      var res = await fetch(API_BASE + '/api/user/update-name', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ userId: window.FIS_USER_ID, newName: newName })
+      });
+      var data = await res.json();
+      if (data.success) {
+        localStorage.setItem('fis_username', data.name);
+        return { success: true };
+      } else {
+        return { error: data.error };
+      }
+    } catch(e) {
+      return { error: e.message };
+    }
+  }
 var selectedFiles = [];
 var fisStep1Result = '';
 var fisStep2Result = '';
@@ -891,8 +912,12 @@ async function analyzeProgress() {
   startProgress('pb-prog', 'pt-prog', 10000);
   try {
     var res = await fetch(API_BASE + '/api/progress', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({rating: ratings.r1, backPain: ratings.r2, tensionSpeed: ratings.r3}) });
+    var data = await res.json();
+    stopProgress('pb-prog', 'pt-prog');
+    var aiResult = data.result || 'Analysis failed, please try again.';
+    resultText.textContent = aiResult;
 
-    // 儲存訓練日誌落 D1
+    // AI 分析完成後自動儲存落 D1（包含 AI 建議）
     if (window.FIS_USER_ID) {
       fetch(API_BASE + '/api/progress/save', {
         method: 'POST',
@@ -901,14 +926,12 @@ async function analyzeProgress() {
           userId: window.FIS_USER_ID,
           muscleActivation: parseInt(ratings.r1) || 1,
           backCompensation: ratings.r2 === '有' ? '有' : ratings.r2 === '輕微' ? '輕微' : '無',
-          tensionSpeed: ratings.r3 || '5次後'
+          tensionSpeed: ratings.r3 || '5次後',
+          notes: aiResult
         })
-      }).then(r=>r.json()).then(d=>{ if(d.success) console.log('Progress saved:', d.logId); })
+      }).then(r=>r.json()).then(d=>{ if(d.success) console.log('Progress auto-saved:', d.logId); })
         .catch(e=>console.warn('Progress save failed:', e.message));
     }
-    var data = await res.json();
-    stopProgress('pb-prog', 'pt-prog');
-    resultText.textContent = data.result || 'Analysis failed, please try again.';
   } catch(e) { stopProgress('pb-prog', 'pt-prog'); resultText.textContent = 'Service temporarily unavailable, please try again later.'; }
 }
 
@@ -923,9 +946,12 @@ async function analyzePain() {
   startProgress('pb-pain', 'pt-pain', 10000);
   try {
     var res = await fetch(API_BASE + '/api/pain', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({bodyPart: selectedPart, symptom: symptom}) });
-    var painData = await res.json();
+    var data = await res.json();
+    stopProgress('pb-pain', 'pt-pain');
+    var aiResult = data.result || 'Diagnosis failed, please try again.';
+    resultText.textContent = aiResult;
 
-    // 儲存痛點診斷落 D1
+    // AI 分析完成後自動儲存落 D1
     if (window.FIS_USER_ID) {
       fetch(API_BASE + '/api/pain/save', {
         method: 'POST',
@@ -934,14 +960,11 @@ async function analyzePain() {
           userId: window.FIS_USER_ID,
           bodyPart: selectedPart,
           symptomDescription: symptom,
-          aiDiagnosis: painData.result || null
+          aiDiagnosis: aiResult
         })
-      }).then(r=>r.json()).then(d=>{ if(d.success) console.log('Pain saved:', d.diagnosisId); })
+      }).then(r=>r.json()).then(d=>{ if(d.success) console.log('Pain auto-saved:', d.diagnosisId); })
         .catch(e=>console.warn('Pain save failed:', e.message));
     }
-    var data = await res.json();
-    stopProgress('pb-pain', 'pt-pain');
-    resultText.textContent = data.result || 'Diagnosis failed, please try again.';
   } catch(e) { stopProgress('pb-pain', 'pt-pain'); resultText.textContent = 'Service temporarily unavailable, please try again later.'; }
 }
 
@@ -972,15 +995,52 @@ function stopProgress(barId, textId) {
   if (bar) { bar.style.width = '100%'; } if (txt) { txt.textContent = '100%'; }
 }
 
-function loadHistory() {
+async function loadHistory() {
+  var section = document.getElementById('historySection');
+  var list = document.getElementById('historyList');
+  if (!section || !list) return;
+
+  // 從 D1 讀取歷史紀錄
+  if (window.FIS_USER_ID) {
+    try {
+      var res = await fetch(API_BASE + '/api/progress/history?userId=' + window.FIS_USER_ID);
+      var data = await res.json();
+      var records = data.records || [];
+      if (records.length === 0) { section.style.display = 'none'; return; }
+      section.style.display = 'block';
+      var html = '';
+      for (var i = 0; i < records.length; i++) {
+        var r = records[i];
+        var date = r.logged_at ? r.logged_at.substring(0, 10) : '—';
+        var activation = r.muscle_activation || '—';
+        var back = r.back_compensation || '—';
+        var tension = r.tension_speed || '—';
+        var isAlert = activation <= 2;
+        html += '<div class="history-item">' +
+          '<div class="history-date">' + date + '</div>' +
+          '<div class="history-scores">' +
+          '<span>發力感: <strong style="color:' + (isAlert ? '#ff6666' : 'var(--gold)') + '">' + activation + '/4</strong></span> ' +
+          '<span>腰部代償: <strong>' + back + '</strong></span> ' +
+          '<span>張力速度: <strong>' + tension + '</strong></span>' +
+          '</div>' +
+          (r.notes ? '<div style="font-size:11px;color:var(--text-dim);margin-top:4px;line-height:1.4">' + r.notes.substring(0, 80) + (r.notes.length > 80 ? '...' : '') + '</div>' : '') +
+          '</div>';
+      }
+      list.innerHTML = html;
+      return;
+    } catch(e) { console.warn('History fetch failed:', e.message); }
+  }
+
+  // Fallback: localStorage
   try {
     var history = JSON.parse(localStorage.getItem('fis_history') || '[]');
-    var section = document.getElementById('historySection'); var list = document.getElementById('historyList');
-    if (!section || !list) return;
     if (history.length === 0) { section.style.display = 'none'; return; }
     section.style.display = 'block';
     var html = '';
-    for (var i = 0; i < history.length; i++) { var r = history[i]; html += '<div class="history-item"><div class="history-date">' + r.date + '</div><div class="history-scores"><span>Activation: <strong style="color:var(--gold)">' + r.r1 + '/4</strong></span> <span>Compensation: <strong>' + r.r2 + '</strong></span> <span>Tension: <strong>' + r.r3 + '</strong></span></div></div>'; }
+    for (var i = 0; i < history.length; i++) {
+      var r = history[i];
+      html += '<div class="history-item"><div class="history-date">' + r.date + '</div><div class="history-scores"><span>Activation: <strong style="color:var(--gold)">' + r.r1 + '/4</strong></span> <span>Compensation: <strong>' + r.r2 + '</strong></span> <span>Tension: <strong>' + r.r3 + '</strong></span></div></div>';
+    }
     list.innerHTML = html;
   } catch(e) {}
 }
