@@ -600,7 +600,8 @@ function bindAll() {
   if (enterBtn) { enterBtn.addEventListener('click', function() { try { localStorage.setItem('fis_agreed', '1'); } catch(e) {} goTo('home'); }); }
 
   var btnFis = document.getElementById('btn-fis'); if (btnFis) { btnFis.addEventListener('click', function() { goTo('fis'); }); }
-  var btnProgress = document.getElementById('btn-progress'); if (btnProgress) { btnProgress.addEventListener('click', function() { goTo('progress'); }); }
+  var btnProgress = document.getElementById('btn-progress'); if (btnProgress) { btnProgress.addEventListener('click', function() { location.href = 'progress-hub.html'; }); }
+  var bnavProgressBtn = document.getElementById('bnav-progress-btn'); if (bnavProgressBtn) { bnavProgressBtn.addEventListener('click', function() { location.href = 'progress-hub.html'; }); }
   var btnPain = document.getElementById('btn-pain'); if (btnPain) { btnPain.addEventListener('click', function() { goTo('pain'); }); }
   var btnWarmup = document.getElementById('btn-warmup'); if (btnWarmup) { btnWarmup.addEventListener('click', function() { goTo('warmup'); }); }
 
@@ -633,7 +634,7 @@ function bindAll() {
   var backWarmup = document.getElementById('back-warmup'); if (backWarmup) { backWarmup.addEventListener('click', function() { goTo('home'); }); }
 
   var bnavFisHome = document.getElementById('bnav-fis-home'); if (bnavFisHome) { bnavFisHome.addEventListener('click', function() { goTo('home'); }); }
-  var bnavFisProgress = document.getElementById('bnav-fis-progress'); if (bnavFisProgress) { bnavFisProgress.addEventListener('click', function() { goTo('progress'); }); }
+  var bnavFisProgress = document.getElementById('bnav-fis-progress'); if (bnavFisProgress) { bnavFisProgress.addEventListener('click', function() { location.href = 'progress-hub.html'; }); }
   var bnavFisPain = document.getElementById('bnav-fis-pain'); if (bnavFisPain) { bnavFisPain.addEventListener('click', function() { goTo('pain'); }); }
   var bnavFisWarmup = document.getElementById('bnav-fis-warmup'); if (bnavFisWarmup) { bnavFisWarmup.addEventListener('click', function() { goTo('warmup'); }); }
   var bnavProgressHome = document.getElementById('bnav-progress-home'); if (bnavProgressHome) { bnavProgressHome.addEventListener('click', function() { goTo('home'); }); }
@@ -642,11 +643,11 @@ function bindAll() {
   var bnavProgressWarmup = document.getElementById('bnav-progress-warmup'); if (bnavProgressWarmup) { bnavProgressWarmup.addEventListener('click', function() { goTo('warmup'); }); }
   var bnavPainHome = document.getElementById('bnav-pain-home'); if (bnavPainHome) { bnavPainHome.addEventListener('click', function() { goTo('home'); }); }
   var bnavPainFis = document.getElementById('bnav-pain-fis'); if (bnavPainFis) { bnavPainFis.addEventListener('click', function() { goTo('fis'); }); }
-  var bnavPainProgress = document.getElementById('bnav-pain-progress'); if (bnavPainProgress) { bnavPainProgress.addEventListener('click', function() { goTo('progress'); }); }
+  var bnavPainProgress = document.getElementById('bnav-pain-progress'); if (bnavPainProgress) { bnavPainProgress.addEventListener('click', function() { location.href = 'progress-hub.html'; }); }
   var bnavPainWarmup = document.getElementById('bnav-pain-warmup'); if (bnavPainWarmup) { bnavPainWarmup.addEventListener('click', function() { goTo('warmup'); }); }
   var bnavWarmupHome = document.getElementById('bnav-warmup-home'); if (bnavWarmupHome) { bnavWarmupHome.addEventListener('click', function() { goTo('home'); }); }
   var bnavWarmupFis = document.getElementById('bnav-warmup-fis'); if (bnavWarmupFis) { bnavWarmupFis.addEventListener('click', function() { goTo('fis'); }); }
-  var bnavWarmupProgress = document.getElementById('bnav-warmup-progress'); if (bnavWarmupProgress) { bnavWarmupProgress.addEventListener('click', function() { goTo('progress'); }); }
+  var bnavWarmupProgress = document.getElementById('bnav-warmup-progress'); if (bnavWarmupProgress) { bnavWarmupProgress.addEventListener('click', function() { location.href = 'progress-hub.html'; }); }
   var bnavWarmupPain = document.getElementById('bnav-warmup-pain'); if (bnavWarmupPain) { bnavWarmupPain.addEventListener('click', function() { goTo('pain'); }); }
 
   var ratingBtns = document.querySelectorAll('.rating-btn');
