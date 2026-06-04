@@ -233,10 +233,55 @@ textarea.sym { width: 100%; background: var(--bg3); border: 1px solid rgba(255,2
 </div>
 
 <!-- PROGRESS -->
+<!-- DATA HUB -->
 <div id="progress" class="screen">
   <div class="s-header">
     <div class="back-btn" id="back-progress">&lt;- 返回</div>
     <div class="s-title">進步追蹤</div>
+    <div class="s-sub">DATA - 追蹤系統</div>
+  </div>
+  <div class="s-body">
+    <div class="module-grid">
+      <div class="module-card" id="btn-data-log">
+        <div class="module-icon">📋</div>
+        <div class="module-num">01 - 日誌</div>
+        <div class="module-name">訓練筋膜日誌</div>
+        <div class="module-desc">填寫今日訓練三大指標</div>
+      </div>
+      <div class="module-card" id="btn-data-weekly">
+        <div class="module-icon">📊</div>
+        <div class="module-num">02 - 週評</div>
+        <div class="module-name">FIS每周進步評估表</div>
+        <div class="module-desc">對比上週筋膜線狀態</div>
+      </div>
+      <div class="module-card" id="btn-data-functional">
+        <div class="module-icon">🧪</div>
+        <div class="module-num">03 - 功能</div>
+        <div class="module-name">FIS功能性測試記錄表</div>
+        <div class="module-desc">單腳站立、Jefferson Curl</div>
+      </div>
+      <div class="module-card" id="btn-data-report">
+        <div class="module-icon">🏆</div>
+        <div class="module-num">04 - 報告</div>
+        <div class="module-name">12星期終極對比報告</div>
+        <div class="module-desc">完整進步數據總覽</div>
+      </div>
+    </div>
+  </div>
+  <div class="bnav">
+    <div class="bnav-item" id="bnav-progress-home"><div class="bnav-icon">HOME</div><div class="bnav-label">主頁</div></div>
+    <div class="bnav-item" id="bnav-progress-fis"><div class="bnav-icon">FIS</div><div class="bnav-label">檢測</div></div>
+    <div class="bnav-item active"><div class="bnav-icon">DATA</div><div class="bnav-label">追蹤</div></div>
+    <div class="bnav-item" id="bnav-progress-pain"><div class="bnav-icon">RX</div><div class="bnav-label">診斷</div></div>
+    <div class="bnav-item" id="bnav-progress-warmup"><div class="bnav-icon">GO</div><div class="bnav-label">熱身</div></div>
+  </div>
+</div>
+
+<!-- DATA 01: 訓練筋膜日誌 -->
+<div id="data-log" class="screen">
+  <div class="s-header">
+    <div class="back-btn" id="back-data-log">&lt;- 返回</div>
+    <div class="s-title">訓練筋膜日誌</div>
     <div class="s-sub">POST-WORKOUT - AI即時分析</div>
   </div>
   <div class="s-body">
@@ -263,19 +308,124 @@ textarea.sym { width: 100%; background: var(--bg3); border: 1px solid rgba(255,2
     <div class="ai-result" id="progressResult">
       <div class="ai-result-title">AI 分析結果</div>
       <div class="ai-result-body" id="progressResultText"></div>
-      <button class="btn-outline" id="btn-save-record" style="margin-top:12px">儲存今日記錄</button>
     </div>
-    <div id="historySection" style="display:none">
+    <div id="historySection" style="display:none;margin-top:20px">
       <div class="sec-label">過往記錄</div>
       <div id="historyList"></div>
     </div>
   </div>
   <div class="bnav">
-    <div class="bnav-item" id="bnav-progress-home"><div class="bnav-icon">HOME</div><div class="bnav-label">主頁</div></div>
-    <div class="bnav-item" id="bnav-progress-fis"><div class="bnav-icon">FIS</div><div class="bnav-label">檢測</div></div>
+    <div class="bnav-item" id="bnav-log-home"><div class="bnav-icon">HOME</div><div class="bnav-label">主頁</div></div>
+    <div class="bnav-item" id="bnav-log-fis"><div class="bnav-icon">FIS</div><div class="bnav-label">檢測</div></div>
     <div class="bnav-item active"><div class="bnav-icon">DATA</div><div class="bnav-label">追蹤</div></div>
-    <div class="bnav-item" id="bnav-progress-pain"><div class="bnav-icon">RX</div><div class="bnav-label">診斷</div></div>
-    <div class="bnav-item" id="bnav-progress-warmup"><div class="bnav-icon">GO</div><div class="bnav-label">熱身</div></div>
+    <div class="bnav-item" id="bnav-log-pain"><div class="bnav-icon">RX</div><div class="bnav-label">診斷</div></div>
+    <div class="bnav-item" id="bnav-log-warmup"><div class="bnav-icon">GO</div><div class="bnav-label">熱身</div></div>
+  </div>
+</div>
+
+<!-- DATA 02: FIS每周進步評估表 -->
+<div id="data-weekly" class="screen">
+  <div class="s-header">
+    <div class="back-btn" id="back-data-weekly">&lt;- 返回</div>
+    <div class="s-title">FIS每周進步評估表</div>
+    <div class="s-sub">WEEKLY - 對比上週狀態</div>
+  </div>
+  <div class="s-body">
+    <div class="ai-result show" style="margin-bottom:16px">
+      <div class="ai-result-title">本週 vs 上週對比</div>
+      <div class="ai-result-body" id="weeklyCompareText">載入中...</div>
+    </div>
+    <div class="sec-label">本週訓練自評（1-10分）</div>
+    <div style="display:flex;gap:12px;align-items:center;margin-bottom:16px">
+      <input type="range" id="weeklyScore" min="1" max="10" value="7" style="flex:1;accent-color:var(--gold)">
+      <span id="weeklyScoreVal" style="color:var(--gold);font-size:24px;font-weight:900;font-family:Bebas Neue,sans-serif;width:40px;text-align:center">7</span>
+    </div>
+    <div class="sec-label">本週最大改善</div>
+    <textarea id="weeklyImprove" placeholder="例如：深前線激活感明顯提升..." style="width:100%;background:rgba(0,0,0,0.3);border:1px solid var(--gold-dim);border-radius:10px;padding:12px;color:var(--text);font-family:inherit;font-size:13px;resize:none;height:80px;outline:none"></textarea>
+    <div class="sec-label" style="margin-top:12px">本週仍需改善</div>
+    <textarea id="weeklyImproveNext" placeholder="例如：腰部代償仍有出現..." style="width:100%;background:rgba(0,0,0,0.3);border:1px solid var(--gold-dim);border-radius:10px;padding:12px;color:var(--text);font-family:inherit;font-size:13px;resize:none;height:80px;outline:none"></textarea>
+    <button class="btn-gold" id="btn-save-weekly" style="margin-top:20px">儲存本週評估</button>
+    <div class="ai-result" id="weeklyResult" style="display:none">
+      <div class="ai-result-title">✅ 已儲存</div>
+      <div class="ai-result-body" id="weeklyResultText"></div>
+    </div>
+  </div>
+  <div class="bnav">
+    <div class="bnav-item" id="bnav-weekly-home"><div class="bnav-icon">HOME</div><div class="bnav-label">主頁</div></div>
+    <div class="bnav-item" id="bnav-weekly-fis"><div class="bnav-icon">FIS</div><div class="bnav-label">檢測</div></div>
+    <div class="bnav-item active"><div class="bnav-icon">DATA</div><div class="bnav-label">追蹤</div></div>
+    <div class="bnav-item" id="bnav-weekly-pain"><div class="bnav-icon">RX</div><div class="bnav-label">診斷</div></div>
+    <div class="bnav-item" id="bnav-weekly-warmup"><div class="bnav-icon">GO</div><div class="bnav-label">熱身</div></div>
+  </div>
+</div>
+
+<!-- DATA 03: FIS功能性測試記錄表 -->
+<div id="data-functional" class="screen">
+  <div class="s-header">
+    <div class="back-btn" id="back-data-functional">&lt;- 返回</div>
+    <div class="s-title">FIS功能性測試記錄表</div>
+    <div class="s-sub">FUNCTIONAL - 動態評估</div>
+  </div>
+  <div class="s-body">
+    <div class="sec-label">單腳站立（秒數）</div>
+    <div style="display:flex;gap:12px;margin-bottom:16px">
+      <div style="flex:1">
+        <div style="font-size:11px;color:var(--text-dim);margin-bottom:6px">左腳</div>
+        <input type="number" id="funcLeftSec" placeholder="例如：25" min="0" max="120" style="width:100%;background:rgba(0,0,0,0.3);border:1px solid var(--gold-dim);border-radius:10px;padding:12px;color:var(--text);font-size:16px;outline:none;text-align:center">
+      </div>
+      <div style="flex:1">
+        <div style="font-size:11px;color:var(--text-dim);margin-bottom:6px">右腳</div>
+        <input type="number" id="funcRightSec" placeholder="例如：28" min="0" max="120" style="width:100%;background:rgba(0,0,0,0.3);border:1px solid var(--gold-dim);border-radius:10px;padding:12px;color:var(--text);font-size:16px;outline:none;text-align:center">
+      </div>
+    </div>
+    <div class="sec-label">Jefferson Curl 脊椎分節級別</div>
+    <div class="toggle-row" style="flex-wrap:wrap">
+      <div class="toggle-btn" data-group="jc" data-val="1">Level 1<br><span style="font-size:10px">完全僵硬</span></div>
+      <div class="toggle-btn" data-group="jc" data-val="2">Level 2<br><span style="font-size:10px">輕微分節</span></div>
+      <div class="toggle-btn" data-group="jc" data-val="3">Level 3<br><span style="font-size:10px">明顯分節</span></div>
+      <div class="toggle-btn" data-group="jc" data-val="4">Level 4<br><span style="font-size:10px">流暢分節</span></div>
+      <div class="toggle-btn" data-group="jc" data-val="5">Level 5<br><span style="font-size:10px">完全控制</span></div>
+    </div>
+    <div class="sec-label" style="margin-top:16px">呼吸模式評估</div>
+    <div class="toggle-row">
+      <div class="toggle-btn" data-group="breath" data-val="胸式">胸式<br><span style="font-size:10px">肩膀聳起</span></div>
+      <div class="toggle-btn" data-group="breath" data-val="混合">混合<br><span style="font-size:10px">輕微代償</span></div>
+      <div class="toggle-btn" data-group="breath" data-val="腹式">腹式<br><span style="font-size:10px">橫膈膜主導</span></div>
+    </div>
+    <button class="btn-gold" id="btn-save-functional" style="margin-top:24px">儲存今日測試</button>
+    <div class="ai-result" id="functionalResult" style="display:none">
+      <div class="ai-result-title">✅ 已儲存</div>
+      <div class="ai-result-body" id="functionalResultText"></div>
+    </div>
+  </div>
+  <div class="bnav">
+    <div class="bnav-item" id="bnav-func-home"><div class="bnav-icon">HOME</div><div class="bnav-label">主頁</div></div>
+    <div class="bnav-item" id="bnav-func-fis"><div class="bnav-icon">FIS</div><div class="bnav-label">檢測</div></div>
+    <div class="bnav-item active"><div class="bnav-icon">DATA</div><div class="bnav-label">追蹤</div></div>
+    <div class="bnav-item" id="bnav-func-pain"><div class="bnav-icon">RX</div><div class="bnav-label">診斷</div></div>
+    <div class="bnav-item" id="bnav-func-warmup"><div class="bnav-icon">GO</div><div class="bnav-label">熱身</div></div>
+  </div>
+</div>
+
+<!-- DATA 04: 12星期終極對比報告 -->
+<div id="data-report" class="screen">
+  <div class="s-header">
+    <div class="back-btn" id="back-data-report">&lt;- 返回</div>
+    <div class="s-title">12星期終極對比報告</div>
+    <div class="s-sub">FINAL REPORT - 完整進步數據</div>
+  </div>
+  <div class="s-body">
+    <div class="ai-result show" id="report12Section">
+      <div class="ai-result-title">📊 載入報告中...</div>
+      <div class="ai-result-body" id="report12Text">正在從數據庫讀取你的訓練紀錄...</div>
+    </div>
+  </div>
+  <div class="bnav">
+    <div class="bnav-item" id="bnav-report-home"><div class="bnav-icon">HOME</div><div class="bnav-label">主頁</div></div>
+    <div class="bnav-item" id="bnav-report-fis"><div class="bnav-icon">FIS</div><div class="bnav-label">檢測</div></div>
+    <div class="bnav-item active"><div class="bnav-icon">DATA</div><div class="bnav-label">追蹤</div></div>
+    <div class="bnav-item" id="bnav-report-pain"><div class="bnav-icon">RX</div><div class="bnav-label">診斷</div></div>
+    <div class="bnav-item" id="bnav-report-warmup"><div class="bnav-icon">GO</div><div class="bnav-label">熱身</div></div>
   </div>
 </div>
 
@@ -412,6 +562,8 @@ var selectedPart = '';
 var ratings = { r1: null, r2: null, r3: null };
 
 function goTo(screenId) {
+  if (screenId === 'data-report') { setTimeout(load12WeekReport, 300); }
+  if (screenId === 'data-weekly') { setTimeout(loadWeeklyCompare, 300); }
   var all = document.querySelectorAll('.screen');
   for (var i = 0; i < all.length; i++) { all[i].classList.remove('active'); all[i].style.display = 'none'; }
   var target = document.getElementById(screenId);
@@ -430,6 +582,34 @@ function bindAll() {
 
   var backFis = document.getElementById('back-fis'); if (backFis) { backFis.addEventListener('click', function() { goTo('home'); }); }
   var backProgress = document.getElementById('back-progress'); if (backProgress) { backProgress.addEventListener('click', function() { goTo('home'); }); }
+
+  // DATA sub-screens
+  function bindNav(id, dest) { var el = document.getElementById(id); if (el) el.addEventListener('click', function(){ goTo(dest); }); }
+  bindNav('btn-data-log', 'data-log');
+  bindNav('btn-data-weekly', 'data-weekly');
+  bindNav('btn-data-functional', 'data-functional');
+  bindNav('btn-data-report', 'data-report');
+  bindNav('back-data-log', 'progress');
+  bindNav('back-data-weekly', 'progress');
+  bindNav('back-data-functional', 'progress');
+  bindNav('back-data-report', 'progress');
+  // DATA sub bnav
+  ['bnav-log-home','bnav-weekly-home','bnav-func-home','bnav-report-home'].forEach(function(id){ bindNav(id,'home'); });
+  ['bnav-log-fis','bnav-weekly-fis','bnav-func-fis','bnav-report-fis'].forEach(function(id){ bindNav(id,'fis'); });
+  ['bnav-log-pain','bnav-weekly-pain','bnav-func-pain','bnav-report-pain'].forEach(function(id){ bindNav(id,'pain'); });
+  ['bnav-log-warmup','bnav-weekly-warmup','bnav-func-warmup','bnav-report-warmup'].forEach(function(id){ bindNav(id,'warmup'); });
+
+  // Weekly score slider
+  var slider = document.getElementById('weeklyScore');
+  if (slider) { slider.addEventListener('input', function(){ document.getElementById('weeklyScoreVal').textContent = this.value; }); }
+
+  // Save weekly
+  var btnWeekly = document.getElementById('btn-save-weekly');
+  if (btnWeekly) { btnWeekly.addEventListener('click', saveWeekly); }
+
+  // Save functional
+  var btnFunc = document.getElementById('btn-save-functional');
+  if (btnFunc) { btnFunc.addEventListener('click', saveFunctional); }
   var backPain = document.getElementById('back-pain'); if (backPain) { backPain.addEventListener('click', function() { goTo('home'); }); }
   var backWarmup = document.getElementById('back-warmup'); if (backWarmup) { backWarmup.addEventListener('click', function() { goTo('home'); }); }
 
@@ -993,6 +1173,137 @@ function stopProgress(barId, textId) {
   if (progressTimers[barId]) { clearInterval(progressTimers[barId]); }
   var bar = document.getElementById(barId); var txt = document.getElementById(textId);
   if (bar) { bar.style.width = '100%'; } if (txt) { txt.textContent = '100%'; }
+}
+
+function saveWeekly() {
+  var score = document.getElementById('weeklyScore').value;
+  var improve = document.getElementById('weeklyImprove').value.trim();
+  var next = document.getElementById('weeklyImproveNext').value.trim();
+  var record = { date: new Date().toLocaleDateString('zh-HK'), score: score, improve: improve, next: next };
+  try {
+    var history = JSON.parse(localStorage.getItem('fis_weekly_history') || '[]');
+    history.unshift(record); if (history.length > 20) history.pop();
+    localStorage.setItem('fis_weekly_history', JSON.stringify(history));
+  } catch(e) {}
+  // 儲存落 D1
+  if (window.FIS_USER_ID) {
+    fetch(API_BASE + '/api/weekly/save', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        userId: window.FIS_USER_ID,
+        score: parseInt(score),
+        improvement: improve,
+        nextFocus: next,
+        weekDate: new Date().toISOString().substring(0,10)
+      })
+    }).then(function(r){ return r.json(); })
+      .then(function(d){ if(d.success) console.log('Weekly saved:', d.assessmentId); })
+      .catch(function(e){ console.warn('Weekly save failed:', e.message); });
+  }
+  var el = document.getElementById('weeklyResult');
+  var txt = document.getElementById('weeklyResultText');
+  if (el && txt) {
+    txt.textContent = '本週評分：' + score + '/10　最大改善：' + (improve||'未填寫') + '　下週重點：' + (next||'未填寫');
+    el.style.display = 'block';
+  }
+}
+
+function loadWeeklyCompare() {
+  var el = document.getElementById('weeklyCompareText');
+  if (!el) return;
+  if (!window.FIS_USER_ID) { el.textContent = '請先完成登入'; return; }
+  fetch(API_BASE + '/api/progress/history?userId=' + window.FIS_USER_ID)
+    .then(function(r){ return r.json(); })
+    .then(function(d) {
+      var logs = d.records || [];
+      if (logs.length < 2) { el.textContent = '需要最少兩次訓練紀錄才能進行對比。'; return; }
+      var latest = logs[0], prev = logs[1];
+      var diff = (latest.muscle_activation || 0) - (prev.muscle_activation || 0);
+      var arrow = diff > 0 ? '↑' : diff < 0 ? '↓' : '→';
+      var color = diff > 0 ? '#2ed573' : diff < 0 ? '#ff4757' : '#ffc845';
+      el.innerHTML =
+        '<div style="display:flex;justify-content:space-between;margin-bottom:12px">' +
+        '<div style="text-align:center"><div style="font-size:11px;color:rgba(180,210,255,0.6)">上次</div><div style="font-size:28px;font-family:Bebas Neue,sans-serif;color:#ffc845">' + (prev.muscle_activation||'—') + '/4</div><div style="font-size:10px;color:rgba(180,210,255,0.5)">' + (prev.logged_at||'').substring(0,10) + '</div></div>' +
+        '<div style="font-size:36px;color:' + color + ';align-self:center">' + arrow + '</div>' +
+        '<div style="text-align:center"><div style="font-size:11px;color:rgba(180,210,255,0.6)">今次</div><div style="font-size:28px;font-family:Bebas Neue,sans-serif;color:#ffc845">' + (latest.muscle_activation||'—') + '/4</div><div style="font-size:10px;color:rgba(180,210,255,0.5)">' + (latest.logged_at||'').substring(0,10) + '</div></div>' +
+        '</div>' +
+        '<div style="font-size:12px;color:rgba(180,210,255,0.7)">代償：' + (latest.back_compensation||'—') + '　張力速度：' + (latest.tension_speed||'—') + '</div>';
+    }).catch(function(){ el.textContent = '載入失敗，請重試。'; });
+}
+
+function saveFunctional() {
+  var left = document.getElementById('funcLeftSec').value;
+  var right = document.getElementById('funcRightSec').value;
+  var jc = document.querySelector('.toggle-btn[data-group="jc"].active');
+  var breath = document.querySelector('.toggle-btn[data-group="breath"].active');
+  if (!left && !right) { alert('請輸入單腳站立秒數'); return; }
+  var jcVal = jc ? parseInt(jc.getAttribute('data-val')) : null;
+  var breathVal = breath ? breath.getAttribute('data-val') : null;
+  var record = {
+    date: new Date().toLocaleDateString('zh-HK'),
+    leftSec: left, rightSec: right,
+    jcLevel: jcVal || '—',
+    breathing: breathVal || '—'
+  };
+  try {
+    var history = JSON.parse(localStorage.getItem('fis_functional_history') || '[]');
+    history.unshift(record); if (history.length > 20) history.pop();
+    localStorage.setItem('fis_functional_history', JSON.stringify(history));
+  } catch(e) {}
+  // 儲存落 D1
+  if (window.FIS_USER_ID) {
+    fetch(API_BASE + '/api/functional/save', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        userId: window.FIS_USER_ID,
+        singleLegLeft: parseFloat(left) || null,
+        singleLegRight: parseFloat(right) || null,
+        jeffersonCurlLevel: jcVal,
+        breathingPattern: breathVal
+      })
+    }).then(function(r){ return r.json(); })
+      .then(function(d){ if(d.success) console.log('Functional saved:', d.testId); })
+      .catch(function(e){ console.warn('Functional save failed:', e.message); });
+  }
+  var el = document.getElementById('functionalResult');
+  var txt = document.getElementById('functionalResultText');
+  if (el && txt) {
+    var diff = left && right ? Math.abs(parseInt(left) - parseInt(right)) : null;
+    txt.innerHTML = '左腳：<strong>' + (left||'—') + '秒</strong>　右腳：<strong>' + (right||'—') + '秒</strong>' +
+      (diff !== null ? '　左右差：<strong style="color:' + (diff > 5 ? '#ff4757' : '#2ed573') + '">' + diff + '秒</strong>' : '') +
+      '<br>Jefferson Curl：Level <strong>' + record.jcLevel + '</strong>　呼吸模式：<strong>' + record.breathing + '</strong>';
+    el.style.display = 'block';
+  }
+}
+
+async function load12WeekReport() {
+  var el = document.getElementById('report12Text');
+  var title = document.querySelector('#report12Section .ai-result-title');
+  if (!el) return;
+  if (!window.FIS_USER_ID) { el.textContent = '請先完成登入'; return; }
+  el.textContent = '正在從數據庫讀取你的訓練紀錄...';
+  try {
+    var res = await fetch(API_BASE + '/api/progress/history?userId=' + window.FIS_USER_ID);
+    var data = await res.json();
+    var logs = data.records || [];
+    if (logs.length === 0) { el.textContent = '尚無訓練紀錄，請先完成至少一次訓練日誌。'; return; }
+    if (title) title.textContent = '📊 12星期終極對比報告（共 ' + logs.length + ' 次訓練）';
+    var first = logs[logs.length-1], last = logs[0];
+    var avg = Math.round((logs.reduce(function(s,l){ return s+(l.muscle_activation||0); },0)/logs.length)*10)/10;
+    var compRate = Math.round(logs.filter(function(l){ return l.back_compensation==='有'; }).length/logs.length*100);
+    var diff = (last.muscle_activation||0) - (first.muscle_activation||0);
+    el.innerHTML =
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">' +
+      '<div style="background:rgba(0,0,0,0.2);border-radius:10px;padding:14px;text-align:center"><div style="font-size:10px;color:rgba(180,210,255,0.6)">訓練次數</div><div style="font-size:32px;font-family:Bebas Neue,sans-serif;color:#ffc845">' + logs.length + '</div></div>' +
+      '<div style="background:rgba(0,0,0,0.2);border-radius:10px;padding:14px;text-align:center"><div style="font-size:10px;color:rgba(180,210,255,0.6)">平均發力感</div><div style="font-size:32px;font-family:Bebas Neue,sans-serif;color:#ffc845">' + avg + '/4</div></div>' +
+      '<div style="background:rgba(0,0,0,0.2);border-radius:10px;padding:14px;text-align:center"><div style="font-size:10px;color:rgba(180,210,255,0.6)">代償率</div><div style="font-size:32px;font-family:Bebas Neue,sans-serif;color:' + (compRate>30?'#ff4757':'#2ed573') + '">' + compRate + '%</div></div>' +
+      '<div style="background:rgba(0,0,0,0.2);border-radius:10px;padding:14px;text-align:center"><div style="font-size:10px;color:rgba(180,210,255,0.6)">整體進步</div><div style="font-size:32px;font-family:Bebas Neue,sans-serif;color:' + (diff>0?'#2ed573':diff<0?'#ff4757':'#ffc845') + '">' + (diff>0?'+':'') + diff + '</div></div>' +
+      '</div>' +
+      '<div style="font-size:12px;color:rgba(180,210,255,0.7);margin-bottom:8px">首次訓練：' + (first.logged_at||'').substring(0,10) + '　最近訓練：' + (last.logged_at||'').substring(0,10) + '</div>' +
+      '<div style="font-size:12px;color:rgba(180,210,255,0.7)">首次發力感：' + (first.muscle_activation||'—') + '/4　最近發力感：' + (last.muscle_activation||'—') + '/4</div>';
+  } catch(e) { el.textContent = '載入失敗：' + e.message; }
 }
 
 async function loadHistory() {
