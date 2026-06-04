@@ -591,6 +591,11 @@ async function loadAllUsers() {
     });
     if (users.length === 0) html = '<div style="color:var(--text-dim);text-align:center;padding:40px">尚無學員</div>';
     document.getElementById('userListGrid').innerHTML = html;
+    // 用 event delegation 避免 onclick 字串問題
+    document.getElementById('userListGrid').onclick = function(e) {
+      var card = e.target.closest('[data-uid]');
+      if (card) loadUser(card.getAttribute('data-uid'));
+    };
   } catch(e) {
     document.getElementById('loading').style.display = 'none';
     showError('載入失敗：' + e.message);
