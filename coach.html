@@ -380,19 +380,34 @@
 <div class="container">
 
   <!-- Search -->
-  <div class="search-section">
-    <div class="search-label">🔐 教練登入 + 學員查詢</div>
-    <div class="search-row" style="margin-bottom:10px">
-      <input class="search-input" id="coachUsername" type="text"
-        placeholder="教練用戶名（例如：alexeywong22）">
-      <input class="search-input" id="coachPassword" type="password"
-        placeholder="教練密碼">
+  <!-- 登入頁面 -->
+  <div id="loginSection">
+    <div class="search-section">
+      <div class="search-label">🔐 教練登入</div>
+      <div class="search-row" style="margin-bottom:10px">
+        <input class="search-input" id="coachUsername" type="text" placeholder="教練用戶名">
+      </div>
+      <div class="search-row">
+        <input class="search-input" id="coachPassword" type="password" placeholder="教練密碼">
+        <button class="btn-search" onclick="coachLogin()">登入</button>
+      </div>
     </div>
-    <div class="search-row">
-      <input class="search-input" id="userIdInput" type="text"
-        placeholder="學員 User ID（例如：usr_155de0661c1640ba）">
-      <button class="btn-search" onclick="loadUser()">載入數據</button>
+  </div>
+
+  <!-- 學員列表 -->
+  <div id="userListSection" style="display:none">
+    <div class="search-section" style="margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div class="search-label" style="margin:0">👥 所有學員</div>
+        <button class="btn-search" style="padding:8px 16px;font-size:12px" onclick="coachLogout()">登出</button>
+      </div>
     </div>
+    <div id="userListGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-bottom:24px"></div>
+  </div>
+
+  <!-- 學員詳細資料 -->
+  <div id="backBtn" style="display:none;margin-bottom:16px">
+    <button class="btn-search" style="background:transparent;border:1px solid var(--border);color:var(--text);padding:8px 20px" onclick="backToList()">← 返回學員列表</button>
   </div>
 
   <!-- Error -->
@@ -506,29 +521,114 @@ const fasciaNames = {
   superficial_front_line: '淺前線 (Superficial Front Line)'
 };
 
-async function loadUser() {
-  const userId = document.getElementById('userIdInput').value.trim();
-  if (!userId) { showError('請輸入學員 User ID'); return; }
+var _coachUsername = '';
+var _coachPassword = '';
+
+async function coachLogin() {
+  const username = document.getElementById('coachUsername').value.trim();
+  const password = document.getElementById('coachPassword').value.trim();
+  if (!username || !password) { showError('請輸入用戶名和密碼'); return; }
 
   document.getElementById('error').style.display = 'none';
-  document.getElementById('dashboard').style.display = 'none';
   document.getElementById('loading').style.display = 'block';
 
   try {
-    const username = document.getElementById('coachUsername').value.trim();
-    const password = document.getElementById('coachPassword').value.trim();
-    if (!username || !password) { showError('請輸入教練用戶名和密碼'); document.getElementById('loading').style.display='none'; return; }
+    const res = await fetch(API + '/api/coach/login', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ username, password })
+    });
+    const data = await res.json();
+    document.getElementById('loading').style.display = 'none';
 
+    if (res.status === 403 || data.error) { showError('❌ 用戶名或密碼錯誤'); return; }
+
+    _coachUsername = username;
+    _coachPassword = password;
+
+    document.getElementById('loginSection').style.display = 'none';
+    document.getElementById('userListSection').style.display = 'block';
+    loadAllUsers();
+  } catch(e) {
+    document.getElementById('loading').style.display = 'none';
+    showError('網絡錯誤：' + e.message);
+  }
+}
+
+async function loadAllUsers() {
+  document.getElementById('loading').style.display = 'block';
+  try {
+    const res = await fetch(API + '/api/coach/users', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ username: _coachUsername, password: _coachPassword })
+    });
+    const data = await res.json();
+    document.getElementById('loading').style.display = 'none';
+
+    const users = data.users || [];
+    var html = '';
+    users.forEach(function(u) {
+      var lastActive = u.last_active ? u.last_active.substring(0,10) : '從未';
+      html += '<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;cursor:pointer;transition:border-color 0.2s" ' +
+        'onclick="loadUser('' + u.id + '')" ' +
+        'onmouseover="this.style.borderColor='var(--cyan)'" ' +
+        'onmouseout="this.style.borderColor='var(--border)'">' +
+        '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">' +
+          '<div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--cyan),#4466ff);display:flex;align-items:center;justify-content:center;font-family:Bebas Neue,sans-serif;font-size:18px;color:#fff">' + (u.name||'U').substring(0,1).toUpperCase() + '</div>' +
+          '<div>' +
+            '<div style="font-weight:700;color:var(--text)">' + (u.name || u.id) + '</div>' +
+            '<div style="font-size:10px;color:var(--text-dim);font-family:JetBrains Mono,monospace">' + u.id + '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div style="display:flex;gap:12px">' +
+          '<div style="text-align:center;flex:1"><div style="font-family:Bebas Neue,sans-serif;font-size:22px;color:var(--gold)">' + (u.fascia_count||0) + '</div><div style="font-size:9px;color:var(--text-dim)">FIS測試</div></div>' +
+          '<div style="text-align:center;flex:1"><div style="font-family:Bebas Neue,sans-serif;font-size:22px;color:var(--cyan)">' + (u.log_count||0) + '</div><div style="font-size:9px;color:var(--text-dim)">訓練日誌</div></div>' +
+          '<div style="text-align:center;flex:1"><div style="font-family:Bebas Neue,sans-serif;font-size:22px;color:var(--red)">' + (u.pain_count||0) + '</div><div style="font-size:9px;color:var(--text-dim)">痛點診斷</div></div>' +
+        '</div>' +
+        '<div style="margin-top:10px;font-size:10px;color:var(--text-dim)">最後活躍：' + lastActive + '</div>' +
+        '</div>';
+    });
+    if (users.length === 0) html = '<div style="color:var(--text-dim);text-align:center;padding:40px">尚無學員</div>';
+    document.getElementById('userListGrid').innerHTML = html;
+  } catch(e) {
+    document.getElementById('loading').style.display = 'none';
+    showError('載入失敗：' + e.message);
+  }
+}
+
+function coachLogout() {
+  _coachUsername = '';
+  _coachPassword = '';
+  document.getElementById('loginSection').style.display = 'block';
+  document.getElementById('userListSection').style.display = 'none';
+  document.getElementById('dashboard').style.display = 'none';
+  document.getElementById('backBtn').style.display = 'none';
+}
+
+function backToList() {
+  document.getElementById('dashboard').style.display = 'none';
+  document.getElementById('backBtn').style.display = 'none';
+  document.getElementById('userListSection').style.display = 'block';
+}
+
+async function loadUser(userId) {
+  if (!userId) return;
+  document.getElementById('error').style.display = 'none';
+  document.getElementById('dashboard').style.display = 'none';
+  document.getElementById('userListSection').style.display = 'none';
+  document.getElementById('loading').style.display = 'block';
+
+  try {
     const res = await fetch(API + '/api/coach/user-summary', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ user_id: userId, username: username, password: password })
+      body: JSON.stringify({ user_id: userId, username: _coachUsername, password: _coachPassword })
     });
     const data = await res.json();
-    if (res.status === 403) { showError('❌ 用戶名或密碼錯誤，拒絕存取'); document.getElementById('loading').style.display='none'; return; }
     document.getElementById('loading').style.display = 'none';
-
     if (data.error) { showError('錯誤：' + data.error); return; }
+    document.getElementById('backBtn').style.display = 'block';
     renderDashboard(data);
   } catch(e) {
     document.getElementById('loading').style.display = 'none';
