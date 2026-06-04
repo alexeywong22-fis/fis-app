@@ -852,6 +852,25 @@ async function runFisStep3() {
 
   imageResult.appendChild(card);
   card.scrollIntoView({behavior:'smooth'});
+
+  // 自動儲存測試結果落 D1
+  if (window.FIS_USER_ID && fisParsedData) {
+    fetch(API_BASE + '/api/fascia-test/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userId: window.FIS_USER_ID,
+        parsed: fisParsedData
+      })
+    }).then(function(r) { return r.json(); })
+      .then(function(d) {
+        if (d.success) {
+          console.log('FIS test saved:', d.testId);
+        }
+      }).catch(function(e) {
+        console.warn('Save failed:', e.message);
+      });
+  }
 }
 
 function downloadImage() {
