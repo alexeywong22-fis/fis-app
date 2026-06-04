@@ -1,0 +1,28 @@
+{
+  "name": "FIS Training Toolkit",
+  "short_name": "FIS",
+  "description": "FIS 體態特徵訓練系統",
+  "start_url": "/fis-app/",
+  "display": "standalone",
+  "background_color": "#050d1a",
+  "theme_color": "#050d1a",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "fis-icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "fis-icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "fis-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "apple touch icon"
+    }
+  ]
+}
