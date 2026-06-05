@@ -146,7 +146,7 @@ textarea.sym { width: 100%; background: var(--bg3); border: 1px solid rgba(255,2
   <div class="home-header">
     <div class="brand-tag">FIS - FASCIAL INTEGRATION SYSTEM</div>
     <div class="home-title">訓練<span>工具</span></div>
-    <div class="home-sub">TRAINING TOOLKIT - ALEXEY WONG</div>
+    <div class="home-sub" id="home-sub">TRAINING TOOLKIT - ALEXEY WONG</div>
     <div class="home-username" id="home-username"></div>
     <div class="home-line"></div>
   </div>
@@ -508,6 +508,7 @@ textarea.sym { width: 100%; background: var(--bg3); border: 1px solid rgba(255,2
     <div class="s-sub">PRE-WORKOUT - 五大筋膜線激活</div>
   </div>
   <div class="s-body">
+    <div class="dbox">[!] 以下熱身動作屬教育性參考，並非醫療建議。如有傷患或不適，請立即停止並咨詢醫生。</div>
     <div class="wu-toggle">
       <button class="wu-btn active" data-wu="upper">上身訓練日</button>
       <button class="wu-btn" data-wu="lower-m">下身（男）</button>
@@ -695,6 +696,15 @@ function bindAll() {
   setupUsernameEditor();
 }
 
+// ── 主頁 home-sub 動態顯示用戶名 ─────────────────────────────────────────────
+function updateHomeSub() {
+  var el = document.getElementById('home-sub');
+  if (!el) return;
+  var name = '';
+  try { name = localStorage.getItem('fis_username') || ''; } catch(e) {}
+  el.textContent = name ? ('歡迎，' + name) : 'TRAINING TOOLKIT - ALEXEY WONG';
+}
+
 // ── 學員名稱 Inline Edit ────────────────────────────────────────────────────
 function setupUsernameEditor() {
   var host = document.getElementById('home-username');
@@ -716,6 +726,7 @@ function setupUsernameEditor() {
     chip.appendChild(label); chip.appendChild(nm); chip.appendChild(pen);
     chip.addEventListener('click', renderEdit);
     host.appendChild(chip);
+    updateHomeSub();
   }
 
   function renderEdit() {
@@ -914,33 +925,50 @@ async function runFisStep2() {
   result.classList.add('show');
   resultText.innerHTML = '<div class="progress-bar-wrap"><div class="progress-bar-fill" id="pb2"></div></div><div class="progress-text" id="pt2">0%</div>';
   startProgress('pb2', 'pt2', 30000);
-  try {
+  // 單次嘗試：成功返 data，API error / 空結果 / 網絡錯誤一律 throw
+  async function attemptStep2() {
     var res = await fetch(API_BASE + '/api/fis-step2', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({step1Result: fisStep1Result}) });
     var data = await res.json();
-    stopProgress('pb2', 'pt2');
-    // 必須先檢查錯誤：API 503 / 空結果時唔可以扮成功，否則 fisParsedData 為 null，Step 3 報告卡會冇內容
     if (data.error || (!data.parsed && !data.result)) {
-      fisParsedData = null;
-      fisStep2Result = '';
-      resultText.innerHTML = '<div style="color:#ff6666;font-size:13px">分析暫時失敗：' + (data.message || data.error || 'AI 服務繁忙，請稍後再試') + '</div>';
-      return;
+      throw new Error(data.message || data.error || 'AI 服務繁忙，請稍後再試');
     }
-    fisParsedData = data.parsed || null;
-    fisStep2Result = data.result || '';
-    resultText.innerHTML =
-      '<div style="font-size:12px;line-height:2;color:#4af;margin-bottom:8px">' +
-      '<div>[✔] 筋膜鏈動力學代償矩陣分析 <span style="color:#ffc845">... 100%</span></div>' +
-      '<div>[✔] 五大筋膜線評級封裝 <span style="color:#ffc845">... 100%</span></div>' +
-      '<div>[✔] 個人化訓練方案生成 <span style="color:#ffc845">... 100%</span></div>' +
-      '</div>' +
-      '<div style="padding:10px;background:rgba(255,200,69,0.08);border:1px solid rgba(255,200,69,0.3);border-radius:8px;font-size:12px;color:#ffc845">' +
-      '⚡ FIS 筋膜矩陣核心分析完成，已成功封裝底層數據。請點擊下方【生成視覺化圖片】解鎖體態特徵面板。' +
-      '</div>';
-    setTimeout(function() {
-      var btn3 = document.getElementById('btn-fis-step3');
-      if (btn3) btn3.scrollIntoView({behavior:'smooth', block:'center'});
-    }, 600);
-  } catch(e) { stopProgress('pb2', 'pt2'); resultText.textContent = 'Generation failed, please try again.'; }
+    return data;
+  }
+
+  var data;
+  try {
+    try {
+      data = await attemptStep2();
+    } catch (e1) {
+      // 第一次失敗：等 2 秒自動重試一次
+      await new Promise(function(resolve) { setTimeout(resolve, 2000); });
+      data = await attemptStep2();
+    }
+  } catch (e2) {
+    // 第二次仍失敗先顯示錯誤
+    stopProgress('pb2', 'pt2');
+    fisParsedData = null;
+    fisStep2Result = '';
+    resultText.innerHTML = '<div style="color:#ff6666;font-size:13px">分析暫時失敗：' + (e2.message || 'AI 服務繁忙，請稍後再試') + '</div>';
+    return;
+  }
+
+  stopProgress('pb2', 'pt2');
+  fisParsedData = data.parsed || null;
+  fisStep2Result = data.result || '';
+  resultText.innerHTML =
+    '<div style="font-size:12px;line-height:2;color:#4af;margin-bottom:8px">' +
+    '<div>[✔] 筋膜鏈動力學代償矩陣分析 <span style="color:#ffc845">... 100%</span></div>' +
+    '<div>[✔] 五大筋膜線評級封裝 <span style="color:#ffc845">... 100%</span></div>' +
+    '<div>[✔] 個人化訓練方案生成 <span style="color:#ffc845">... 100%</span></div>' +
+    '</div>' +
+    '<div style="padding:10px;background:rgba(255,200,69,0.08);border:1px solid rgba(255,200,69,0.3);border-radius:8px;font-size:12px;color:#ffc845">' +
+    '⚡ FIS 筋膜矩陣核心分析完成，已成功封裝底層數據。請點擊下方【生成視覺化圖片】解鎖體態特徵面板。' +
+    '</div>';
+  setTimeout(function() {
+    var btn3 = document.getElementById('btn-fis-step3');
+    if (btn3) btn3.scrollIntoView({behavior:'smooth', block:'center'});
+  }, 600);
 }
 
 // ── FIS STEP 3 ────────────────────────────────────────────────────────────────
@@ -1229,28 +1257,50 @@ async function analyzePain() {
   result.classList.add('show');
   resultText.innerHTML = '<div class="progress-bar-wrap"><div class="progress-bar-fill" id="pb-pain"></div></div><div class="progress-text" id="pt-pain">0%</div>';
   startProgress('pb-pain', 'pt-pain', 10000);
-  try {
+
+  // 單次嘗試：成功返 result 文字，API error / 空結果 / 網絡錯誤一律 throw
+  async function attemptPain() {
     var res = await fetch(API_BASE + '/api/pain', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({bodyPart: selectedPart, symptom: symptom}) });
     var data = await res.json();
-    stopProgress('pb-pain', 'pt-pain');
-    var aiResult = data.result || 'Diagnosis failed, please try again.';
-    resultText.textContent = aiResult;
-
-    // AI 分析完成後自動儲存落 D1
-    if (window.FIS_USER_ID) {
-      fetch(API_BASE + '/api/pain/save', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-          userId: window.FIS_USER_ID,
-          bodyPart: selectedPart,
-          symptomDescription: symptom,
-          aiDiagnosis: aiResult
-        })
-      }).then(r=>r.json()).then(d=>{ if(d.success) console.log('Pain auto-saved:', d.diagnosisId); })
-        .catch(e=>console.warn('Pain save failed:', e.message));
+    if (data.error || !data.result) {
+      throw new Error(data.message || data.error || 'AI 服務繁忙，請稍後再試');
     }
-  } catch(e) { stopProgress('pb-pain', 'pt-pain'); resultText.textContent = 'Service temporarily unavailable, please try again later.'; }
+    return data.result;
+  }
+
+  var aiResult;
+  try {
+    try {
+      aiResult = await attemptPain();
+    } catch (e1) {
+      // 第一次失敗：等 2 秒自動重試一次
+      await new Promise(function(resolve) { setTimeout(resolve, 2000); });
+      aiResult = await attemptPain();
+    }
+  } catch (e2) {
+    // 第二次仍失敗先顯示錯誤
+    stopProgress('pb-pain', 'pt-pain');
+    resultText.textContent = '診斷暫時失敗：' + (e2.message || '請稍後再試');
+    return;
+  }
+
+  stopProgress('pb-pain', 'pt-pain');
+  resultText.textContent = aiResult;
+
+  // AI 分析完成後自動儲存落 D1
+  if (window.FIS_USER_ID) {
+    fetch(API_BASE + '/api/pain/save', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        userId: window.FIS_USER_ID,
+        bodyPart: selectedPart,
+        symptomDescription: symptom,
+        aiDiagnosis: aiResult
+      })
+    }).then(r=>r.json()).then(d=>{ if(d.success) console.log('Pain auto-saved:', d.diagnosisId); })
+      .catch(e=>console.warn('Pain save failed:', e.message));
+  }
 }
 
 function saveRecord() {

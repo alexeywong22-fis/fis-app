@@ -57,7 +57,8 @@
 | `cbea2c2` | 新增 `CONTEXT.md`（專案上下文）+ `CLAUDE.md`（session 開始自動指引讀 CONTEXT.md） |
 | `4ca52d2` | CONTEXT.md 加入「收尾時自動更新」開發習慣 |
 | `da3e995` | 改用 wrangler 3.x（本機 Node 20 可直接部署，避開 Node 22）+ 加入 package-lock.json |
-| _(本次)_ | **完成 Wrangler 自動部署設定並首次部署上線** — 填好 `wrangler.toml`（account_id + D1 `fis-db`），用 API token 部署，`/api/user/init` 返 name 已生效（Version `b93f5cbb`）|
+| `19a55dc` | **完成 Wrangler 自動部署設定並首次部署上線** — 填好 `wrangler.toml`（account_id + D1 `fis-db`），用 API token 部署，`/api/user/init` 返 name 已生效（Version `b93f5cbb`）|
+| _(本次)_ | **index.html 三項優化**：①warmup 頁頂加醫療免責 `.dbox`（同 RX 同款）②home-sub 動態顯示「歡迎，[名字]」（有 `fis_username` 時，經 `updateHomeSub()`）③`runFisStep2` + `analyzePain` 加自動重試一次（失敗等 2 秒重試，第二次先報錯）|
 
 ---
 
@@ -69,7 +70,7 @@
 - [x] 確認 secrets 全部係 Secret（`alexeywong22`、`GEMINI_API_KEY`、`FAL/OPENAI/OPENROUTER_API_KEY`），跨部署自動保留。
 
 ### 💡 未來可考慮
-- [ ] AI 503 容錯：`/api/progress`、`/api/pain`、`/api/fis-step2` 加 retry 機制。
+- [ ] AI 503 容錯 retry：`runFisStep2`、`analyzePain` 已加（前端重試一次）；尚餘 `analyzeProgress`（`/api/progress`）未加。
 - [ ] 名稱驗證放寬支援中文（目前 worker 限 `^[a-zA-Z0-9_]{3,20}$`）。
 
 ### 部署資訊 / 慣例
