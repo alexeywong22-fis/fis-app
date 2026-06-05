@@ -839,11 +839,15 @@ async function runFisStep2() {
     var res = await fetch(API_BASE + '/api/fis-step2', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({step1Result: fisStep1Result}) });
     var data = await res.json();
     stopProgress('pb2', 'pt2');
-    fisParsedData = data.parsed || null;
-    fisParsedData = data.parsed || null;
+    // 必須先檢查錯誤：API 503 / 空結果時唔可以扮成功，否則 fisParsedData 為 null，Step 3 報告卡會冇內容
+    if (data.error || (!data.parsed && !data.result)) {
+      fisParsedData = null;
+      fisStep2Result = '';
+      resultText.innerHTML = '<div style="color:#ff6666;font-size:13px">分析暫時失敗：' + (data.message || data.error || 'AI 服務繁忙，請稍後再試') + '</div>';
+      return;
+    }
     fisParsedData = data.parsed || null;
     fisStep2Result = data.result || '';
-    stopProgress('pb2', 'pt2');
     resultText.innerHTML =
       '<div style="font-size:12px;line-height:2;color:#4af;margin-bottom:8px">' +
       '<div>[✔] 筋膜鏈動力學代償矩陣分析 <span style="color:#ffc845">... 100%</span></div>' +
