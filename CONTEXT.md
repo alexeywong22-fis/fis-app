@@ -54,6 +54,8 @@
 | `790fede` | **index.html**：主頁 home-header 加入學員名稱 **Inline Edit**（tap 改名、Enter 儲存/Esc 取消、前端驗證 `^[a-zA-Z0-9_]{3,20}$`、連 `/api/user/update-name`） |
 | `d986136` | **fis-worker.js + index.html**：`/api/user/init` 改為回傳用戶 `name`；前端 init 存入 localStorage 並即時 re-render 名稱 chip ⚠️**未部署** |
 | `926788f` | 加入 Wrangler 部署設定：`wrangler.toml`、`package.json`、`.nvmrc`、`.gitignore`、`DEPLOY.md`；移除已追蹤嘅 `.DS_Store` |
+| `cbea2c2` | 新增 `CONTEXT.md`（專案上下文）+ `CLAUDE.md`（session 開始自動指引讀 CONTEXT.md） |
+| _(本次)_ | CONTEXT.md 加入「收尾時自動更新」開發習慣 |
 
 ---
 
@@ -82,3 +84,10 @@
 - Commit message 用繁體中文（廣東話書面語）。
 - 改完前端必驗證單一 `<script>` block 語法；改完 worker 用 `node --check`（當 ESM）驗證。
 - Worker 部署：**唔好用無 binding 設定嘅 wrangler 硬 deploy**，會洗走 D1 / secrets。
+
+### 📝 收尾習慣（每次 session 結束前）
+完成有意義嘅改動、收尾之前，**自動更新本檔案 `CONTEXT.md`**，毋須等用戶開口：
+1. 更新頂部「最後更新」日期。
+2. 將今次完成嘅嘢加入「§2 今日已完成功能」（附 commit hash）。
+3. 將已解決嘅項目喺「§3 待完成」剔走，並補上新發現嘅待辦。
+4. 連同其他改動一齊 commit / push。
