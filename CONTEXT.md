@@ -55,26 +55,29 @@
 | `d986136` | **fis-worker.js + index.html**：`/api/user/init` 改為回傳用戶 `name`；前端 init 存入 localStorage 並即時 re-render 名稱 chip ⚠️**未部署** |
 | `926788f` | 加入 Wrangler 部署設定：`wrangler.toml`、`package.json`、`.nvmrc`、`.gitignore`、`DEPLOY.md`；移除已追蹤嘅 `.DS_Store` |
 | `cbea2c2` | 新增 `CONTEXT.md`（專案上下文）+ `CLAUDE.md`（session 開始自動指引讀 CONTEXT.md） |
-| _(本次)_ | CONTEXT.md 加入「收尾時自動更新」開發習慣 |
+| `4ca52d2` | CONTEXT.md 加入「收尾時自動更新」開發習慣 |
+| `da3e995` | 改用 wrangler 3.x（本機 Node 20 可直接部署，避開 Node 22）+ 加入 package-lock.json |
+| _(本次)_ | **完成 Wrangler 自動部署設定並首次部署上線** — 填好 `wrangler.toml`（account_id + D1 `fis-db`），用 API token 部署，`/api/user/init` 返 name 已生效（Version `b93f5cbb`）|
 
 ---
 
 ## 3. 待完成功能 / 待辦
 
-### 🔴 高優先（阻塞中）
-- [ ] **部署 `fis-worker.js` 到 Cloudflare** —— `d986136`（init 回傳 name）改動**未上線**，舊用戶換裝置/清 cache 後名稱仍會顯示 placeholder，要部署後先生效。
-- [ ] **填 `wrangler.toml` 嘅 D1 binding** —— `database_name` / `database_id` 仍係 placeholder，未填唔可以 `npm run deploy`（否則 worker 連唔到 D1）。
-  - 攞值：`npm run d1:list`（需 Node 22 + `npx wrangler login`）。
-- [ ] **確認 secrets 係 Secret 而非明文 var**（`GEMINI_API_KEY` + 教練密碼），否則 wrangler deploy 會洗走。
-
-### 部署環境注意
-- 本機 Node 為 **v20.11.0**，但 wrangler v4 需 **Node ≥ 22**；本機無 nvm/brew。
-- 部署步驟見 `DEPLOY.md`（裝 Node 22 → `npm install` → `npx wrangler login` → 填 D1 id → `npm run deploy`）。
-- ⚠️ Claude 喺現有環境**無法代為部署**（Node 版本 + 需互動式瀏覽器授權 + 無 CF 憑證）。
+### ✅ 已解決（原阻塞項）
+- [x] 部署 `fis-worker.js` 到 Cloudflare（init 回傳 name 已上線）。
+- [x] 填 `wrangler.toml` D1 binding（account_id + `fis-db` / `6bf1dc99-...`）。
+- [x] 確認 secrets 全部係 Secret（`alexeywong22`、`GEMINI_API_KEY`、`FAL/OPENAI/OPENROUTER_API_KEY`），跨部署自動保留。
 
 ### 💡 未來可考慮
 - [ ] AI 503 容錯：`/api/progress`、`/api/pain`、`/api/fis-step2` 加 retry 機制。
 - [ ] 名稱驗證放寬支援中文（目前 worker 限 `^[a-zA-Z0-9_]{3,20}$`）。
+
+### 部署資訊 / 慣例
+- **部署指令**：`export CLOUDFLARE_API_TOKEN=<token> && npm run deploy`（或 `npx wrangler deploy`）。
+- 本機用 **wrangler 3.114**（Node v20.11 可行，毋須 Node 22）。
+- 認證：`wrangler login` 互動瀏覽器授權喺呢部機試過會 timeout；改用 **API token**（`CLOUDFLARE_API_TOKEN` 環境變數）較可靠。token 唔好寫入 repo。
+- npm cache 有 root-owned 檔，`npm install` 要加 `--cache /tmp/fis-npm-cache` 繞過（或 `sudo chown -R 501:20 ~/.npm` 永久修）。
+- account_id：`61d31020d4d776c88faeb05bd53c19bf`；D1 `fis-db`：`6bf1dc99-d448-4e1a-8267-64f7ed8198a4`。
 
 ---
 
