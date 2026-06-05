@@ -341,11 +341,28 @@ function renderStudent(d){
     </div></div>`;
   }
 
-  // ── Weekly assessments ───────────────────────────────
+  // ── Weekly assessments (趨勢圖 + 記錄) ─────────────────
   const assessments=weekly.assessments||[];
   if(assessments.length>0){
-    html+=`<div class="section"><div class="section-title">每週自評記錄</div>
-    <div style="display:flex;flex-direction:column;gap:8px">
+    // Chronological order (oldest → newest) for the trend chart
+    const wkChrono=assessments.slice(0,12).slice().reverse();
+    html+=`<div class="section"><div class="section-title">04 · 每週自評趨勢</div>
+    <div class="chart-wrap">
+      <div class="chart-bars-row">
+        ${wkChrono.map(a=>{
+          const sc=Number(a.score)||0;
+          const h=Math.round((sc/10)*100);
+          const col=sc>=7?'var(--green)':sc>=4?'var(--gold)':'var(--red)';
+          const dt=(a.week_date||'').substring(5,10);
+          return `<div class="trend-bar-group">
+            <div class="trend-bar-wrap"><div class="trend-bar" style="height:${h}%;background:${col}"></div></div>
+            <div class="trend-date">${dt}</div>
+            <div class="trend-val">${sc}</div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-top:14px">
       ${assessments.slice(0,4).map(a=>`<div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;display:flex;align-items:center;gap:12px">
         <div style="font-size:11px;color:var(--dim);font-family:'DM Mono',monospace;min-width:80px">${a.week_date}</div>
         <div style="font-size:24px;font-weight:900;color:var(--gold);font-family:'DM Mono',monospace">${a.score}</div>
@@ -354,6 +371,47 @@ function renderStudent(d){
           ${a.next_focus?`<div style="font-size:12px;color:var(--dim)">→ ${a.next_focus}</div>`:''}
         </div>
       </div>`).join('')}
+    </div></div>`;
+  }
+
+  // ── FIS Functional 測試歷史 ────────────────────────────
+  const funcHistory=fis.history||[];
+  if(funcHistory.length>0){
+    // Chronological order for the balance trend chart (best single-leg side per test)
+    const fnChrono=funcHistory.slice().reverse();
+    const maxBal=Math.max(1,...fnChrono.map(t=>Math.max(t.single_leg_left||0,t.single_leg_right||0)));
+    html+=`<div class="section"><div class="section-title">05 · FIS Functional 測試歷史</div>
+    <div class="chart-wrap">
+      <div style="font-size:10px;color:var(--dim);font-family:'DM Mono',monospace;margin-bottom:10px">單腳站立平衡趨勢（秒 · 取左右較佳一側）</div>
+      <div class="chart-bars-row">
+        ${fnChrono.map(t=>{
+          const best=Math.max(t.single_leg_left||0,t.single_leg_right||0);
+          const h=Math.round((best/maxBal)*100);
+          return `<div class="trend-bar-group">
+            <div class="trend-bar-wrap"><div class="trend-bar" style="height:${h}%;background:var(--green)"></div></div>
+            <div class="trend-date">D${t.training_day_index??'—'}</div>
+            <div class="trend-val">${best||'—'}</div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+    <div style="margin-top:14px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden">
+      <table class="log-table">
+        <thead><tr><th>訓練日</th><th>日期</th><th>左腳(s)</th><th>右腳(s)</th><th>Jefferson</th><th>深蹲代償</th></tr></thead>
+        <tbody>
+          ${funcHistory.slice(0,10).map(t=>{
+            const compPill=t.squat_compensation==='有'?'pill-red':t.squat_compensation==='無'?'pill-green':'pill-gold';
+            return `<tr>
+              <td style="font-family:'DM Mono',monospace;font-size:11px">第 ${t.training_day_index??'—'} 天</td>
+              <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--dim)">${(t.tested_at||'').substring(0,10)||'—'}</td>
+              <td style="font-family:'DM Mono',monospace;font-size:12px">${t.single_leg_left??'—'}</td>
+              <td style="font-family:'DM Mono',monospace;font-size:12px">${t.single_leg_right??'—'}</td>
+              <td><span class="pill pill-gold">${t.jefferson_curl_level??'—'}</span></td>
+              <td><span class="pill ${compPill}">${t.squat_compensation||'—'}</span></td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
     </div></div>`;
   }
 
