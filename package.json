@@ -1,0 +1,19 @@
+{
+  "name": "fis-app-worker",
+  "private": true,
+  "version": "1.0.0",
+  "description": "FIS PWA Cloudflare Worker (fis-worker.js)",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev",
+    "tail": "wrangler tail",
+    "d1:list": "wrangler d1 list",
+    "whoami": "wrangler whoami"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}

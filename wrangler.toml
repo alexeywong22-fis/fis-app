@@ -1,0 +1,31 @@
+name = "fis-app"
+main = "fis-worker.js"
+compatibility_date = "2025-06-01"
+
+# ─────────────────────────────────────────────────────────────
+# D1 資料庫 binding  →  code 入面用 env.DB
+# 必須填返你現有 D1 database 嘅 name 同 id，否則部署會整爛資料庫連接。
+# 攞值方法（二擇一）：
+#   1) 行 `npm run d1:list`（即 npx wrangler d1 list）
+#   2) Dashboard → Workers & Pages → fis-app → Settings → Bindings
+#      再去 Storage & Databases → D1 睇 database 嘅 ID
+# ─────────────────────────────────────────────────────────────
+[[d1_databases]]
+binding = "DB"
+database_name = "REPLACE_WITH_D1_DATABASE_NAME"
+database_id = "REPLACE_WITH_D1_DATABASE_ID"
+
+# ─────────────────────────────────────────────────────────────
+# Secrets（千祈唔好寫喺呢個檔，會 commit 上 GitHub 洩漏！）
+# 以下全部屬 secret，用 `npx wrangler secret put <NAME>` 設定。
+# Secret 一旦設定就會跨部署自動保留，wrangler deploy 唔會覆蓋佢哋。
+#
+#   - GEMINI_API_KEY          ← Gemini AI key
+#   - <每個教練 username>      ← 教練密碼（code 用 env[username] 讀取，
+#                                例如教練帳號 alexeywong22 就要
+#                                `npx wrangler secret put alexeywong22`）
+#
+# 如果呢啲值目前喺 Dashboard 係「明文 Variable」而唔係「Secret」，
+# 部署前要將佢哋轉做 Secret（或行上面 secret put），
+# 否則 wrangler deploy 會將 Dashboard 嘅明文 var 移除。
+# ─────────────────────────────────────────────────────────────
