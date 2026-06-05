@@ -43,6 +43,18 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .home-title span { color: var(--gold); }
 .home-sub { font-size: 13px; color: var(--text-dim); letter-spacing: 1px; margin-bottom: 40px; }
 .home-line { width: 40px; height: 2px; background: var(--gold); margin-bottom: 40px; }
+/* 學員名稱 inline edit */
+.home-username { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 28px; }
+.hu-chip { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; padding: 8px 14px; border: 1px solid var(--gold-dim); border-radius: 24px; background: rgba(255,200,69,0.05); transition: background .2s; }
+.hu-chip:hover { background: rgba(255,200,69,0.12); }
+.hu-label { font-size: 10px; letter-spacing: 2px; color: var(--text-dim); }
+.hu-name { font-size: 15px; font-weight: 700; color: var(--gold); }
+.hu-pencil { font-size: 12px; color: var(--text-dim); }
+.hu-input { background: rgba(0,0,0,0.4); border: 1px solid var(--gold); border-radius: 8px; padding: 7px 11px; color: var(--text); font-family: inherit; font-size: 15px; outline: none; width: 150px; }
+.hu-btn { border: none; border-radius: 8px; padding: 7px 12px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
+.hu-save { background: var(--gold); color: #0f1c35; }
+.hu-cancel { background: rgba(255,255,255,0.08); color: var(--text-dim); }
+.hu-msg { font-size: 11px; }
 .module-grid { padding: 0 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .module-card { background: var(--bg3); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 20px 16px; display: flex; flex-direction: column; gap: 10px; min-height: 140px; cursor: pointer; }
 .module-num { font-family: 'Bebas Neue', sans-serif; font-size: 11px; letter-spacing: 3px; color: var(--gold-dim); }
@@ -135,6 +147,7 @@ textarea.sym { width: 100%; background: var(--bg3); border: 1px solid rgba(255,2
     <div class="brand-tag">FIS - FASCIAL INTEGRATION SYSTEM</div>
     <div class="home-title">訓練<span>工具</span></div>
     <div class="home-sub">TRAINING TOOLKIT - ALEXEY WONG</div>
+    <div class="home-username" id="home-username"></div>
     <div class="home-line"></div>
   </div>
   <div class="module-grid">
@@ -677,6 +690,70 @@ function bindAll() {
   var btnAnalyzeProgress = document.getElementById('btn-analyze-progress'); if (btnAnalyzeProgress) { btnAnalyzeProgress.addEventListener('click', analyzeProgress); }
   var btnSaveRecord = document.getElementById('btn-save-record'); if (btnSaveRecord) { btnSaveRecord.addEventListener('click', saveRecord); }
   var btnAnalyzePain = document.getElementById('btn-analyze-pain'); if (btnAnalyzePain) { btnAnalyzePain.addEventListener('click', analyzePain); }
+  setupUsernameEditor();
+}
+
+// ── 學員名稱 Inline Edit ────────────────────────────────────────────────────
+function setupUsernameEditor() {
+  var host = document.getElementById('home-username');
+  if (!host) return;
+
+  function currentName() {
+    try { return localStorage.getItem('fis_username') || ''; } catch(e) { return ''; }
+  }
+
+  function renderView() {
+    var name = currentName();
+    host.innerHTML = '';
+    var chip = document.createElement('div');
+    chip.className = 'hu-chip';
+    chip.title = '撳一下改名';
+    var label = document.createElement('span'); label.className = 'hu-label'; label.textContent = '學員';
+    var nm = document.createElement('span'); nm.className = 'hu-name'; nm.textContent = name || '設定名稱';
+    var pen = document.createElement('span'); pen.className = 'hu-pencil'; pen.textContent = '✎';
+    chip.appendChild(label); chip.appendChild(nm); chip.appendChild(pen);
+    chip.addEventListener('click', renderEdit);
+    host.appendChild(chip);
+  }
+
+  function renderEdit() {
+    host.innerHTML = '';
+    var input = document.createElement('input');
+    input.className = 'hu-input'; input.type = 'text'; input.maxLength = 20;
+    input.value = currentName(); input.placeholder = '英文/數字/底線 3-20';
+    var save = document.createElement('button'); save.className = 'hu-btn hu-save'; save.textContent = '儲存';
+    var cancel = document.createElement('button'); cancel.className = 'hu-btn hu-cancel'; cancel.textContent = '取消';
+    var msg = document.createElement('span'); msg.className = 'hu-msg';
+    host.appendChild(input); host.appendChild(save); host.appendChild(cancel); host.appendChild(msg);
+    input.focus(); input.select();
+
+    function showMsg(text, color) { msg.textContent = text; msg.style.color = color; }
+
+    async function doSave() {
+      var val = input.value.trim();
+      if (!/^[a-zA-Z0-9_]{3,20}$/.test(val)) {
+        showMsg('只可用英文、數字、底線，3-20字元', '#ff6666'); return;
+      }
+      save.disabled = true; cancel.disabled = true;
+      showMsg('儲存緊...', 'var(--text-dim)');
+      var res = await updateUsername(val);
+      if (res && res.success) {
+        renderView();
+      } else {
+        save.disabled = false; cancel.disabled = false;
+        showMsg((res && res.error) ? res.error : '儲存失敗，請再試', '#ff6666');
+      }
+    }
+
+    save.addEventListener('click', doSave);
+    cancel.addEventListener('click', renderView);
+    input.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') { e.preventDefault(); doSave(); }
+      else if (e.key === 'Escape') { e.preventDefault(); renderView(); }
+    });
+  }
+
+  renderView();
 }
 
 // ── FIS STEP 1 ────────────────────────────────────────────────────────────────
