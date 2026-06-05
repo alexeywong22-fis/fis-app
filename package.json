@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "description": "FIS PWA Cloudflare Worker (fis-worker.js)",
   "engines": {
-    "node": ">=22"
+    "node": ">=18.17.0"
   },
   "scripts": {
     "deploy": "wrangler deploy",
@@ -14,6 +14,6 @@
     "whoami": "wrangler whoami"
   },
   "devDependencies": {
-    "wrangler": "^4.0.0"
+    "wrangler": "^3.114.0"
   }
 }
