@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FIS 教練後台 · 上帝視角</title>
+<style>
+:root{
+  --bg:#080c18;--bg2:#0d1425;--card:#111827;--card2:#1a2235;
+  --gold:#f5c842;--gold2:#c9a030;--green:#22d3a0;--red:#f56565;
+  --text:#e2e8f4;--dim:#64748b;--border:rgba(245,200,66,0.15);--r:12px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Noto Serif TC','Hiragino Sans GB',serif;min-height:100vh}
+/* Layout */
+.layout{display:grid;grid-template-columns:280px 1fr;min-height:100vh}
+@media(max-width:768px){.layout{grid-template-columns:1fr;}}
+/* Sidebar */
+.sidebar{background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column}
+.sidebar-header{padding:28px 20px 20px;border-bottom:1px solid var(--border)}
+.sidebar-tag{font-size:9px;letter-spacing:3px;color:var(--gold);font-family:'DM Mono',monospace;margin-bottom:6px}
+.sidebar-title{font-size:20px;font-weight:900;color:#fff}
+.sidebar-sub{font-size:11px;color:var(--dim);margin-top:3px}
+/* Auth box */
+.auth-box{margin:16px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:14px}
+.auth-label{font-size:9px;letter-spacing:2px;color:var(--gold);font-family:'DM Mono',monospace;margin-bottom:8px}
+.auth-input{width:100%;background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-family:inherit;font-size:13px;outline:none;margin-bottom:8px}
+.auth-input:focus{border-color:var(--gold)}
+.auth-btn{width:100%;background:var(--gold);color:#080c18;border:none;border-radius:8px;padding:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
+.auth-status{font-size:11px;margin-top:6px;text-align:center}
+.auth-ok{color:var(--green)}.auth-fail{color:var(--red)}
+/* User list */
+.user-list{flex:1;overflow-y:auto;padding:8px}
+.user-list-label{font-size:9px;letter-spacing:2px;color:var(--dim);font-family:'DM Mono',monospace;padding:8px 8px 6px}
+.user-item{padding:10px 12px;border-radius:8px;cursor:pointer;transition:background .15s;margin-bottom:2px;display:flex;align-items:center;gap:10px}
+.user-item:hover{background:rgba(245,200,66,0.06)}
+.user-item.active{background:rgba(245,200,66,0.1);border:1px solid rgba(245,200,66,0.25)}
+.user-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold2));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#080c18;flex-shrink:0}
+.user-item-name{font-size:13px;font-weight:700}
+.user-item-meta{font-size:10px;color:var(--dim);margin-top:1px}
+.user-item-dot{width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0;margin-left:auto}
+/* Main panel */
+.main{overflow-y:auto;padding:28px}
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;min-height:60vh;color:var(--dim);text-align:center;gap:12px}
+.empty-icon{font-size:48px;opacity:.4}
+.empty-text{font-size:14px}
+/* Student detail */
+.detail-header{margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.detail-name{font-size:24px;font-weight:900;color:#fff}
+.detail-id{font-size:11px;color:var(--dim);font-family:'DM Mono',monospace;margin-top:3px}
+.badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.badge{padding:4px 10px;border-radius:20px;font-size:11px;font-family:'DM Mono',monospace;font-weight:600}
+.badge-gold{background:rgba(245,200,66,0.12);color:var(--gold);border:1px solid rgba(245,200,66,0.25)}
+.badge-green{background:rgba(34,211,160,0.1);color:var(--green);border:1px solid rgba(34,211,160,0.2)}
+.badge-red{background:rgba(245,101,101,0.1);color:var(--red);border:1px solid rgba(245,101,101,0.2)}
+/* Stats row */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-bottom:24px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:14px}
+.stat-num{font-size:28px;font-weight:900;color:var(--gold);font-family:'DM Mono',monospace;line-height:1}
+.stat-label{font-size:10px;color:var(--dim);letter-spacing:1px;margin-top:4px}
+/* Section */
+.section{margin-bottom:28px}
+.section-title{font-size:11px;letter-spacing:2.5px;color:var(--gold);font-family:'DM Mono',monospace;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+/* Split screen photos */
+.split-screen{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.split-side{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.split-label{padding:8px 12px;font-size:10px;letter-spacing:2px;color:var(--dim);font-family:'DM Mono',monospace;border-bottom:1px solid var(--border)}
+.split-photos{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:8px}
+.split-photo{aspect-ratio:3/4;border-radius:6px;object-fit:cover;background:var(--card2);border:1px solid var(--border);width:100%}
+.no-photo{aspect-ratio:3/4;display:flex;align-items:center;justify-content:center;color:var(--dim);font-size:11px;background:var(--card2);border-radius:6px;border:1px dashed rgba(255,255,255,0.08)}
+/* Trend chart */
+.chart-wrap{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px}
+.chart-bars-row{display:flex;gap:6px;align-items:flex-end;height:80px;margin-bottom:8px}
+.trend-bar-group{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px}
+.trend-bar-wrap{width:100%;display:flex;align-items:flex-end;height:64px}
+.trend-bar{width:100%;border-radius:3px 3px 0 0;transition:height .8s ease;min-height:2px}
+.trend-date{font-size:8px;color:var(--dim);font-family:'DM Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;text-align:center}
+.trend-val{font-size:9px;color:var(--gold);font-family:'DM Mono',monospace}
+/* Pain hotspots */
+.hotspot-list{display:flex;flex-direction:column;gap:8px}
+.hotspot-item{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 14px}
+.hotspot-part{flex:1;font-size:13px}
+.hotspot-bar-wrap{width:80px;height:4px;background:rgba(255,255,255,0.07);border-radius:2px;overflow:hidden}
+.hotspot-bar{height:100%;background:var(--red);border-radius:2px}
+.hotspot-count{font-size:11px;color:var(--dim);font-family:'DM Mono',monospace;min-width:30px;text-align:right}
+/* Log table */
+.log-table{width:100%;border-collapse:collapse;font-size:12px}
+.log-table th{text-align:left;padding:8px 10px;font-size:9px;letter-spacing:1.5px;color:var(--dim);font-family:'DM Mono',monospace;border-bottom:1px solid var(--border);font-weight:600}
+.log-table td{padding:8px 10px;border-bottom:1px solid rgba(255,255,255,0.04);vertical-align:middle}
+.log-table tr:last-child td{border-bottom:none}
+.log-table tr:hover td{background:rgba(245,200,66,0.03)}
+.pill{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-family:'DM Mono',monospace}
+.pill-gold{background:rgba(245,200,66,0.12);color:var(--gold)}
+.pill-green{background:rgba(34,211,160,0.1);color:var(--green)}
+.pill-red{background:rgba(245,101,101,0.1);color:var(--red)}
+/* Loading */
+.loading{display:flex;align-items:center;justify-content:center;padding:40px;color:var(--dim)}
+.spinner{display:inline-block;width:20px;height:20px;border:2px solid rgba(245,200,66,0.2);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;margin-right:10px}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* Toast */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--card2);border:1px solid var(--gold);border-radius:8px;padding:10px 18px;font-size:13px;color:var(--gold);opacity:0;transition:all .3s;z-index:999}
+.toast.show{opacity:1}
+/* Scrollbar */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(245,200,66,0.2);border-radius:2px}
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="layout">
+  <!-- ── Sidebar ── -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-tag">FIS · COACH DASHBOARD</div>
+      <div class="sidebar-title">上帝視角</div>
+      <div class="sidebar-sub">教練安全管理後台</div>
+    </div>
+
+    <!-- Auth -->
+    <div class="auth-box">
+      <div class="auth-label">教 練 密 鑰</div>
+      <input class="auth-input" type="password" id="coachKey" placeholder="輸入 Coach Key..." value="">
+      <button class="auth-btn" onclick="loadUsers()">登入 · 載入學員</button>
+      <div class="auth-status" id="authStatus"></div>
+    </div>
+
+    <div class="user-list-label">學 員 列 表</div>
+    <div class="user-list" id="userList">
+      <div style="padding:12px;font-size:12px;color:var(--dim);text-align:center">請先輸入密鑰登入</div>
+    </div>
+  </aside>
+
+  <!-- ── Main ── -->
+  <main class="main" id="mainPanel">
+    <div class="empty-state">
+      <div class="empty-icon">🔐</div>
+      <div class="empty-text">輸入教練密鑰並選擇學員<br>查看詳細訓練數據</div>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API='https://fis-app.alexeywong22.workers.dev';
+let coachKey='';
+let currentUserId=null;
+
+// ── Init: restore saved key ──────────────────────────────
+window.addEventListener('DOMContentLoaded',()=>{
+  const saved=localStorage.getItem('fis_coach_key');
+  if(saved){document.getElementById('coachKey').value=saved;coachKey=saved;}
+});
+
+// ── Load user list ───────────────────────────────────────
+async function loadUsers(){
+  coachKey=document.getElementById('coachKey').value.trim();
+  if(!coachKey){showToast('請輸入教練密鑰');return;}
+  const status=document.getElementById('authStatus');
+  status.textContent='驗證中...';status.className='auth-status';
+  try{
+    const r=await fetch(API+'/api/coach/users',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({username:'alexeywong22',password:coachKey})
+    });
+    const d=await r.json();
+    if(!d.success){status.textContent='❌ 密鑰錯誤';status.className='auth-status auth-fail';return;}
+    localStorage.setItem('fis_coach_key',coachKey);
+    status.textContent='✅ 已驗證';status.className='auth-status auth-ok';
+    renderUserList(d.users||[]);
+  }catch(e){status.textContent='❌ 連線失敗';status.className='auth-status auth-fail';}
+}
+
+function renderUserList(users){
+  const list=document.getElementById('userList');
+  if(!users.length){list.innerHTML='<div style="padding:12px;font-size:12px;color:var(--dim);text-align:center">暫無學員</div>';return;}
+  list.innerHTML=users.map(u=>{
+    const initial=(u.name||'?').substring(0,1).toUpperCase();
+    const lastActive=u.last_active?(new Date(u.last_active)).toLocaleDateString('zh-HK'):'未有記錄';
+    const isActive=u.log_count>0;
+    return `<div class="user-item" id="ui-${u.id}" onclick="loadStudent('${u.id}','${u.name}')">
+      <div class="user-avatar">${initial}</div>
+      <div style="flex:1;min-width:0">
+        <div class="user-item-name">${u.name||u.id.substring(0,12)}</div>
+        <div class="user-item-meta">日誌 ${u.log_count} · 測試 ${u.fascia_count} · 痛點 ${u.pain_count}</div>
+      </div>
+      ${isActive?'<div class="user-item-dot"></div>':''}
+    </div>`;
+  }).join('');
+}
+
+// ── Load student detail ──────────────────────────────────
+async function loadStudent(userId,userName){
+  currentUserId=userId;
+  // Highlight in sidebar
+  document.querySelectorAll('.user-item').forEach(el=>el.classList.remove('active'));
+  const el=document.getElementById('ui-'+userId);
+  if(el)el.classList.add('active');
+  // Show loading
+  document.getElementById('mainPanel').innerHTML='<div class="loading"><span class="spinner"></span>載入學員數據...</div>';
+  try{
+    const r=await fetch(API+'/api/coach/user-summary-v2',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({coach_key:coachKey,user_id:userId})
+    });
+    if(r.status===403){document.getElementById('mainPanel').innerHTML='<div class="empty-state"><div class="empty-icon">🔐</div><div class="empty-text">密鑰驗證失敗<br>請重新登入</div></div>';return;}
+    const d=await r.json();
+    renderStudent(d);
+  }catch(e){document.getElementById('mainPanel').innerHTML='<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-text">載入失敗，請重試</div></div>';}
+}
+
+function renderStudent(d){
+  const u=d.user||{};
+  const s=d.summary||{};
+  const fis=d.fisSection||{};
+  const data=d.dataSection||{};
+  const rx=d.rxSection||{};
+  const weekly=d.weeklySection||{};
+
+  // Compensation pill
+  const compRate=parseInt(s.backCompensationRate)||0;
+  const compClass=compRate>50?'badge-red':compRate>20?'badge-gold':'badge-green';
+
+  let html=`
+  <div class="detail-header">
+    <div>
+      <div class="detail-name">${u.name||'未命名學員'}</div>
+      <div class="detail-id">${u.id}</div>
+      <div class="badges">
+        <span class="badge badge-gold">🏋️ ${s.totalTrainingDays||0} 實質訓練日</span>
+        <span class="badge badge-green">⚡ 發力 ${s.avgMuscleActivation||'—'}/4</span>
+        <span class="badge ${compClass}">腰代償 ${s.backCompensationRate||'—'}</span>
+      </div>
+    </div>
+    <div style="font-size:11px;color:var(--dim);text-align:right">
+      加入：${(u.created_at||'').substring(0,10)}<br>
+      <span style="color:var(--green)">FIS測試 ${s.totalFunctionalTests}</span> · 痛點 ${s.totalPainDiagnoses}
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-num">${s.totalTrainingDays||0}</div><div class="stat-label">實質訓練日</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--green)">${s.avgMuscleActivation||'—'}</div><div class="stat-label">平均發力感</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:${compRate>30?'var(--red)':'var(--green)'}">${s.backCompensationRate||'—'}</div><div class="stat-label">腰代償率</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:#a78bfa">${s.totalFunctionalTests||0}</div><div class="stat-label">FIS 測試次數</div></div>
+  </div>`;
+
+  // ── Split-screen photos ──────────────────────────────
+  const baseline=fis.baseline;
+  const latest=fis.latest;
+  if(baseline||latest){
+    html+=`<div class="section"><div class="section-title">01 · FIS 體態相片對比</div>
+    <div class="split-screen">
+      <div class="split-side">
+        <div class="split-label">基準（第 ${baseline?.training_day_index||'—'} 天）</div>
+        <div class="split-photos">
+          ${photoEl(baseline?.photo_front_url,'正')}
+          ${photoEl(baseline?.photo_side_url,'側')}
+          ${photoEl(baseline?.photo_back_url,'背')}
+        </div>
+      </div>
+      <div class="split-side">
+        <div class="split-label">最新（第 ${latest?.training_day_index||'—'} 天）</div>
+        <div class="split-photos">
+          ${photoEl(latest?.photo_front_url,'正')}
+          ${photoEl(latest?.photo_side_url,'側')}
+          ${photoEl(latest?.photo_back_url,'背')}
+        </div>
+      </div>
+    </div>`;
+    // FIS metrics comparison
+    if(baseline&&latest){
+      html+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
+        <div class="chart-wrap">
+          <div class="section-title" style="margin-bottom:10px">單腳站立（秒）</div>
+          ${metricRow('左腳',baseline.single_leg_left,latest.single_leg_left,'s')}
+          ${metricRow('右腳',baseline.single_leg_right,latest.single_leg_right,'s')}
+        </div>
+        <div class="chart-wrap">
+          <div class="section-title" style="margin-bottom:10px">Jefferson Curl</div>
+          ${metricRow('級別',baseline.jefferson_curl_level,latest.jefferson_curl_level,'')}
+        </div>
+      </div>`;
+    }
+    html+='</div>';
+  }
+
+  // ── Activation trend chart ───────────────────────────
+  const logs=(data.logs||[]).slice(0,10).reverse();
+  if(logs.length>0){
+    html+=`<div class="section"><div class="section-title">02 · DATA 發力感趨勢</div>
+    <div class="chart-wrap">
+      <div class="chart-bars-row">
+        ${logs.map(l=>{
+          const h=Math.round((l.muscle_activation/4)*100);
+          const col=l.muscle_activation>=3?'var(--green)':l.muscle_activation===2?'var(--gold)':'var(--red)';
+          const dt=(l.logged_at||'').substring(5,10);
+          return `<div class="trend-bar-group">
+            <div class="trend-bar-wrap"><div class="trend-bar" style="height:${h}%;background:${col}"></div></div>
+            <div class="trend-date">${dt}</div>
+            <div class="trend-val">${l.muscle_activation}</div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+    // Log table (last 10)
+    html+=`<div style="margin-top:14px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden">
+      <table class="log-table">
+        <thead><tr><th>日期</th><th>發力感</th><th>腰代償</th><th>張力速度</th><th>AI 建議</th></tr></thead>
+        <tbody>
+          ${logs.slice().reverse().slice(0,8).map(l=>{
+            const compPill=l.back_compensation==='有'?'pill-red':l.back_compensation==='無'?'pill-green':'pill-gold';
+            return `<tr>
+              <td style="font-family:'DM Mono',monospace;font-size:11px">${(l.logged_at||'').substring(0,10)}</td>
+              <td><span class="pill ${l.muscle_activation>=3?'pill-green':l.muscle_activation===2?'pill-gold':'pill-red'}">${l.muscle_activation}/4</span></td>
+              <td><span class="pill ${compPill}">${l.back_compensation||'—'}</span></td>
+              <td style="font-size:11px;color:var(--dim)">${l.tension_speed||'—'}</td>
+              <td style="font-size:11px;color:var(--dim);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${(l.notes||'').substring(0,60)||'—'}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div></div>`;
+  }
+
+  // ── Pain hotspots ────────────────────────────────────
+  const hotspots=rx.hotspots||[];
+  const maxCount=hotspots[0]?.count||1;
+  if(hotspots.length>0){
+    html+=`<div class="section"><div class="section-title">03 · RX 痛點熱點</div>
+    <div class="hotspot-list">
+      ${hotspots.map(h=>`<div class="hotspot-item">
+        <div style="font-size:16px">🔴</div>
+        <div class="hotspot-part">${h.part}</div>
+        <div class="hotspot-bar-wrap"><div class="hotspot-bar" style="width:${Math.round(h.count/maxCount*100)}%"></div></div>
+        <div class="hotspot-count">${h.count}次</div>
+      </div>`).join('')}
+    </div></div>`;
+  }
+
+  // ── Weekly assessments ───────────────────────────────
+  const assessments=weekly.assessments||[];
+  if(assessments.length>0){
+    html+=`<div class="section"><div class="section-title">每週自評記錄</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      ${assessments.slice(0,4).map(a=>`<div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;display:flex;align-items:center;gap:12px">
+        <div style="font-size:11px;color:var(--dim);font-family:'DM Mono',monospace;min-width:80px">${a.week_date}</div>
+        <div style="font-size:24px;font-weight:900;color:var(--gold);font-family:'DM Mono',monospace">${a.score}</div>
+        <div style="flex:1">
+          ${a.improvement?`<div style="font-size:12px;color:var(--green)">✅ ${a.improvement}</div>`:''}
+          ${a.next_focus?`<div style="font-size:12px;color:var(--dim)">→ ${a.next_focus}</div>`:''}
+        </div>
+      </div>`).join('')}
+    </div></div>`;
+  }
+
+  document.getElementById('mainPanel').innerHTML=html;
+}
+
+function photoEl(url,label){
+  if(url) return `<img class="split-photo" src="${url}" alt="${label}面" loading="lazy" onerror="this.style.display='none'">`;
+  return `<div class="no-photo">${label}面</div>`;
+}
+
+function metricRow(label,before,after,unit){
+  const b=before??'—',a=after??'—';
+  const diff=(typeof before==='number'&&typeof after==='number')?Math.round((after-before)*10)/10:null;
+  const col=diff>0?'var(--green)':diff<0?'var(--red)':'var(--dim)';
+  return `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;font-size:12px">
+    <span style="color:var(--dim)">${label}</span>
+    <span style="font-family:'DM Mono',monospace">${b}${unit} → <strong style="color:var(--gold)">${a}${unit}</strong></span>
+    ${diff!==null?`<span style="font-size:11px;color:${col}">${diff>0?'+':''}${diff}${unit}</span>`:''}
+  </div>`;
+}
+
+let toastTimer;
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2500);}
+</script>
+</body>
+</html>
