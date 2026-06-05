@@ -561,6 +561,8 @@ var API_BASE = 'https://fis-app.alexeywong22.workers.dev';
       if (data.userId) {
         window.FIS_USER_ID = data.userId;
         localStorage.setItem('fis_user_id', window.FIS_USER_ID);
+        if (data.name) { localStorage.setItem('fis_username', data.name); }
+        if (typeof setupUsernameEditor === 'function') { setupUsernameEditor(); }
         console.log(data.existing ? 'Existing user: ' + window.FIS_USER_ID : 'New user: ' + window.FIS_USER_ID);
       }
     } catch(e) {

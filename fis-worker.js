@@ -341,10 +341,10 @@ const body = await request.json().catch(() => ({}));
 let userId = body.userId || null;
 if (userId && env.DB) {
 const existing = await env.DB.prepare(
-'SELECT id FROM users WHERE id = ?'
+'SELECT id, name FROM users WHERE id = ?'
       ).bind(userId).first();
 if (existing) {
-return jsonResponse({ userId: existing.id, existing: true });
+return jsonResponse({ userId: existing.id, name: existing.name, existing: true });
 }
 }
 const newId = 'usr_' + crypto.randomUUID().replace(/-/g, '').substring(0, 16);
@@ -355,7 +355,7 @@ await env.DB.prepare(
 'INSERT INTO users (id, name, email, created_at, updated_at) VALUES (?, ?, ?, datetime("now"), datetime("now"))'
       ).bind(newId, name, email).run();
 }
-return jsonResponse({ userId: newId, existing: false });
+return jsonResponse({ userId: newId, name: name, existing: false });
 } catch (e) {
 return jsonResponse({ error: e.message }, 500);
 }
