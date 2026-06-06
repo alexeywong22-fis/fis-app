@@ -737,16 +737,23 @@ function setupUsernameEditor() {
   }
 
   function renderView() {
+    var ready = !!window.FIS_USER_ID;   // userId 完全初始化後先啟用改名
     var name = currentName();
     host.innerHTML = '';
     var chip = document.createElement('div');
     chip.className = 'hu-chip';
-    chip.title = '撳一下改名';
     var label = document.createElement('span'); label.className = 'hu-label'; label.textContent = '學員';
-    var nm = document.createElement('span'); nm.className = 'hu-name'; nm.textContent = name || '設定名稱';
-    var pen = document.createElement('span'); pen.className = 'hu-pencil'; pen.textContent = '✎';
+    var nm = document.createElement('span'); nm.className = 'hu-name'; nm.textContent = ready ? (name || '設定名稱') : '載入中…';
+    var pen = document.createElement('span'); pen.className = 'hu-pencil'; pen.textContent = ready ? '✎' : '';
     chip.appendChild(label); chip.appendChild(nm); chip.appendChild(pen);
-    chip.addEventListener('click', renderEdit);
+    if (ready) {
+      chip.title = '撳一下改名';
+      chip.addEventListener('click', renderEdit);
+    } else {
+      chip.title = '帳號初始化中，請稍候…';
+      chip.style.opacity = '0.6';
+      chip.style.cursor = 'default';
+    }
     host.appendChild(chip);
     updateHomeSub();
   }
@@ -765,6 +772,9 @@ function setupUsernameEditor() {
     function showMsg(text, color) { msg.textContent = text; msg.style.color = color; }
 
     async function doSave() {
+      if (!window.FIS_USER_ID) {
+        showMsg('帳號仲初始化緊，請稍候再試', '#ff6666'); return;
+      }
       var val = input.value.trim();
       if (!/^[a-zA-Z0-9_]{3,20}$/.test(val)) {
         showMsg('只可用英文、數字、底線，3-20字元', '#ff6666'); return;

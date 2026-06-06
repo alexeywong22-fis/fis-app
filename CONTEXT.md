@@ -62,7 +62,8 @@
 | `0698c0f` | **FIS 影片改抽 10 幀（10%-100%）送 Gemini**：`extractVideoFrames` 由 3 幀升 10 幀，只送截圖永不送影片（根治 error 400），100% clamp + 15 秒 watchdog |
 | `e02989c` | `analyzeProgress` 加自動重試一次（與 runFisStep2 / analyzePain 一致，拆出 `attemptProgress()`）|
 | `ddfd4fd` | **SKool 入口**：報告卡下面加「想知解決方法？」CTA（`fis-skool-cta`）+ 主頁全寬 SKool 課程卡（`btn-skool`），共用 `SKOOL_URL='YOUR_SKOOL_URL'` placeholder 與 `openSkool()` |
-| _(本次)_ | **FIS 圖片上載前自動壓縮 + HEIC 提示**：新增 `compressImage()`（長邊 1200px、JPEG 80%，參考 progress-hub）取代直接 readAsDataURL；新增 `isHeic()`，選檔即時警告 + 分析時跳過 HEIC 並提示轉 JPG/PNG |
+| `8a8fa34` | **FIS 圖片上載前自動壓縮 + HEIC 提示**：新增 `compressImage()`（長邊 1200px、JPEG 80%，參考 progress-hub）取代直接 readAsDataURL；新增 `isHeic()`，選檔即時警告 + 分析時跳過 HEIC 並提示轉 JPG/PNG |
+| _(本次)_ | **修復改名失敗**：名稱 chip 喺 `FIS_USER_ID` 未初始化前顯示「載入中…」且不可改，init 完成後 re-render 啟用；`doSave` 加 userId 保險。`manifest.json` name 改「FIS 綜合系統」 |
 
 ---
 
