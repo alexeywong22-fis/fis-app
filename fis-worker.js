@@ -27,6 +27,19 @@ return handleCoachLogin(request, env);
 if (path === '/api/coach/users' && request.method === 'POST') {
 return handleCoachUsers(request, env);
 }
+// ── Stage 1: 新教練 email+密碼認證（純新增，唔影響上面舊 coach endpoint）──
+if (path === '/api/coach/auth/register' && request.method === 'POST') {
+return handleCoachAuthRegister(request, env);
+}
+if (path === '/api/coach/auth/login' && request.method === 'POST') {
+return handleCoachAuthLogin(request, env);
+}
+if (path === '/api/coach/auth/logout' && request.method === 'POST') {
+return handleCoachAuthLogout(request, env);
+}
+if (path === '/api/coach/auth/me' && request.method === 'GET') {
+return handleCoachAuthMe(request, env);
+}
 if (path === '/api/weekly/save' && request.method === 'POST') {
 return handleWeeklySave(request, env);
 }
@@ -828,4 +841,142 @@ if (a.length !== b.length) return false;
 let diff = 0;
 for (let i = 0; i < a.length; i++) { diff |= a.charCodeAt(i) ^ b.charCodeAt(i); }
 return diff === 0;
+}
+
+// ============================================================================
+// Stage 1 — 教練 email + 密碼認證（PBKDF2 hash + DB opaque session token）
+// 純新增，唔影響現有 /api/coach/login、/api/coach/users、user-summary(-v2)。
+// ============================================================================
+const COACH_PBKDF2_ITERATIONS = 210000;   // 實測 ~25ms；逐行存 iterations，可隨時升降（若 Worker CPU 超限回落 150000）
+const COACH_HASH_VERSION = 1;
+const COACH_SESSION_TTL_MS = 12 * 60 * 60 * 1000;   // 12 小時
+
+function coachBufToB64(buf) {
+const bytes = new Uint8Array(buf);
+let bin = '';
+for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+return btoa(bin);
+}
+function coachB64ToBytes(b64) {
+const bin = atob(b64);
+const bytes = new Uint8Array(bin.length);
+for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+return bytes;
+}
+function coachBase64Url(bytes) {
+return coachBufToB64(bytes).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+async function coachPbkdf2(password, saltBytes, iterations) {
+const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveBits']);
+const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', salt: saltBytes, iterations, hash: 'SHA-256' }, key, 256);
+return new Uint8Array(bits);
+}
+async function coachSha256Hex(str) {
+const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+// 由 Authorization: Bearer <token> 取回有效教練（過期自動清），失敗返 null
+async function coachFromToken(request, env) {
+const auth = request.headers.get('Authorization') || '';
+const m = auth.match(/^Bearer\s+(.+)$/i);
+if (!m) return null;
+const tokenHash = await coachSha256Hex(m[1].trim());
+const row = await env.DB.prepare(
+'SELECT s.coach_id, s.expires_at, c.email, c.role, c.name, c.status FROM coach_sessions s JOIN coaches c ON c.id = s.coach_id WHERE s.token_hash = ?'
+).bind(tokenHash).first();
+if (!row) return null;
+if (new Date(row.expires_at).getTime() < Date.now()) {
+await env.DB.prepare('DELETE FROM coach_sessions WHERE token_hash = ?').bind(tokenHash).run();
+return null;
+}
+if (row.status !== 'active') return null;
+return { id: row.coach_id, email: row.email, role: row.role, name: row.name };
+}
+
+async function handleCoachAuthRegister(request, env) {
+if (!env.DB) return jsonResponse({ error: 'DB not configured' }, 500);
+let body;
+try { body = await request.json(); } catch (e) { return jsonResponse({ error: 'Invalid JSON body' }, 400); }
+const email = (body.email || '').trim().toLowerCase();
+const password = body.password || '';
+const name = body.name || null;
+let role = body.role === 'admin' ? 'admin' : 'coach';
+try {
+// 授權：(1) 有效 admin token，或 (2) coaches 表仲空 + 正確 bootstrap_key（= legacy secret）
+const caller = await coachFromToken(request, env);
+let authorized = false;
+if (caller && caller.role === 'admin') {
+authorized = true;
+} else {
+const cnt = await env.DB.prepare('SELECT COUNT(*) AS c FROM coaches').first();
+const isEmpty = ((cnt && cnt.c) || 0) === 0;
+const legacy = env['alexeywong22'] || '';
+if (isEmpty && body.bootstrap_key && legacy && timingSafeEqual(body.bootstrap_key, legacy)) {
+authorized = true;
+role = 'admin';   // 第一個 bootstrap 帳號強制 admin
+}
+}
+if (!authorized) {
+await new Promise(r => setTimeout(r, 200));
+return jsonResponse({ error: 'Forbidden: requires admin token or valid bootstrap_key (only when no coach exists)' }, 403);
+}
+if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return jsonResponse({ error: 'Invalid email' }, 400);
+if (typeof password !== 'string' || password.length < 8) return jsonResponse({ error: 'Password must be at least 8 characters' }, 400);
+const existing = await env.DB.prepare('SELECT id FROM coaches WHERE email = ?').bind(email).first();
+if (existing) return jsonResponse({ error: 'Email already registered' }, 409);
+const salt = crypto.getRandomValues(new Uint8Array(16));
+const hash = await coachPbkdf2(password, salt, COACH_PBKDF2_ITERATIONS);
+const id = 'coach_' + crypto.randomUUID().replace(/-/g, '').substring(0, 16);
+await env.DB.prepare(
+'INSERT INTO coaches (id, email, password_hash, salt, iterations, hash_version, role, name) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+).bind(id, email, coachBufToB64(hash), coachBufToB64(salt), COACH_PBKDF2_ITERATIONS, COACH_HASH_VERSION, role, name).run();
+return jsonResponse({ success: true, id, email, role });
+} catch (e) { return jsonResponse({ error: e.message }, 500); }
+}
+
+async function handleCoachAuthLogin(request, env) {
+if (!env.DB) return jsonResponse({ error: 'DB not configured' }, 500);
+let body;
+try { body = await request.json(); } catch (e) { return jsonResponse({ error: 'Invalid JSON body' }, 400); }
+const email = (body.email || '').trim().toLowerCase();
+const password = body.password || '';
+try {
+const c = await env.DB.prepare('SELECT id, password_hash, salt, iterations, role, name, status FROM coaches WHERE email = ?').bind(email).first();
+// 無論搵唔搵到都行一次 hash + 固定延遲，減少 timing / 帳號枚舉
+const saltBytes = c ? coachB64ToBytes(c.salt) : crypto.getRandomValues(new Uint8Array(16));
+const iters = c ? c.iterations : COACH_PBKDF2_ITERATIONS;
+const derived = await coachPbkdf2(password, saltBytes, iters);
+const ok = c && c.status === 'active' && timingSafeEqual(coachBufToB64(derived), c.password_hash);
+if (!ok) {
+await new Promise(r => setTimeout(r, 200));
+return jsonResponse({ error: 'Invalid email or password' }, 401);
+}
+const token = coachBase64Url(crypto.getRandomValues(new Uint8Array(32)));
+const tokenHash = await coachSha256Hex(token);
+const expires = new Date(Date.now() + COACH_SESSION_TTL_MS).toISOString();
+await env.DB.prepare('INSERT INTO coach_sessions (token_hash, coach_id, expires_at) VALUES (?, ?, ?)').bind(tokenHash, c.id, expires).run();
+return jsonResponse({ success: true, token, expires_at: expires, role: c.role, name: c.name, email });
+} catch (e) { return jsonResponse({ error: e.message }, 500); }
+}
+
+async function handleCoachAuthLogout(request, env) {
+if (!env.DB) return jsonResponse({ error: 'DB not configured' }, 500);
+try {
+const auth = request.headers.get('Authorization') || '';
+const m = auth.match(/^Bearer\s+(.+)$/i);
+if (m) {
+const tokenHash = await coachSha256Hex(m[1].trim());
+await env.DB.prepare('DELETE FROM coach_sessions WHERE token_hash = ?').bind(tokenHash).run();
+}
+return jsonResponse({ success: true });
+} catch (e) { return jsonResponse({ error: e.message }, 500); }
+}
+
+async function handleCoachAuthMe(request, env) {
+if (!env.DB) return jsonResponse({ error: 'DB not configured' }, 500);
+try {
+const c = await coachFromToken(request, env);
+if (!c) return jsonResponse({ error: 'Unauthorized' }, 401);
+return jsonResponse({ success: true, id: c.id, email: c.email, role: c.role, name: c.name });
+} catch (e) { return jsonResponse({ error: e.message }, 500); }
 }
