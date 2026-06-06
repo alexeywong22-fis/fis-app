@@ -58,12 +58,19 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
   position: relative; overflow: hidden;
 }
 .module-card:active { opacity: .85; }
-.module-card.locked { opacity: .5; cursor: default; }
+.module-card.locked { opacity: .5 !important; cursor: default; }
 .module-card.locked:active { opacity: .5; }
 .module-card.unlocked-glow {
   border-color: var(--gold);
   box-shadow: 0 0 0 1px rgba(255,200,69,0.3), inset 0 0 20px rgba(255,200,69,0.04);
 }
+/* 卡片彈出動畫（每格錯開 0.08s；用 ID 因 grid 夾住 panel-wrap）*/
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+.module-card { animation: fadeInUp 0.35s cubic-bezier(0.2,0,0.2,1.2) both; }
+#card01 { animation-delay: 0s; }
+#card02 { animation-delay: 0.08s; }
+#card03 { animation-delay: 0.16s; }
+#card04 { animation-delay: 0.24s; }
 
 .module-icon { font-size: 13px; font-weight: 700; color: var(--gold); }
 .module-num { font-family: 'Bebas Neue', sans-serif; font-size: 11px; letter-spacing: 3px; color: var(--gold-dim); }
