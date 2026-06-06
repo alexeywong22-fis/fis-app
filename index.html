@@ -198,7 +198,7 @@ textarea.sym { width: 100%; background: var(--bg3); border: 1px solid rgba(255,2
     <div class="module-card" id="btn-progress"><div class="module-icon">DATA</div><div class="module-num">02 - 追蹤</div><div class="module-name">進步追蹤系統</div><div class="module-desc">AI分析今日訓練數據</div></div>
     <div class="module-card" id="btn-pain"><div class="module-icon">RX</div><div class="module-num">03 - 診斷</div><div class="module-name">訓練痛點診斷</div><div class="module-desc">即時搵出筋膜線根源</div></div>
     <div class="module-card" id="btn-warmup"><div class="module-icon">GO</div><div class="module-num">04 - 熱身</div><div class="module-name">今日熱身激活</div><div class="module-desc">上下身個人化熱身方案</div></div>
-    <div class="module-card" id="btn-skool" style="grid-column:1 / -1;background:linear-gradient(135deg,rgba(255,200,69,0.16),rgba(255,200,69,0.04));border-color:rgba(255,200,69,0.4);min-height:auto"><div class="module-icon">★</div><div class="module-num">SKOOL · 課程</div><div class="module-name">FIS 筋膜訓練課程</div><div class="module-desc">加入社群，跟住一步步解決你嘅體態問題</div></div>
+    <div class="module-card" id="btn-skool" style="display:none;grid-column:1 / -1;background:linear-gradient(135deg,rgba(255,200,69,0.16),rgba(255,200,69,0.04));border-color:rgba(255,200,69,0.4);min-height:auto"><div class="module-icon">★</div><div class="module-num">SKOOL · 課程</div><div class="module-name">FIS 筋膜訓練課程</div><div class="module-desc">加入社群，跟住一步步解決你嘅體態問題</div></div>
   </div>
   <div class="legal-links" style="padding:24px 20px 100px"><a data-legal="terms">服務條款</a> · <a data-legal="privacy">私隱政策</a><br><span style="font-size:10px">© 2026 FIS 筋膜整合系統 · Alexey Wong</span></div>
   <div class="bnav">
@@ -643,7 +643,7 @@ textarea.sym { width: 100%; background: var(--bg3); border: 1px solid rgba(255,2
     <div class="legal-p">本條款受<strong>香港特別行政區法律</strong>管轄並據其詮釋，任何爭議受香港法院之專屬司法管轄權管轄。</div>
 
     <div class="legal-h">13. 聯絡我哋</div>
-    <div class="legal-p">如對本條款有任何疑問，請聯絡：服務提供者 Alexey Wong（電郵：<strong>YOUR_CONTACT_EMAIL</strong>）。</div>
+    <div class="legal-p">如對本條款有任何疑問，請聯絡：服務提供者 Alexey Wong（電郵：<strong>alexeywong22@gmail.com</strong>）。</div>
 
     <div class="legal-links"><a data-legal="privacy">改睇私隱政策 →</a></div>
   </div>
@@ -661,7 +661,7 @@ textarea.sym { width: 100%; background: var(--bg3); border: 1px solid rgba(255,2
     <div class="legal-p">本私隱政策說明 <strong>FIS 筋膜整合系統</strong>（由 <strong>Alexey Wong</strong> 提供）如何收集、使用、儲存及保護你嘅個人資料。我哋遵循香港《個人資料（私隱）條例》（PDPO）及歐盟《通用資料保護條例》（GDPR）嘅相關要求。</div>
 
     <div class="legal-h">1. 資料控制者</div>
-    <div class="legal-p">資料控制者為 <strong>Alexey Wong</strong>（FIS 筋膜整合系統）。如需聯絡，電郵：<strong>YOUR_CONTACT_EMAIL</strong>。</div>
+    <div class="legal-p">資料控制者為 <strong>Alexey Wong</strong>（FIS 筋膜整合系統）。如需聯絡，電郵：<strong>alexeywong22@gmail.com</strong>。</div>
 
     <div class="legal-h">2. 我哋收集嘅資料</div>
     <ul class="legal-list">
@@ -717,7 +717,7 @@ textarea.sym { width: 100%; background: var(--bg3); border: 1px solid rgba(255,2
     <div class="legal-p">我哋可不時更新本政策，更新後會修訂上方「最後更新」日期。</div>
 
     <div class="legal-h">13. 如何行使權利及投訴</div>
-    <div class="legal-p">行使任何權利或查詢，請電郵 <strong>YOUR_CONTACT_EMAIL</strong>。香港用戶亦可向<strong>香港個人資料私隱專員公署（PCPD）</strong>投訴；歐洲經濟區用戶可向當地資料保護機構投訴。</div>
+    <div class="legal-p">行使任何權利或查詢，請電郵 <strong>alexeywong22@gmail.com</strong>。香港用戶亦可向<strong>香港個人資料私隱專員公署（PCPD）</strong>投訴；歐洲經濟區用戶可向當地資料保護機構投訴。</div>
 
     <div class="legal-links"><a data-legal="terms">改睇服務條款 →</a></div>
   </div>
@@ -734,7 +734,9 @@ textarea.sym { width: 100%; background: var(--bg3); border: 1px solid rgba(255,2
 
 <script>
 var API_BASE = 'https://fis-app.alexeywong22.workers.dev';
-// SKool 課程連結（部署前將 YOUR_SKOOL_URL 換成真實連結即可）
+// ── SKool 課程開關 ──────────────────────────────────────────────────────────
+// 日後開咗 SKool 之後：將 SKOOL_ENABLED 設 true + 填 SKOOL_URL，主頁卡片同報告卡 CTA 就會自動出返。
+var SKOOL_ENABLED = false;
 var SKOOL_URL = 'YOUR_SKOOL_URL';
 function openSkool() {
   if (SKOOL_URL && SKOOL_URL !== 'YOUR_SKOOL_URL') {
@@ -883,7 +885,7 @@ function bindAll() {
   var bnavProgressBtn = document.getElementById('bnav-progress-btn'); if (bnavProgressBtn) { bnavProgressBtn.addEventListener('click', function() { location.href = 'progress-hub.html'; }); }
   var btnPain = document.getElementById('btn-pain'); if (btnPain) { btnPain.addEventListener('click', function() { goTo('pain'); }); }
   var btnWarmup = document.getElementById('btn-warmup'); if (btnWarmup) { btnWarmup.addEventListener('click', function() { goTo('warmup'); }); }
-  var btnSkool = document.getElementById('btn-skool'); if (btnSkool) { btnSkool.addEventListener('click', openSkool); }
+  var btnSkool = document.getElementById('btn-skool'); if (btnSkool && SKOOL_ENABLED) { btnSkool.style.display = ''; btnSkool.addEventListener('click', openSkool); }
 
   var backFis = document.getElementById('back-fis'); if (backFis) { backFis.addEventListener('click', function() { goTo('home'); }); }
   var backProgress = document.getElementById('back-progress'); if (backProgress) { backProgress.addEventListener('click', function() { goTo('home'); }); }
@@ -1526,16 +1528,18 @@ async function runFisStep3() {
 
   imageResult.appendChild(card);
 
-  // 報告卡下面加「想知解決方法？」CTA → SKool 課程
+  // 報告卡下面加「想知解決方法？」CTA → SKool 課程（開關開咗先顯示）
   var oldCta = document.getElementById('fis-skool-cta');
   if (oldCta) oldCta.remove();
-  var cta = document.createElement('button');
-  cta.id = 'fis-skool-cta';
-  cta.className = 'btn-gold';
-  cta.style.cssText = 'width:100%;margin-top:16px';
-  cta.textContent = '想知解決方法？→ 加入 FIS SKool 課程';
-  cta.addEventListener('click', openSkool);
-  imageResult.appendChild(cta);
+  if (SKOOL_ENABLED) {
+    var cta = document.createElement('button');
+    cta.id = 'fis-skool-cta';
+    cta.className = 'btn-gold';
+    cta.style.cssText = 'width:100%;margin-top:16px';
+    cta.textContent = '想知解決方法？→ 加入 FIS SKool 課程';
+    cta.addEventListener('click', openSkool);
+    imageResult.appendChild(cta);
+  }
 
   card.scrollIntoView({behavior:'smooth'});
 
