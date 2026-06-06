@@ -695,7 +695,18 @@ function bindAll() {
   }
 
   var fisFiles = document.getElementById('fisFiles');
-  if (fisFiles) { fisFiles.addEventListener('change', function() { selectedFiles = Array.from(this.files); var el = document.getElementById('fileCount'); if (el) { el.textContent = 'Selected ' + selectedFiles.length + ' files (need 8)'; } }); }
+  if (fisFiles) { fisFiles.addEventListener('change', function() {
+    selectedFiles = Array.from(this.files);
+    var el = document.getElementById('fileCount');
+    if (el) {
+      var heic = selectedFiles.filter(isHeic);
+      var msg = 'Selected ' + selectedFiles.length + ' files (need 8)';
+      if (heic.length > 0) {
+        msg += '<br><span style="color:#ff6666">⚠️ 偵測到 ' + heic.length + ' 個 HEIC/HEIF 檔，多數裝置無法分析。請先轉成 JPG／PNG 再上載（iPhone：設定 → 相機 → 格式 → 「最相容」）。</span>';
+      }
+      el.innerHTML = msg;
+    }
+  }); }
 
   var btnFisStep1 = document.getElementById('btn-fis-step1'); if (btnFisStep1) { btnFisStep1.addEventListener('click', runFisStep1); }
   var btnFisStep2 = document.getElementById('btn-fis-step2'); if (btnFisStep2) { btnFisStep2.addEventListener('click', runFisStep2); }
@@ -781,6 +792,40 @@ function setupUsernameEditor() {
 }
 
 // ── FIS STEP 1 ────────────────────────────────────────────────────────────────
+// 偵測 HEIC/HEIF（iPhone 預設格式，多數瀏覽器同 Gemini 都無法處理）
+function isHeic(file) {
+  var t = (file.type || '').toLowerCase();
+  var n = (file.name || '').toLowerCase();
+  return t === 'image/heic' || t === 'image/heif' || /\.(heic|heif)$/.test(n);
+}
+
+// 圖片上載前自動壓縮（長邊 1200px、JPEG 品質 80%）— 參考 progress-hub.html
+function compressImage(file) {
+  return new Promise(function(resolve, reject) {
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var img = new Image();
+      img.onload = function() {
+        try {
+          var w = img.width, h = img.height, max = 1200;
+          if (w > max || h > max) {
+            if (w > h) { h = Math.round(h * max / w); w = max; }
+            else { w = Math.round(w * max / h); h = max; }
+          }
+          var canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL('image/jpeg', 0.8));
+        } catch (err) { reject(err); }
+      };
+      img.onerror = function() { reject(new Error('image decode failed')); };
+      img.src = e.target.result;
+    };
+    reader.onerror = function() { reject(new Error('file read failed')); };
+    reader.readAsDataURL(file);
+  });
+}
+
 async function runFisStep1() {
   if (selectedFiles.length === 0) { alert('Please upload photos and videos first'); return; }
   var result = document.getElementById('fisStep1Result');
@@ -850,19 +895,17 @@ async function runFisStep1() {
   // 處理所有檔案
   var imageBase64List = [];
   var videoLabels = [];
+  var heicFiles = selectedFiles.filter(isHeic);
 
   for (var i = 0; i < selectedFiles.length; i++) {
     var file = selectedFiles[i];
+    if (isHeic(file)) { console.warn('跳過 HEIC 圖片（請轉 JPG/PNG）:', file.name); continue; }
     if (file.type.startsWith('image/')) {
       try {
-        var b64 = await new Promise(function(resolve, reject) {
-          var reader = new FileReader();
-          reader.onload = function(e) { resolve(e.target.result); };
-          reader.onerror = reject;
-          reader.readAsDataURL(file);
-        });
+        // 上載前自動壓縮（長邊 1200px、品質 80%），減少 payload 同避免過大引致錯誤
+        var b64 = await compressImage(file);
         imageBase64List.push(b64);
-      } catch(err) { console.warn('跳過圖片:', file.name); }
+      } catch(err) { console.warn('跳過圖片（壓縮失敗）:', file.name); }
 
     } else if (file.type.startsWith('video/')) {
       try {
@@ -879,7 +922,11 @@ async function runFisStep1() {
 
   if (imageBase64List.length === 0) {
     stopProgress('pb1', 'pt1');
-    resultText.textContent = '請上載最少一張圖片或影片進行分析';
+    if (heicFiles.length > 0) {
+      resultText.innerHTML = '<div style="color:#ff6666;font-size:13px">你上載嘅相片係 HEIC/HEIF 格式，無法分析。請先轉成 JPG 或 PNG 再上載（iPhone：設定 → 相機 → 格式 → 「最相容」）。</div>';
+    } else {
+      resultText.textContent = '請上載最少一張圖片或影片進行分析';
+    }
     return;
   }
 
