@@ -78,6 +78,15 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .a2hs-text { flex: 1; font-size: 13px; color: var(--text); line-height: 1.5; }
 .a2hs-install { background: var(--gold); color: #2a3d63; border: none; border-radius: 10px; padding: 9px 14px; font-weight: 800; font-size: 13px; cursor: pointer; font-family: inherit; white-space: nowrap; }
 .a2hs-close { background: none; border: none; color: var(--text-dim); font-size: 18px; cursor: pointer; padding: 0 4px; line-height: 1; }
+/* 法律頁面（服務條款 / 私隱政策）*/
+.legal-meta { font-size: 11px; color: var(--text-dim); margin-bottom: 16px; font-family: 'Bebas Neue', sans-serif; letter-spacing: 1px; }
+.legal-h { font-size: 14px; font-weight: 700; color: var(--gold); margin: 22px 0 8px; }
+.legal-p { font-size: 13px; color: var(--text-dim); line-height: 1.75; margin-bottom: 10px; }
+.legal-p strong { color: var(--text); }
+.legal-list { font-size: 13px; color: var(--text-dim); line-height: 1.75; margin: 0 0 10px; padding-left: 20px; }
+.legal-list li { margin-bottom: 4px; }
+.legal-links { margin-top: 22px; text-align: center; font-size: 12px; color: var(--text-dim); }
+.legal-links a { color: var(--gold-dim); text-decoration: underline; cursor: pointer; }
 .module-num { font-family: 'Bebas Neue', sans-serif; font-size: 11px; letter-spacing: 3px; color: var(--gold-dim); }
 .module-name { font-size: 14px; font-weight: 700; line-height: 1.3; }
 .module-desc { font-size: 11px; color: var(--text-dim); line-height: 1.4; margin-top: auto; }
@@ -172,6 +181,7 @@ textarea.sym { width: 100%; background: var(--bg3); border: 1px solid rgba(255,2
   <div class="dis-point"><div class="dis-num">4</div><div class="dis-text"><strong>訓練中如有不適請立即停止</strong>訓練過程中如出現任何疼痛或不適，請立即停止並咨詢專業醫療人士。</div></div>
   <div class="dis-divider"></div>
   <button class="dis-btn" id="enterBtn">我已閱讀，進入訓練工具</button>
+  <div class="legal-links"><a data-legal="terms">服務條款</a> · <a data-legal="privacy">私隱政策</a></div>
 </div>
 
 <!-- HOME -->
@@ -190,6 +200,7 @@ textarea.sym { width: 100%; background: var(--bg3); border: 1px solid rgba(255,2
     <div class="module-card" id="btn-warmup"><div class="module-icon">GO</div><div class="module-num">04 - 熱身</div><div class="module-name">今日熱身激活</div><div class="module-desc">上下身個人化熱身方案</div></div>
     <div class="module-card" id="btn-skool" style="grid-column:1 / -1;background:linear-gradient(135deg,rgba(255,200,69,0.16),rgba(255,200,69,0.04));border-color:rgba(255,200,69,0.4);min-height:auto"><div class="module-icon">★</div><div class="module-num">SKOOL · 課程</div><div class="module-name">FIS 筋膜訓練課程</div><div class="module-desc">加入社群，跟住一步步解決你嘅體態問題</div></div>
   </div>
+  <div class="legal-links" style="padding:24px 20px 100px"><a data-legal="terms">服務條款</a> · <a data-legal="privacy">私隱政策</a><br><span style="font-size:10px">© 2026 FIS 筋膜整合系統 · Alexey Wong</span></div>
   <div class="bnav">
     <div class="bnav-item active" id="bnav-home-btn"><div class="bnav-icon">HOME</div><div class="bnav-label">主頁</div></div>
     <div class="bnav-item" id="bnav-fis-btn"><div class="bnav-icon">FIS</div><div class="bnav-label">檢測</div></div>
@@ -579,6 +590,139 @@ textarea.sym { width: 100%; background: var(--bg3); border: 1px solid rgba(255,2
   </div>
 </div>
 
+<!-- 服務條款 -->
+<div id="terms" class="screen">
+  <div class="s-header">
+    <div class="back-btn" data-legal-back>&lt;- 返回</div>
+    <div class="s-title">服務條款</div>
+    <div class="s-sub">TERMS OF SERVICE</div>
+  </div>
+  <div class="s-body">
+    <div class="legal-meta">生效日期：2026-06-06 · 最後更新：2026-06-06</div>
+    <div class="legal-p">歡迎使用 <strong>FIS 筋膜整合系統</strong>（下稱「本服務」）。本服務由 <strong>Alexey Wong</strong>（下稱「服務提供者」或「我哋」）提供及營運。當你存取或使用本服務，即表示你已閱讀、理解並同意接受以下條款；如你唔同意，請停止使用本服務。</div>
+
+    <div class="legal-h">1. 服務性質</div>
+    <div class="legal-p">本服務係一套基於筋膜線理論（Anatomy Trains）嘅<strong>體態自我評估及訓練參考工具</strong>，透過人工智能（AI）分析你提供嘅相片、影片及訓練數據，生成教育性質嘅體態參考報告、訓練追蹤、痛點分析及熱身建議。</div>
+
+    <div class="legal-h">2. 使用資格</div>
+    <div class="legal-p">你必須年滿 <strong>18 歲</strong>，或喺家長／監護人同意及陪同下使用本服務。使用本服務即表示你聲明符合此資格。</div>
+
+    <div class="legal-h">3. 用戶責任</div>
+    <ul class="legal-list">
+      <li>提供準確、真實嘅資料；</li>
+      <li>只上載你本人嘅相片／影片，或已取得當事人明確同意嘅內容；</li>
+      <li>唔得將本服務用於任何非法、侵權或損害他人嘅用途；</li>
+      <li>妥善保管你嘅裝置及帳戶，對透過你帳戶進行嘅活動負責。</li>
+    </ul>
+
+    <div class="legal-h">4. AI 分析免責</div>
+    <div class="legal-p">本服務嘅分析由第三方 AI 模型（Google Gemini）生成，<strong>結果可能不完整、不準確或有誤</strong>，僅供教育及個人參考。我哋唔保證任何分析結果嘅準確性、可靠性或適用性，亦唔會就你依賴該等結果而作出嘅決定承擔責任。</div>
+
+    <div class="legal-h">5. 醫療免責</div>
+    <div class="legal-p">本服務<strong>並非醫療服務</strong>，唔構成任何醫療診斷、物理治療、運動處方或專業醫療意見。如你有任何關節疼痛、舊患、傷患或健康疑慮，請先咨詢醫生或註冊物理治療師。訓練過程中如有任何不適，請立即停止並尋求專業協助。</div>
+
+    <div class="legal-h">6. 帳戶與數據</div>
+    <div class="legal-p">本服務以匿名識別碼建立帳戶，並會收集及處理你提供嘅訓練數據。有關個人資料嘅收集、使用及你嘅權利，請參閱我哋嘅<a data-legal="privacy">《私隱政策》</a>。</div>
+
+    <div class="legal-h">7. 知識產權</div>
+    <div class="legal-p">本服務嘅所有內容、設計、商標（包括「FIS 筋膜整合系統」名稱）、訓練方法及程式碼，版權均屬服務提供者所有。你保留你上載內容（相片／影片／文字）嘅版權，但授予我哋為提供及改善本服務而處理該等內容嘅必要授權。</div>
+
+    <div class="legal-h">8. 收費與退款政策</div>
+    <div class="legal-p"><strong>【退款政策預留位置】</strong>　如本服務提供任何付費功能或課程，相關收費、訂閱及退款條款將於此處列明。在條款補充前，所有付費安排以購買時頁面所列為準。<em>（待補充）</em></div>
+
+    <div class="legal-h">9. 責任限制</div>
+    <div class="legal-p">在適用法律允許嘅最大範圍內，本服務按「現狀」提供，服務提供者唔就因使用或無法使用本服務而引致嘅任何直接、間接、附帶或後果性損失承擔責任。本條款並唔排除或限制任何根據法律不可排除嘅責任。</div>
+
+    <div class="legal-h">10. 服務變更或終止</div>
+    <div class="legal-p">我哋可隨時修改、暫停或終止本服務之全部或部分，恕不另行通知。</div>
+
+    <div class="legal-h">11. 條款修訂</div>
+    <div class="legal-p">我哋可不時更新本條款，更新後會修訂上方「最後更新」日期。你持續使用本服務即視為接受修訂後嘅條款。</div>
+
+    <div class="legal-h">12. 適用法律及司法管轄</div>
+    <div class="legal-p">本條款受<strong>香港特別行政區法律</strong>管轄並據其詮釋，任何爭議受香港法院之專屬司法管轄權管轄。</div>
+
+    <div class="legal-h">13. 聯絡我哋</div>
+    <div class="legal-p">如對本條款有任何疑問，請聯絡：服務提供者 Alexey Wong（電郵：<strong>YOUR_CONTACT_EMAIL</strong>）。</div>
+
+    <div class="legal-links"><a data-legal="privacy">改睇私隱政策 →</a></div>
+  </div>
+</div>
+
+<!-- 私隱政策 -->
+<div id="privacy" class="screen">
+  <div class="s-header">
+    <div class="back-btn" data-legal-back>&lt;- 返回</div>
+    <div class="s-title">私隱政策</div>
+    <div class="s-sub">PRIVACY POLICY</div>
+  </div>
+  <div class="s-body">
+    <div class="legal-meta">生效日期：2026-06-06 · 最後更新：2026-06-06</div>
+    <div class="legal-p">本私隱政策說明 <strong>FIS 筋膜整合系統</strong>（由 <strong>Alexey Wong</strong> 提供）如何收集、使用、儲存及保護你嘅個人資料。我哋遵循香港《個人資料（私隱）條例》（PDPO）及歐盟《通用資料保護條例》（GDPR）嘅相關要求。</div>
+
+    <div class="legal-h">1. 資料控制者</div>
+    <div class="legal-p">資料控制者為 <strong>Alexey Wong</strong>（FIS 筋膜整合系統）。如需聯絡，電郵：<strong>YOUR_CONTACT_EMAIL</strong>。</div>
+
+    <div class="legal-h">2. 我哋收集嘅資料</div>
+    <ul class="legal-list">
+      <li><strong>帳戶識別碼</strong>：匿名用戶 ID（自動生成）；</li>
+      <li><strong>用戶自訂名稱</strong>（如你選擇設定）；</li>
+      <li><strong>訓練數據</strong>：發力感評分、腰部代償、張力速度、痛點部位及症狀描述、功能性測試數據、每週自評；</li>
+      <li><strong>影像</strong>：你上載作體態分析嘅相片及影片（影片會喺你嘅裝置抽取截圖）；</li>
+      <li><strong>技術性資料</strong>：瀏覽器本地儲存（localStorage）所需嘅設定值。</li>
+    </ul>
+
+    <div class="legal-h">3. 收集目的及法律依據</div>
+    <div class="legal-p">我哋收集上述資料係為咗提供 AI 體態分析、訓練追蹤及個人化建議。GDPR 下嘅法律依據為：你嘅<strong>同意</strong>（提供影像及健康相關數據）及<strong>合法權益</strong>（提供及改善服務）。你可隨時撤回同意。</div>
+
+    <div class="legal-h">4. AI 處理及第三方</div>
+    <div class="legal-p">你嘅相片、影片截圖及訓練數據會傳送至 <strong>Google Gemini</strong>（Google 提供嘅 AI 服務）進行分析。資料亦儲存於 <strong>Cloudflare</strong>（D1 資料庫及 Workers 平台）。該等第三方按其自身私隱政策處理資料。</div>
+
+    <div class="legal-h">5. 資料儲存及保留</div>
+    <div class="legal-p">資料儲存於 Cloudflare 基礎設施。我哋只會喺達成上述目的所需嘅期間內保留你嘅資料；你亦可要求刪除（見第 9 節）。</div>
+
+    <div class="legal-h">6. 資料共享及披露</div>
+    <ul class="legal-list">
+      <li><strong>你嘅教練</strong>：如你係教練學員，教練可透過後台查看你嘅訓練數據及體態相片，作指導用途；</li>
+      <li><strong>服務供應商</strong>：Google、Cloudflare（用於 AI 處理及儲存）；</li>
+      <li><strong>法律要求</strong>：當法律要求或為保障權利時，我哋可能披露資料。</li>
+    </ul>
+    <div class="legal-p">我哋<strong>唔會</strong>將你嘅個人資料出售俾第三方。</div>
+
+    <div class="legal-h">7. Cookie 及本地儲存</div>
+    <div class="legal-p">本服務使用瀏覽器 localStorage 儲存運作所需資料（例如：匿名用戶 ID、用戶名稱、同意紀錄、引導及提示狀態）。清除瀏覽器資料會移除該等項目。</div>
+
+    <div class="legal-h">8. 國際資料傳輸</div>
+    <div class="legal-p">由於使用 Google 及 Cloudflare 等全球服務，你嘅資料可能會喺香港或歐洲經濟區（EEA）以外嘅地區處理。我哋會採取合理措施確保該等傳輸有適當保障。</div>
+
+    <div class="legal-h">9. 你嘅權利</div>
+    <div class="legal-p">根據 PDPO 及 GDPR，你有權：</div>
+    <ul class="legal-list">
+      <li>查閱我哋持有關於你嘅個人資料；</li>
+      <li>要求改正不準確嘅資料；</li>
+      <li>要求刪除資料（「被遺忘權」）；</li>
+      <li>限制或反對處理；</li>
+      <li>資料可攜（取得結構化格式副本）；</li>
+      <li>撤回先前給予嘅同意；</li>
+      <li>向監管機構投訴。</li>
+    </ul>
+
+    <div class="legal-h">10. 資料安全</div>
+    <div class="legal-p">我哋採取合理嘅技術及組織措施保護你嘅資料，但互聯網傳輸無法保證絕對安全。</div>
+
+    <div class="legal-h">11. 兒童私隱</div>
+    <div class="legal-p">本服務唔以 18 歲以下人士為對象。如我哋發現喺未經監護人同意下收集咗兒童資料，會盡快刪除。</div>
+
+    <div class="legal-h">12. 政策修訂</div>
+    <div class="legal-p">我哋可不時更新本政策，更新後會修訂上方「最後更新」日期。</div>
+
+    <div class="legal-h">13. 如何行使權利及投訴</div>
+    <div class="legal-p">行使任何權利或查詢，請電郵 <strong>YOUR_CONTACT_EMAIL</strong>。香港用戶亦可向<strong>香港個人資料私隱專員公署（PCPD）</strong>投訴；歐洲經濟區用戶可向當地資料保護機構投訴。</div>
+
+    <div class="legal-links"><a data-legal="terms">改睇服務條款 →</a></div>
+  </div>
+</div>
+
 <!-- 加入主畫面 banner（完成第一次自我檢測後顯示） -->
 <div class="a2hs-banner" id="a2hs-banner">
   <div class="a2hs-row">
@@ -648,6 +792,14 @@ async function installA2HS() {
   fisDeferredPrompt = null;
   dismissA2HS();
 }
+
+// ── 法律頁面（服務條款 / 私隱政策）導航 ──────────────────────────────────────
+function openLegal(id) {
+  var active = document.querySelector('.screen.active');
+  window.__legalReturn = active ? active.id : 'home';
+  goTo(id);
+}
+function backFromLegal() { goTo(window.__legalReturn || 'home'); }
 
   // ── 匿名用戶初始化 ────────────────────────────────────────
   window.FIS_USER_ID = localStorage.getItem('fis_user_id') || null;
@@ -721,6 +873,10 @@ function bindAll() {
 
   var a2hsInstall = document.getElementById('a2hs-install'); if (a2hsInstall) { a2hsInstall.addEventListener('click', installA2HS); }
   var a2hsClose = document.getElementById('a2hs-close'); if (a2hsClose) { a2hsClose.addEventListener('click', dismissA2HS); }
+
+  // 法律頁面入口連結 + 返回掣
+  document.querySelectorAll('[data-legal]').forEach(function(el) { el.addEventListener('click', function() { openLegal(el.getAttribute('data-legal')); }); });
+  document.querySelectorAll('[data-legal-back]').forEach(function(el) { el.addEventListener('click', backFromLegal); });
 
   var btnFis = document.getElementById('btn-fis'); if (btnFis) { btnFis.addEventListener('click', function() { goTo('fis'); }); }
   var btnProgress = document.getElementById('btn-progress'); if (btnProgress) { btnProgress.addEventListener('click', function() { location.href = 'progress-hub.html'; }); }

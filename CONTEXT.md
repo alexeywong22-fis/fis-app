@@ -64,7 +64,8 @@
 | `ddfd4fd` | **SKool 入口**：報告卡下面加「想知解決方法？」CTA（`fis-skool-cta`）+ 主頁全寬 SKool 課程卡（`btn-skool`），共用 `SKOOL_URL='YOUR_SKOOL_URL'` placeholder 與 `openSkool()` |
 | `8a8fa34` | **FIS 圖片上載前自動壓縮 + HEIC 提示**：新增 `compressImage()`（長邊 1200px、JPEG 80%，參考 progress-hub）取代直接 readAsDataURL；新增 `isHeic()`，選檔即時警告 + 分析時跳過 HEIC 並提示轉 JPG/PNG |
 | `ab959e8` | **修復改名失敗**：名稱 chip 喺 `FIS_USER_ID` 未初始化前顯示「載入中…」且不可改，init 完成後 re-render 啟用；`doSave` 加 userId 保險。`manifest.json` name 改「FIS 綜合系統」 |
-| _(本次)_ | **三項 UX**：①新用戶引導頁 `#onboarding`（3 共鳴問題 + FIS 介紹，`fis_onboarded` 控制，首開→引導→disclaimer）②主頁 + progress-hub 四格 `fadeInUp` 彈出動畫（0.35s、cubic-bezier(0.2,0,0.2,1.2)、每格錯 0.08s）③加入主畫面 banner `#a2hs-banner`（完成首次自我檢測 `fis_first_assess` 後顯示，iOS 指示／Android `beforeinstallprompt`，`fis_a2hs_done` 唔重複）|
+| `414546c` | **三項 UX**：①新用戶引導頁 `#onboarding`（3 共鳴問題 + FIS 介紹，`fis_onboarded` 控制，首開→引導→disclaimer）②主頁 + progress-hub 四格 `fadeInUp` 彈出動畫（0.35s、cubic-bezier(0.2,0,0.2,1.2)、每格錯 0.08s）③加入主畫面 banner `#a2hs-banner`（完成首次自我檢測 `fis_first_assess` 後顯示，iOS 指示／Android `beforeinstallprompt`，`fis_a2hs_done` 唔重複）|
+| _(本次)_ | **服務條款 `#terms` + 私隱政策 `#privacy`**（獨立 screen，合 HK PDPO + GDPR）：FIS 筋膜整合系統品牌、Alexey Wong 服務提供者、數據收集、AI／醫療免責、退款政策 placeholder；disclaimer + home footer 入口（`data-legal` / `openLegal`）。**待填 `YOUR_CONTACT_EMAIL` + 退款條款** |
 
 ---
 
