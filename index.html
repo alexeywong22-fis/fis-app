@@ -155,6 +155,7 @@ textarea.sym { width: 100%; background: var(--bg3); border: 1px solid rgba(255,2
     <div class="module-card" id="btn-progress"><div class="module-icon">DATA</div><div class="module-num">02 - 追蹤</div><div class="module-name">進步追蹤系統</div><div class="module-desc">AI分析今日訓練數據</div></div>
     <div class="module-card" id="btn-pain"><div class="module-icon">RX</div><div class="module-num">03 - 診斷</div><div class="module-name">訓練痛點診斷</div><div class="module-desc">即時搵出筋膜線根源</div></div>
     <div class="module-card" id="btn-warmup"><div class="module-icon">GO</div><div class="module-num">04 - 熱身</div><div class="module-name">今日熱身激活</div><div class="module-desc">上下身個人化熱身方案</div></div>
+    <div class="module-card" id="btn-skool" style="grid-column:1 / -1;background:linear-gradient(135deg,rgba(255,200,69,0.16),rgba(255,200,69,0.04));border-color:rgba(255,200,69,0.4);min-height:auto"><div class="module-icon">★</div><div class="module-num">SKOOL · 課程</div><div class="module-name">FIS 筋膜訓練課程</div><div class="module-desc">加入社群，跟住一步步解決你嘅體態問題</div></div>
   </div>
   <div class="bnav">
     <div class="bnav-item active" id="bnav-home-btn"><div class="bnav-icon">HOME</div><div class="bnav-label">主頁</div></div>
@@ -547,6 +548,15 @@ textarea.sym { width: 100%; background: var(--bg3); border: 1px solid rgba(255,2
 
 <script>
 var API_BASE = 'https://fis-app.alexeywong22.workers.dev';
+// SKool 課程連結（部署前將 YOUR_SKOOL_URL 換成真實連結即可）
+var SKOOL_URL = 'YOUR_SKOOL_URL';
+function openSkool() {
+  if (SKOOL_URL && SKOOL_URL !== 'YOUR_SKOOL_URL') {
+    window.open(SKOOL_URL, '_blank', 'noopener');
+  } else {
+    alert('SKool 課程連結即將開放，敬請期待！');
+  }
+}
 
   // ── 匿名用戶初始化 ────────────────────────────────────────
   window.FIS_USER_ID = localStorage.getItem('fis_user_id') || null;
@@ -620,6 +630,7 @@ function bindAll() {
   var bnavProgressBtn = document.getElementById('bnav-progress-btn'); if (bnavProgressBtn) { bnavProgressBtn.addEventListener('click', function() { location.href = 'progress-hub.html'; }); }
   var btnPain = document.getElementById('btn-pain'); if (btnPain) { btnPain.addEventListener('click', function() { goTo('pain'); }); }
   var btnWarmup = document.getElementById('btn-warmup'); if (btnWarmup) { btnWarmup.addEventListener('click', function() { goTo('warmup'); }); }
+  var btnSkool = document.getElementById('btn-skool'); if (btnSkool) { btnSkool.addEventListener('click', openSkool); }
 
   var backFis = document.getElementById('back-fis'); if (backFis) { backFis.addEventListener('click', function() { goTo('home'); }); }
   var backProgress = document.getElementById('back-progress'); if (backProgress) { backProgress.addEventListener('click', function() { goTo('home'); }); }
@@ -1201,6 +1212,18 @@ async function runFisStep3() {
   card.appendChild(disc);
 
   imageResult.appendChild(card);
+
+  // 報告卡下面加「想知解決方法？」CTA → SKool 課程
+  var oldCta = document.getElementById('fis-skool-cta');
+  if (oldCta) oldCta.remove();
+  var cta = document.createElement('button');
+  cta.id = 'fis-skool-cta';
+  cta.className = 'btn-gold';
+  cta.style.cssText = 'width:100%;margin-top:16px';
+  cta.textContent = '想知解決方法？→ 加入 FIS SKool 課程';
+  cta.addEventListener('click', openSkool);
+  imageResult.appendChild(cta);
+
   card.scrollIntoView({behavior:'smooth'});
 
   // 自動儲存測試結果落 D1

@@ -58,7 +58,10 @@
 | `4ca52d2` | CONTEXT.md 加入「收尾時自動更新」開發習慣 |
 | `da3e995` | 改用 wrangler 3.x（本機 Node 20 可直接部署，避開 Node 22）+ 加入 package-lock.json |
 | `19a55dc` | **完成 Wrangler 自動部署設定並首次部署上線** — 填好 `wrangler.toml`（account_id + D1 `fis-db`），用 API token 部署，`/api/user/init` 返 name 已生效（Version `b93f5cbb`）|
-| _(本次)_ | **index.html 三項優化**：①warmup 頁頂加醫療免責 `.dbox`（同 RX 同款）②home-sub 動態顯示「歡迎，[名字]」（有 `fis_username` 時，經 `updateHomeSub()`）③`runFisStep2` + `analyzePain` 加自動重試一次（失敗等 2 秒重試，第二次先報錯）|
+| `6ccbc1d` | **index.html 三項優化**：①warmup 頁頂加醫療免責 `.dbox`（同 RX 同款）②home-sub 動態顯示「歡迎，[名字]」（有 `fis_username` 時，經 `updateHomeSub()`）③`runFisStep2` + `analyzePain` 加自動重試一次（失敗等 2 秒重試，第二次先報錯）|
+| `0698c0f` | **FIS 影片改抽 10 幀（10%-100%）送 Gemini**：`extractVideoFrames` 由 3 幀升 10 幀，只送截圖永不送影片（根治 error 400），100% clamp + 15 秒 watchdog |
+| `e02989c` | `analyzeProgress` 加自動重試一次（與 runFisStep2 / analyzePain 一致，拆出 `attemptProgress()`）|
+| _(本次)_ | **SKool 入口**：報告卡下面加「想知解決方法？」CTA（`fis-skool-cta`）+ 主頁全寬 SKool 課程卡（`btn-skool`），共用 `SKOOL_URL='YOUR_SKOOL_URL'` placeholder 與 `openSkool()` |
 
 ---
 
@@ -70,8 +73,9 @@
 - [x] 確認 secrets 全部係 Secret（`alexeywong22`、`GEMINI_API_KEY`、`FAL/OPENAI/OPENROUTER_API_KEY`），跨部署自動保留。
 
 ### 💡 未來可考慮
-- [ ] AI 503 容錯 retry：`runFisStep2`、`analyzePain` 已加（前端重試一次）；尚餘 `analyzeProgress`（`/api/progress`）未加。
+- [x] AI 容錯 retry：`runFisStep2`、`analyzePain`、`analyzeProgress` 三個都已加前端重試一次。
 - [ ] 名稱驗證放寬支援中文（目前 worker 限 `^[a-zA-Z0-9_]{3,20}$`）。
+- [ ] **將 `SKOOL_URL`（index.html）由 `YOUR_SKOOL_URL` 換成真實 SKool 連結**（報告卡 CTA + 主頁卡共用）。
 
 ### 部署資訊 / 慣例
 - **部署指令**：`export CLOUDFLARE_API_TOKEN=<token> && npm run deploy`（或 `npx wrangler deploy`）。
