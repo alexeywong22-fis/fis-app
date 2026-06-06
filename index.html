@@ -1239,31 +1239,53 @@ async function analyzeProgress() {
   result.classList.add('show');
   resultText.innerHTML = '<div class="progress-bar-wrap"><div class="progress-bar-fill" id="pb-prog"></div></div><div class="progress-text" id="pt-prog">0%</div>';
   startProgress('pb-prog', 'pt-prog', 10000);
-  try {
+
+  // 單次嘗試：成功返 result 文字，API error / 空結果 / 網絡錯誤一律 throw
+  async function attemptProgress() {
     var res = await fetch(API_BASE + '/api/progress', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({rating: ratings.r1, backPain: ratings.r2, tensionSpeed: ratings.r3}) });
     var data = await res.json();
-    stopProgress('pb-prog', 'pt-prog');
-    var aiResult = data.result || 'Analysis failed, please try again.';
-    resultText.textContent = aiResult;
-
-    // AI 分析完成後自動儲存落 D1（包含 AI 建議）
-    if (window.FIS_USER_ID) {
-      fetch(API_BASE + '/api/progress/save', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-          userId: window.FIS_USER_ID,
-          muscleActivation: parseInt(ratings.r1) || 1,
-          backCompensation: ratings.r2 === '有' ? '有' : ratings.r2 === '輕微' ? '輕微' : '無',
-          tensionSpeed: ratings.r3 || '5次後',
-          notes: aiResult
-        })
-      }).then(r=>r.json()).then(d=>{ if(d.success) console.log('Progress auto-saved:', d.logId); })
-        .catch(e=>console.warn('Progress save failed:', e.message));
-      // Cache locally for mini-chart routing logic
-      cacheProgressLog(parseInt(ratings.r1) || 1);
+    if (data.error || !data.result) {
+      throw new Error(data.message || data.error || 'AI 服務繁忙，請稍後再試');
     }
-  } catch(e) { stopProgress('pb-prog', 'pt-prog'); resultText.textContent = 'Service temporarily unavailable, please try again later.'; }
+    return data.result;
+  }
+
+  var aiResult;
+  try {
+    try {
+      aiResult = await attemptProgress();
+    } catch (e1) {
+      // 第一次失敗：等 2 秒自動重試一次
+      await new Promise(function(resolve) { setTimeout(resolve, 2000); });
+      aiResult = await attemptProgress();
+    }
+  } catch (e2) {
+    // 第二次仍失敗先顯示錯誤
+    stopProgress('pb-prog', 'pt-prog');
+    resultText.textContent = '分析暫時失敗：' + (e2.message || '請稍後再試');
+    return;
+  }
+
+  stopProgress('pb-prog', 'pt-prog');
+  resultText.textContent = aiResult;
+
+  // AI 分析完成後自動儲存落 D1（包含 AI 建議）
+  if (window.FIS_USER_ID) {
+    fetch(API_BASE + '/api/progress/save', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        userId: window.FIS_USER_ID,
+        muscleActivation: parseInt(ratings.r1) || 1,
+        backCompensation: ratings.r2 === '有' ? '有' : ratings.r2 === '輕微' ? '輕微' : '無',
+        tensionSpeed: ratings.r3 || '5次後',
+        notes: aiResult
+      })
+    }).then(r=>r.json()).then(d=>{ if(d.success) console.log('Progress auto-saved:', d.logId); })
+      .catch(e=>console.warn('Progress save failed:', e.message));
+    // Cache locally for mini-chart routing logic
+    cacheProgressLog(parseInt(ratings.r1) || 1);
+  }
 }
 
 async function analyzePain() {
