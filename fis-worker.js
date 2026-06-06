@@ -847,7 +847,7 @@ return diff === 0;
 // Stage 1 — 教練 email + 密碼認證（PBKDF2 hash + DB opaque session token）
 // 純新增，唔影響現有 /api/coach/login、/api/coach/users、user-summary(-v2)。
 // ============================================================================
-const COACH_PBKDF2_ITERATIONS = 210000;   // 實測 ~25ms；逐行存 iterations，可隨時升降（若 Worker CPU 超限回落 150000）
+const COACH_PBKDF2_ITERATIONS = 100000;   // Cloudflare Workers PBKDF2 硬上限 = 100000（超過會拒）。逐行存 iterations + hash_version，將來要更強可換 WASM argon2/bcrypt
 const COACH_HASH_VERSION = 1;
 const COACH_SESSION_TTL_MS = 12 * 60 * 60 * 1000;   // 12 小時
 
