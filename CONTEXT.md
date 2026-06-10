@@ -70,6 +70,7 @@
 | `af0d20a` | **coach.html 改 FIS 品牌色（方案C）**：`:root` 換深海軍藍 `#2a3d63` + 金 `#ffc845`（新增 `--cream`）；統一金色 rgba `255,200,69`、金底深字 `#16223f`、移走紫色 `#a78bfa`→金。純顏色，冇郁邏輯 |
 | `5f63e90` | **教練多帳號認證 Stage 1**：新增 `migrations/0001_coaches.sql`（`coaches` + `coach_sessions`，只 CREATE）+ 4 個新 endpoint `/api/coach/auth/{register,login,logout,me}`（PBKDF2+每人 salt、DB opaque token 存 SHA-256、12h）。100% 新增，現有 `/api/coach/*` + coach.html 零改動 |
 | `247a2ee` | 教練認證 PBKDF2 iterations 改 **100000**（Cloudflare Workers 硬上限，210000 被拒）|
+| `527c7f2` | **FIS AI 檢測 503 容錯**：後端 `callGemini` 拆 `callGeminiOnce`+silent retry wrapper（只 503/429/網絡重試，最多 3 次指數退避 600ms→1.2s→2.4s+jitter，per-fetch 15s+總 25s budget；400/401/403 即時返）。覆蓋 fis-step1/2 + pain + progress（同一 `callGemini`），prompt/免責/handler 零改。前端 step1/2 loading 改轉圈 spinner + 失敗顯示溫和訊息「AI 分析服務暫時繁忙」+ 再試掣 |
 
 ---
 
@@ -110,7 +111,7 @@
 - [x] 確認 secrets 全部係 Secret（`alexeywong22`、`GEMINI_API_KEY`、`FAL/OPENAI/OPENROUTER_API_KEY`），跨部署自動保留。
 
 ### 💡 未來可考慮
-- [x] AI 容錯 retry：`runFisStep2`、`analyzePain`、`analyzeProgress` 三個都已加前端重試一次。
+- [x] AI 容錯 retry：前端 `runFisStep2`/`analyzePain`/`analyzeProgress` 各 1 次重試；**後端 `callGemini` 亦加 silent retry（503/429/網絡，3 次指數退避+timeout）覆蓋 fis-step1/2+pain+progress**（`527c7f2`）。
 - [ ] 名稱驗證放寬支援中文（目前 worker 限 `^[a-zA-Z0-9_]{3,20}$`）。
 - [ ] **將 `SKOOL_URL`（index.html）由 `YOUR_SKOOL_URL` 換成真實 SKool 連結**（報告卡 CTA + 主頁卡共用）。
 - [ ] **教練 auth Stage 2**：coach.html 接新 `/api/coach/auth/login`（存 token 唔存密碼）、保護頁面用 `/me` 驗 token；`corsHeaders()` 加 `Authorization`；之後逐步淘汰舊 `env[username]` 共享密碼登入。
