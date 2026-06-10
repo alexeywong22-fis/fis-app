@@ -84,6 +84,7 @@
 - GitHub repo secrets：`CLOUDFLARE_API_TOKEN`、`CLOUDFLARE_ACCOUNT_ID`（已設）。
 - **以後改 `fis-worker.js` push 上 main 就自動部署 worker**；前端（index/coach 等）一直由 **GitHub Pages** 自動部署。
 - ⚠️ 踩過嘅坑：①檔名要 `.github/workflows/`（開頭有點）②GitHub 網頁編輯器貼上會自動加縮排令 YAML 失效 → 用 **Cmd+A → Shift+Tab** 整段退格修正 ③本機 git token 冇 `workflow` scope，**推唔到 workflow 檔**，要喺 GitHub 網頁改。
+- ⚠️ **Pages 坑（cb54867）**：repo 有**冒號檔名**（`指令一:二:三.md`）會令 Pages 預設 **Jekyll build fail** → 新 commit publish 唔到、實機停留舊版（即使本機/遠端 SHA 已新）。已加 **`.nojekyll`**（Pages 直接 serve 靜態、跳過 Jekyll）+ 改走冒號檔名。**以後唔好放怪檔名／保持 `.nojekyll`**。診斷法：`curl 線上 index.html | grep 新字串` 對比本機。
 
 ---
 
