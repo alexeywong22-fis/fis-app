@@ -225,29 +225,25 @@ textarea.sym { width: 100%; background: var(--bg3); border: 1px solid rgba(255,2
   </div>
   <div class="s-body">
     <div class="dbox">[!] 以下資訊屬教育性體態參考，並非醫療診斷。如有任何疼痛或傷患，請先咨詢醫生。</div>
-    <div class="sec-label">第一步 - 準備八個檔案</div>
+    <div class="sec-label">第一步 - 準備 4 張相片</div>
     <div class="info-card">
-      <div class="info-card-title">需要準備以下檔案</div>
+      <div class="info-card-title">需要準備以下 4 張相片（全部必需，請依順序揀）</div>
       <div class="file-list">
-        <div class="file-item"><div class="file-dot"></div>照片一：正面站立</div>
-        <div class="file-item"><div class="file-dot"></div>照片二：側面站立</div>
-        <div class="file-item"><div class="file-dot"></div>照片三：背面站立</div>
-        <div class="file-item"><div class="file-dot"></div>影片一：左腳單腳站立30秒</div>
-        <div class="file-item"><div class="file-dot"></div>影片二：右腳單腳站立30秒</div>
-        <div class="file-item"><div class="file-dot"></div>影片三：Jefferson Curl側面</div>
-        <div class="file-item"><div class="file-dot"></div>影片四：原地行走10步正面</div>
-        <div class="file-item"><div class="file-dot"></div>影片五：雙手舉高呼吸5下側面</div>
+        <div class="file-item"><div class="file-dot"></div>① 正面站立</div>
+        <div class="file-item"><div class="file-dot"></div>② 側面站立</div>
+        <div class="file-item"><div class="file-dot"></div>③ 背面站立</div>
+        <div class="file-item"><div class="file-dot"></div>④ 站姿前彎最低點（側面）</div>
       </div>
     </div>
     <div class="step-row">
       <div class="step-num">1</div>
       <div>
-        <div class="step-title">上載照片同影片</div>
-        <div class="step-desc">撳下面按鈕選擇八個檔案</div>
+        <div class="step-title">上載 4 張相片</div>
+        <div class="step-desc">一次揀齊 4 張，順序：① 正面 ② 側面 ③ 背面 ④ 前彎側面</div>
         <label style="display:block;margin-top:12px;background:var(--bg4);border:1px dashed var(--gold-dim);border-radius:10px;padding:16px;text-align:center;cursor:pointer;">
-          <input type="file" id="fisFiles" multiple accept="image/*,video/*" style="display:none">
-          <div style="font-size:13px;color:var(--gold);margin-bottom:4px">[FILE] 撳此上載檔案</div>
-          <div style="font-size:11px;color:var(--text-dim)">支援圖片同影片</div>
+          <input type="file" id="fisFiles" multiple accept="image/*" style="display:none">
+          <div style="font-size:13px;color:var(--gold);margin-bottom:4px">[FILE] 撳此上載相片</div>
+          <div style="font-size:11px;color:var(--text-dim)">只支援相片（JPG／PNG）· 需 4 張</div>
         </label>
         <div id="fileCount" style="font-size:12px;color:var(--text-dim);margin-top:8px;text-align:center"></div>
       </div>
@@ -256,8 +252,8 @@ textarea.sym { width: 100%; background: var(--bg3); border: 1px solid rgba(255,2
       <div class="step-num">2</div>
       <div style="flex:1">
         <div class="step-title">AI分析體態特徵</div>
-        <div class="step-desc">上載完成後，撳以下按鈕開始分析</div>
-        <button class="btn-gold" id="btn-fis-step1">開始體態分析</button>
+        <div class="step-desc">揀齊 4 張相片先可以開始</div>
+        <button class="btn-gold" id="btn-fis-step1" disabled style="opacity:.5">開始體態分析</button>
         <div class="ai-result" id="fisStep1Result">
           <div class="ai-result-title">體態觀察結果</div>
           <div class="ai-result-body" id="fisStep1Text"></div>
@@ -959,9 +955,13 @@ function bindAll() {
   if (fisFiles) { fisFiles.addEventListener('change', function() {
     selectedFiles = Array.from(this.files);
     var el = document.getElementById('fileCount');
+    var btn = document.getElementById('btn-fis-step1');
+    var heic = selectedFiles.filter(isHeic);
+    var photos = selectedFiles.filter(function(f) { return f.type && f.type.startsWith('image/') && !isHeic(f); });
+    var ready = (heic.length === 0 && photos.length >= 4);
+    if (btn) { btn.disabled = !ready; btn.style.opacity = ready ? '1' : '.5'; }
     if (el) {
-      var heic = selectedFiles.filter(isHeic);
-      var msg = 'Selected ' + selectedFiles.length + ' files (need 8)';
+      var msg = '已選 ' + photos.length + '/4 張相' + (ready ? ' ✓ 可以開始' : '（需揀齊 4 張：① 正面 ② 側面 ③ 背面 ④ 前彎側面）');
       if (heic.length > 0) {
         msg += '<br><span style="color:#ff6666">⚠️ 偵測到 ' + heic.length + ' 個 HEIC/HEIF 檔，多數裝置無法分析。請先轉成 JPG／PNG 再上載（iPhone：設定 → 相機 → 格式 → 「最相容」）。</span>';
       }
@@ -1137,141 +1137,30 @@ async function aiCallWithRetry(resultText, attemptFn, retryFnName) {
 }
 
 async function runFisStep1() {
-  if (selectedFiles.length === 0) { alert('Please upload photos and videos first'); return; }
+  // 相片版：4 張全必需（① 正面 ② 側面 ③ 背面 ④ 站姿前彎側面）
+  var photos = selectedFiles.filter(function(f) { return f.type && f.type.startsWith('image/') && !isHeic(f); });
+  var heicFiles = selectedFiles.filter(isHeic);
+  if (heicFiles.length > 0) { alert('偵測到 HEIC/HEIF 相片，請先轉成 JPG／PNG 再上載（iPhone：設定 → 相機 → 格式 →「最相容」）'); return; }
+  if (photos.length < 4) { alert('請揀齊 4 張相：① 正面 ② 側面 ③ 背面 ④ 站姿前彎（側面）'); return; }
   var result = document.getElementById('fisStep1Result');
   var resultText = document.getElementById('fisStep1Text');
   result.classList.add('show');
   resultText.innerHTML = fisLoadingHTML('分析緊…（AI 體態檢測）');
-  startProgress('pb1', 'pt1', 90000);
 
-  // 從影片自動抽取 10 個時間點截圖（10%–100%），只送截圖、永不送影片本身（根治 Gemini error 400）
-  function extractVideoFrames(videoFile) {
-    return new Promise(function(resolve) {
-      var frames = [];
-      var settled = false;
-      var url = URL.createObjectURL(videoFile);
-      function finish() {
-        if (settled) return;
-        settled = true;
-        clearTimeout(watchdog);
-        try { URL.revokeObjectURL(url); } catch(e) {}
-        resolve(frames);
-      }
-      // 安全網：15 秒內未完成就用已抽到嘅幀返回，避免卡死成個分析
-      var watchdog = setTimeout(finish, 15000);
-
-      var video = document.createElement('video');
-      video.muted = true;
-      video.playsInline = true;
-      video.src = url;
-
-      video.addEventListener('loadedmetadata', function() {
-        var duration = video.duration;
-        if (!duration || duration === Infinity || isNaN(duration)) { finish(); return; }
-        // 10%、20% … 100% 共 10 個時間點；100% 直接 seek 到結尾好多瀏覽器唔會觸發 seeked，故 clamp 喺 duration-0.1
-        var times = [];
-        for (var p = 1; p <= 10; p++) {
-          times.push(Math.min(duration * (p / 10), Math.max(0, duration - 0.1)));
-        }
-        var idx = 0;
-
-        function captureFrame() {
-          if (idx >= times.length) { finish(); return; }
-          video.currentTime = times[idx];
-        }
-
-        video.addEventListener('seeked', function() {
-          if (settled) return;
-          try {
-            var canvas = document.createElement('canvas');
-            canvas.width  = Math.min(video.videoWidth  || 640, 640);
-            canvas.height = Math.min(video.videoHeight || 640, 640);
-            var ctx = canvas.getContext('2d');
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            frames.push(canvas.toDataURL('image/jpeg', 0.7));
-          } catch(e) { /* 個別幀失敗就跳過 */ }
-          idx++;
-          captureFrame();
-        });
-
-        captureFrame();
-      });
-
-      video.addEventListener('error', function() { finish(); });
-      video.load();
-    });
-  }
-
-  // 處理所有檔案
+  // 壓縮 4 張相片（長邊 1200px、品質 80%）；只送相片、唔送任何影片
   var imageBase64List = [];
-  var videoLabels = [];
-  var heicFiles = selectedFiles.filter(isHeic);
-
-  for (var i = 0; i < selectedFiles.length; i++) {
-    var file = selectedFiles[i];
-    if (isHeic(file)) { console.warn('跳過 HEIC 圖片（請轉 JPG/PNG）:', file.name); continue; }
-    if (file.type.startsWith('image/')) {
-      try {
-        // 上載前自動壓縮（長邊 1200px、品質 80%），減少 payload 同避免過大引致錯誤
-        var b64 = await compressImage(file);
-        imageBase64List.push(b64);
-      } catch(err) { console.warn('跳過圖片（壓縮失敗）:', file.name); }
-
-    } else if (file.type.startsWith('video/')) {
-      try {
-        resultText.innerHTML = '<div class="progress-bar-wrap"><div class="progress-bar-fill" id="pb1" style="width:20%"></div></div>' +
-          '<div class="progress-text" id="pt1">正在抽取影片分鏡：' + file.name + '...</div>';
-        var frames = await extractVideoFrames(file);
-        if (frames.length > 0) {
-          frames.forEach(function(f) { imageBase64List.push(f); });
-          videoLabels.push(file.name + ' (' + frames.length + '幀)');
-        }
-      } catch(err) { console.warn('跳過影片:', file.name); }
-    }
+  for (var i = 0; i < photos.length; i++) {
+    try { imageBase64List.push(await compressImage(photos[i])); }
+    catch (err) { console.warn('跳過圖片（壓縮失敗）:', photos[i].name); }
   }
+  if (imageBase64List.length < 4) { resultText.innerHTML = fisRetryHTML('runFisStep1'); return; }
 
-  if (imageBase64List.length === 0) {
-    stopProgress('pb1', 'pt1');
-    if (heicFiles.length > 0) {
-      resultText.innerHTML = '<div style="color:#ff6666;font-size:13px">你上載嘅相片係 HEIC/HEIF 格式，無法分析。請先轉成 JPG 或 PNG 再上載（iPhone：設定 → 相機 → 格式 → 「最相容」）。</div>';
-    } else {
-      resultText.textContent = '請上載最少一張圖片或影片進行分析';
-    }
-    return;
-  }
-
-  // 動態分析 prompt
-  var hasVideo = videoLabels.length > 0;
-  var prompt = hasVideo
-    ? '你係一位專業體態評估師及筋膜線治療師。你收到嘅係靜態體態相片，以及【動態測試嘅連續分鏡截圖】。\n\n' +
-      '已抽幀嘅影片：' + videoLabels.join('、') + '\n\n' +
-      '請同時分析靜態相片同動態分鏡，從Thomas Myers筋膜線理論角度進行全面體態分析：\n\n' +
-      '【動態評估必須包含】：\n' +
-      '1. 單腳站立分鏡：骨盆有無側傾代償（側線LL張力）\n' +
-      '2. Jefferson Curl分鏡：脊椎分節活動度（淺背線SBL張力，有無段落性受限）\n' +
-      '3. 步態分鏡：左右骨盆旋轉對稱性（螺旋線SL）\n' +
-      '4. 呼吸分鏡：有無聳肩或胸式呼吸代償（深前線DFL橫膈膜抑制）\n\n' +
-      '【靜態評估包含】：\n' +
-      '1. 姿勢偏差評估：頭頸肩脊椎骨盆膝蓋足弓\n' +
-      '2. 五大筋膜線張力分析\n' +
-      '3. 主要問題識別（3-5個）\n' +
-      '4. 訓練激活建議（每個問題具體動作）\n' +
-      '5. 注意事項\n\n' +
-      '⚠️ 如果只分析靜態骨骼而忽略動態分鏡，此任務視為失敗。\n\n' +
-      '請用繁體中文（香港口語書面語）回答，條理清晰，實用易懂。'
-    : '你係一位專業體態評估師及筋膜線治療師。請根據以下圖片，從筋膜線理論（Thomas Myers Anatomy Trains）角度進行全面體態分析：\n\n' +
-      '1. 姿勢偏差評估：觀察頭部前傾、肩膀高低、脊椎側彎、骨盆傾斜、膝蓋對齊、足弓狀態\n' +
-      '2. 筋膜線張力分析：評估深前線、側線、螺旋線、淺背線、淺前線各線嘅張力與縮短狀態\n' +
-      '3. 主要問題識別：列出最明顯嘅3-5個體態問題，每個問題說明涉及嘅筋膜線\n' +
-      '4. 訓練激活建議：針對每個問題，提供具體嘅筋膜激活或矯正動作（包括組數與時間）\n' +
-      '5. 注意事項：說明哪些常見訓練動作可能加劇問題\n\n' +
-      '請用繁體中文（香港口語書面語）回答，條理清晰，實用易懂。';
-
+  // 只送相片（worker 用自己 hardcode 嘅相片版 prompt，唔讀前端 prompt）
   async function attemptStep1(signal) {
     var res = await fetch(API_BASE + '/api/fis-step1', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ images: imageBase64List, prompt: prompt }),
+      body: JSON.stringify({ images: imageBase64List }),
       signal: signal
     });
     var data = await res.json();
@@ -1280,8 +1169,7 @@ async function runFisStep1() {
   }
 
   var data = await aiCallWithRetry(resultText, attemptStep1, 'runFisStep1');
-  if (data === null) { stopProgress('pb1', 'pt1'); fisStep1Result = ''; return; }
-  stopProgress('pb1', 'pt1');
+  if (data === null) { fisStep1Result = ''; return; }
   fisStep1Result = data.result || '';
   // 標記已完成第一次自我檢測 → 之後顯示「加入主畫面」banner
   try { localStorage.setItem('fis_first_assess', '1'); } catch(e) {}
@@ -1291,7 +1179,7 @@ async function runFisStep1() {
     '<div style="font-size:12px;line-height:2;color:#4af">' +
     '<div>[✔] 體態三維幾何數據採樣 <span style="color:#ffc845">... 100%</span></div>' +
     '<div>[✔] 五大筋膜鏈張力掃描 <span style="color:#ffc845">... 100%</span></div>' +
-    '<div>[✔] 動態代償模式識別 <span style="color:#ffc845">... 100%</span></div>' +
+    '<div>[✔] 靜態代償模式識別 <span style="color:#ffc845">... 100%</span></div>' +
     '</div>' +
     '<div style="margin-top:10px;padding:10px;background:rgba(255,200,69,0.08);border:1px solid rgba(255,200,69,0.3);border-radius:8px;font-size:12px;color:#ffc845">' +
     '⚡ FIS 體態原始數據採樣完成，請點擊【生成筋膜線報告卡】繼續。' +
