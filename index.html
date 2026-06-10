@@ -202,7 +202,7 @@ textarea.sym { width: 100%; background: var(--bg3); border: 1px solid rgba(255,2
   <div class="module-grid">
     <div class="module-card" id="btn-fis"><div class="module-icon">FIS</div><div class="module-num">01 - FIS</div><div class="module-name">筋膜線自我檢測</div><div class="module-desc">上載照片生成個人報告卡</div></div>
     <div class="module-card" id="btn-progress"><div class="module-icon">DATA</div><div class="module-num">02 - 追蹤</div><div class="module-name">進步追蹤系統</div><div class="module-desc">AI分析今日訓練數據</div></div>
-    <div class="module-card" id="btn-pain"><div class="module-icon">RX</div><div class="module-num">03 - 診斷</div><div class="module-name">訓練痛點診斷</div><div class="module-desc">即時搵出筋膜線根源</div></div>
+    <div class="module-card" id="btn-pain"><div class="module-icon">RX</div><div class="module-num">03 - 建議</div><div class="module-name">訓練痛點分析</div><div class="module-desc">即時搵出筋膜線根源</div></div>
     <div class="module-card" id="btn-warmup"><div class="module-icon">GO</div><div class="module-num">04 - 熱身</div><div class="module-name">今日熱身激活</div><div class="module-desc">上下身個人化熱身方案</div></div>
     <div class="module-card" id="btn-skool" style="display:none;grid-column:1 / -1;background:linear-gradient(135deg,rgba(255,200,69,0.16),rgba(255,200,69,0.04));border-color:rgba(255,200,69,0.4);min-height:auto"><div class="module-icon">★</div><div class="module-num">SKOOL · 課程</div><div class="module-name">FIS 筋膜訓練課程</div><div class="module-desc">加入社群，跟住一步步解決你嘅體態問題</div></div>
   </div>
@@ -518,7 +518,7 @@ textarea.sym { width: 100%; background: var(--bg3); border: 1px solid rgba(255,2
 <div id="pain" class="screen">
   <div class="s-header">
     <div class="back-btn" id="back-pain">&lt;- 返回</div>
-    <div class="s-title">痛點診斷</div>
+    <div class="s-title">痛點分析</div>
     <div class="s-sub">PAIN POINT - AI即時分析</div>
   </div>
   <div class="s-body">
@@ -1102,7 +1102,25 @@ function fisLoadingHTML(label) {
   return '<div class="fis-loading"><span class="fis-spin"></span>' + (label || '分析緊…') + '</div>';
 }
 function fisRetryHTML(retryFnName) {
-  return '<div class="fis-error">⚠️ AI 分析服務暫時繁忙，請再試一次。<button class="fis-retry" onclick="' + retryFnName + '()">再試</button></div>';
+  return '<div class="fis-error">⚠️ AI 服務一時繁忙（唔係 app 壞咗），請撳「再試」。<button class="fis-retry" onclick="' + retryFnName + '()">再試</button></div>';
+}
+
+// 統一 AI 呼叫：第一次失敗 → 顯示「自動重試緊…」→ 隔 3 秒靜靜重試 1 次 →
+// 仍失敗 → 顯示溫和訊息 + 再試掣（畫面永不出 Gemini/API/503/error 等技術字眼）。
+// 成功返 attemptFn 嘅值；最終失敗 helper 自行 render 錯誤 UI 並返 null。
+async function aiCallWithRetry(resultText, attemptFn, retryFnName) {
+  try {
+    return await attemptFn();
+  } catch (e1) {
+    resultText.innerHTML = '<div class="fis-loading"><span class="fis-spin"></span>AI 繁忙，自動重試緊…</div>';
+    await new Promise(function(r) { setTimeout(r, 3000); });
+    try {
+      return await attemptFn();
+    } catch (e2) {
+      resultText.innerHTML = fisRetryHTML(retryFnName);
+      return null;
+    }
+  }
 }
 
 async function runFisStep1() {
@@ -1236,42 +1254,39 @@ async function runFisStep1() {
       '5. 注意事項：說明哪些常見訓練動作可能加劇問題\n\n' +
       '請用繁體中文（香港口語書面語）回答，條理清晰，實用易懂。';
 
-  try {
+  async function attemptStep1() {
     var res = await fetch(API_BASE + '/api/fis-step1', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ images: imageBase64List, prompt: prompt })
     });
     var data = await res.json();
-    stopProgress('pb1', 'pt1');
-    if (data.error) {
-      fisStep1Result = '';
-      resultText.innerHTML = fisRetryHTML('runFisStep1');
-    } else {
-      fisStep1Result = data.result || '';
-      // 標記已完成第一次自我檢測 → 之後顯示「加入主畫面」banner
-      try { localStorage.setItem('fis_first_assess', '1'); } catch(e) {}
-      setTimeout(maybeShowA2HS, 1200);
-      // 顯示科技感完成面板，唔顯示原始文字
-      resultText.innerHTML =
-        '<div style="font-size:12px;line-height:2;color:#4af">' +
-        '<div>[✔] 體態三維幾何數據採樣 <span style="color:#ffc845">... 100%</span></div>' +
-        '<div>[✔] 五大筋膜鏈張力掃描 <span style="color:#ffc845">... 100%</span></div>' +
-        '<div>[✔] 動態代償模式識別 <span style="color:#ffc845">... 100%</span></div>' +
-        '</div>' +
-        '<div style="margin-top:10px;padding:10px;background:rgba(255,200,69,0.08);border:1px solid rgba(255,200,69,0.3);border-radius:8px;font-size:12px;color:#ffc845">' +
-        '⚡ FIS 體態原始數據採樣完成，請點擊【生成筋膜線報告卡】繼續。' +
-        '</div>';
-      // 自動 scroll 去 Step 2 按鈕
-      setTimeout(function() {
-        var btn2 = document.getElementById('btn-fis-step2');
-        if (btn2) btn2.scrollIntoView({behavior:'smooth', block:'center'});
-      }, 600);
-    }
-  } catch(e) {
-    stopProgress('pb1', 'pt1');
-    resultText.innerHTML = fisRetryHTML('runFisStep1');
+    if (data.error || !data.result) { throw new Error(data.message || data.error || 'AI busy'); }
+    return data;
   }
+
+  var data = await aiCallWithRetry(resultText, attemptStep1, 'runFisStep1');
+  if (data === null) { stopProgress('pb1', 'pt1'); fisStep1Result = ''; return; }
+  stopProgress('pb1', 'pt1');
+  fisStep1Result = data.result || '';
+  // 標記已完成第一次自我檢測 → 之後顯示「加入主畫面」banner
+  try { localStorage.setItem('fis_first_assess', '1'); } catch(e) {}
+  setTimeout(maybeShowA2HS, 1200);
+  // 顯示科技感完成面板，唔顯示原始文字
+  resultText.innerHTML =
+    '<div style="font-size:12px;line-height:2;color:#4af">' +
+    '<div>[✔] 體態三維幾何數據採樣 <span style="color:#ffc845">... 100%</span></div>' +
+    '<div>[✔] 五大筋膜鏈張力掃描 <span style="color:#ffc845">... 100%</span></div>' +
+    '<div>[✔] 動態代償模式識別 <span style="color:#ffc845">... 100%</span></div>' +
+    '</div>' +
+    '<div style="margin-top:10px;padding:10px;background:rgba(255,200,69,0.08);border:1px solid rgba(255,200,69,0.3);border-radius:8px;font-size:12px;color:#ffc845">' +
+    '⚡ FIS 體態原始數據採樣完成，請點擊【生成筋膜線報告卡】繼續。' +
+    '</div>';
+  // 自動 scroll 去 Step 2 按鈕
+  setTimeout(function() {
+    var btn2 = document.getElementById('btn-fis-step2');
+    if (btn2) btn2.scrollIntoView({behavior:'smooth', block:'center'});
+  }, 600);
 }
 
 // ── FIS STEP 2 ────────────────────────────────────────────────────────────────
@@ -1293,24 +1308,8 @@ async function runFisStep2() {
     return data;
   }
 
-  var data;
-  try {
-    try {
-      data = await attemptStep2();
-    } catch (e1) {
-      // 第一次失敗：等 2 秒自動重試一次
-      await new Promise(function(resolve) { setTimeout(resolve, 2000); });
-      data = await attemptStep2();
-    }
-  } catch (e2) {
-    // 第二次仍失敗先顯示溫和訊息 + 再試掣
-    stopProgress('pb2', 'pt2');
-    fisParsedData = null;
-    fisStep2Result = '';
-    resultText.innerHTML = fisRetryHTML('runFisStep2');
-    return;
-  }
-
+  var data = await aiCallWithRetry(resultText, attemptStep2, 'runFisStep2');
+  if (data === null) { stopProgress('pb2', 'pt2'); fisParsedData = null; fisStep2Result = ''; return; }
   stopProgress('pb2', 'pt2');
   fisParsedData = data.parsed || null;
   fisStep2Result = data.result || '';
@@ -1591,7 +1590,7 @@ async function analyzeProgress() {
   var result = document.getElementById('progressResult');
   var resultText = document.getElementById('progressResultText');
   result.classList.add('show');
-  resultText.innerHTML = '<div class="progress-bar-wrap"><div class="progress-bar-fill" id="pb-prog"></div></div><div class="progress-text" id="pt-prog">0%</div>';
+  resultText.innerHTML = fisLoadingHTML('分析緊…');
   startProgress('pb-prog', 'pt-prog', 10000);
 
   // 單次嘗試：成功返 result 文字，API error / 空結果 / 網絡錯誤一律 throw
@@ -1604,22 +1603,8 @@ async function analyzeProgress() {
     return data.result;
   }
 
-  var aiResult;
-  try {
-    try {
-      aiResult = await attemptProgress();
-    } catch (e1) {
-      // 第一次失敗：等 2 秒自動重試一次
-      await new Promise(function(resolve) { setTimeout(resolve, 2000); });
-      aiResult = await attemptProgress();
-    }
-  } catch (e2) {
-    // 第二次仍失敗先顯示錯誤
-    stopProgress('pb-prog', 'pt-prog');
-    resultText.textContent = '分析暫時失敗：' + (e2.message || '請稍後再試');
-    return;
-  }
-
+  var aiResult = await aiCallWithRetry(resultText, attemptProgress, 'analyzeProgress');
+  if (aiResult === null) { stopProgress('pb-prog', 'pt-prog'); return; }
   stopProgress('pb-prog', 'pt-prog');
   resultText.textContent = aiResult;
 
@@ -1649,7 +1634,7 @@ async function analyzePain() {
   var result = document.getElementById('painResult');
   var resultText = document.getElementById('painResultText');
   result.classList.add('show');
-  resultText.innerHTML = '<div class="progress-bar-wrap"><div class="progress-bar-fill" id="pb-pain"></div></div><div class="progress-text" id="pt-pain">0%</div>';
+  resultText.innerHTML = fisLoadingHTML('分析緊…');
   startProgress('pb-pain', 'pt-pain', 10000);
 
   // 單次嘗試：成功返 result 文字，API error / 空結果 / 網絡錯誤一律 throw
@@ -1662,22 +1647,8 @@ async function analyzePain() {
     return data.result;
   }
 
-  var aiResult;
-  try {
-    try {
-      aiResult = await attemptPain();
-    } catch (e1) {
-      // 第一次失敗：等 2 秒自動重試一次
-      await new Promise(function(resolve) { setTimeout(resolve, 2000); });
-      aiResult = await attemptPain();
-    }
-  } catch (e2) {
-    // 第二次仍失敗先顯示錯誤
-    stopProgress('pb-pain', 'pt-pain');
-    resultText.textContent = '診斷暫時失敗：' + (e2.message || '請稍後再試');
-    return;
-  }
-
+  var aiResult = await aiCallWithRetry(resultText, attemptPain, 'analyzePain');
+  if (aiResult === null) { stopProgress('pb-pain', 'pt-pain'); return; }
   stopProgress('pb-pain', 'pt-pain');
   resultText.textContent = aiResult;
 
