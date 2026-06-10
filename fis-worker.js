@@ -53,10 +53,6 @@ return jsonResponse({
           keys: Object.keys(env)
 });
 }
-// 【臨時】驗證 Gemini thinkingConfig 解析到邊個策略（驗完移走）
-if (path === '/api/debug/gemini') {
-return handleDebugGemini(request, env);
-}
 if (path === '/api/coach/user-summary') {
 return handleCoachUserSummary(request, env);
 }
@@ -275,15 +271,6 @@ return jsonResponse({ result: geminiResult.text });
 // 解析後快取嘅 Gemini 策略（endpoint 版本 + 有冇 thinkingConfig）。null = 未解析。
 let GEMINI_CFG = null;
 
-// 【臨時】驗證用：跑一次最小 Gemini 呼叫，回報解析到嘅策略 + 耗時（驗完移走）
-async function handleDebugGemini(request, env) {
-const GEMINI_API_KEY = env.GEMINI_API_KEY;
-if (!GEMINI_API_KEY) return jsonResponse({ error: 'GEMINI_API_KEY not configured' }, 500);
-const t0 = Date.now();
-const r = await callGeminiOnce([{ text: 'Reply with the single word OK.' }], GEMINI_API_KEY, 20000);
-return jsonResponse({ ok: !r.error, cfg: r.cfg || null, status: r.status || null, error: r.error || null, ms: Date.now() - t0 });
-}
-
 // 單次 Gemini 呼叫。prompt / parts / 圖片 / temperature 0.4 / maxOutputTokens 8192 完全不變。
 // 新增 thinkingConfig:{thinkingBudget:0}（關思考減延遲），並自動 capability fallback：
 //   v1+thinking → v1beta+thinking → v1beta 去 thinkingConfig（只喺 400 唔識該欄位時先 fallback）。
@@ -312,7 +299,7 @@ geminiRes = await fetch(endpoint, {
 });
 } catch (err) {
 clearTimeout(timer);
-const aborted = !!(err && (err.name === 'AbortError' || err.name === 'TimeoutError'));
+const aborted = ctrl.signal.aborted;   // 我哋自己 abort 嘅 → 確定係 timeout（比靠 err.name 可靠）
 return { error: 'Failed to reach Gemini API: ' + err.message, retryable: true, timedOut: aborted };
 }
 clearTimeout(timer);
