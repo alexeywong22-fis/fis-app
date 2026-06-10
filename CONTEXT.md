@@ -73,6 +73,7 @@
 | `527c7f2` | **FIS AI 檢測 503 容錯**：後端 `callGemini` 拆 `callGeminiOnce`+silent retry wrapper（只 503/429/網絡重試，最多 3 次指數退避 600ms→1.2s→2.4s+jitter，per-fetch 15s+總 25s budget；400/401/403 即時返）。覆蓋 fis-step1/2 + pain + progress（同一 `callGemini`），prompt/免責/handler 零改。前端 step1/2 loading 改轉圈 spinner + 失敗顯示溫和訊息「AI 分析服務暫時繁忙」+ 再試掣 |
 | `446797d`+`b892da4` | **修 AI 超時 + RX 改名**：`callGemini(timeoutMs)` 動態 timeout（fis-step1 圖片=60s、step2/pain/progress=30s）；`generationConfig` 加 `thinkingConfig:{thinkingBudget:0}`（**v1 唔收 400→自動 fallback v1beta+thinkingBudget0**，已驗證）；TOTAL_BUDGET 按 timeoutMs 動態計；重試分類 503/429/網絡=3 次、timeout(abort, `ctrl.signal.aborted`)=2 次。RX UI：底部導覽「診斷」→「建議」、按鈕/標題「診斷」→「建議」（免責/路徑/RX/s-title 不變）。curl /api/pain 驗證 HTTP 200 |
 | `577fc70` | **「診斷」改名收尾 + AI 失敗訊息統一**：HOME 卡「03-診斷」→「建議」/「訓練痛點診斷」→「訓練痛點分析」、RX 標題「痛點診斷」→「痛點分析」（5 處免責聲明保留）。新增 `aiCallWithRetry()`：失敗 →「自動重試緊…」→ 隔 3 秒重試 1 次 → 仍失敗 →「⚠️ AI 服務一時繁忙（唔係 app 壞咗），請撳再試」+ 再試掣；RX 結果區加再試掣；畫面零技術字眼。覆蓋 step1/2 + pain + progress。純前端 |
+| `33efed2` | **改善 AI 等待體感**（純前端，4 入口共用 `aiCallWithRetry`）：等待 spinner 文字「AI 分析緊…（今晚 AI 較繁忙，可能要 20–40 秒，請稍候）」、~30s 升級「仲喺度處理，多謝耐心…」；**100s 安全網 AbortController**（≥ 後端 max ~95s，唔殺死遲返嘅成功；curl 實測後端可遲到 36.8s）；4 個 attemptFn 收 signal。唔用短 timeout（避免假失敗）|
 
 ---
 
