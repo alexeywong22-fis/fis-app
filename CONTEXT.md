@@ -1,7 +1,7 @@
 # FIS PWA — 專案上下文 CONTEXT
 
 > ⚠️ **每次開新 session，請先讀取本檔案再開始工作。**
-> 本檔案記錄專案架構、進度、待辦。最後更新：**2026-06-06**
+> 本檔案記錄專案架構、進度、待辦。最後更新：**2026-06-10**
 
 ---
 
@@ -68,6 +68,8 @@
 | `f19d6dd` | **服務條款 `#terms` + 私隱政策 `#privacy`**（獨立 screen，合 HK PDPO + GDPR）：FIS 筋膜整合系統品牌、Alexey Wong 服務提供者、數據收集、AI／醫療免責、退款政策 placeholder；disclaimer + home footer 入口（`data-legal` / `openLegal`）。聯絡電郵已填 `alexeywong22@gmail.com`，**仍待補退款條款** |
 | `ad7dcb0` | 法律頁聯絡電郵填 `alexeywong22@gmail.com`（3 處）；**SKool 加開關 `SKOOL_ENABLED=false`** 暫時隱藏主頁卡（`btn-skool`）同報告卡 CTA（`fis-skool-cta`）—— 日後開 SKool 設 `true` + 填 `SKOOL_URL` 即可開返 |
 | `af0d20a` | **coach.html 改 FIS 品牌色（方案C）**：`:root` 換深海軍藍 `#2a3d63` + 金 `#ffc845`（新增 `--cream`）；統一金色 rgba `255,200,69`、金底深字 `#16223f`、移走紫色 `#a78bfa`→金。純顏色，冇郁邏輯 |
+| `5f63e90` | **教練多帳號認證 Stage 1**：新增 `migrations/0001_coaches.sql`（`coaches` + `coach_sessions`，只 CREATE）+ 4 個新 endpoint `/api/coach/auth/{register,login,logout,me}`（PBKDF2+每人 salt、DB opaque token 存 SHA-256、12h）。100% 新增，現有 `/api/coach/*` + coach.html 零改動 |
+| `247a2ee` | 教練認證 PBKDF2 iterations 改 **100000**（Cloudflare Workers 硬上限，210000 被拒）|
 
 ---
 
@@ -77,6 +79,26 @@
 - GitHub repo secrets：`CLOUDFLARE_API_TOKEN`、`CLOUDFLARE_ACCOUNT_ID`（已設）。
 - **以後改 `fis-worker.js` push 上 main 就自動部署 worker**；前端（index/coach 等）一直由 **GitHub Pages** 自動部署。
 - ⚠️ 踩過嘅坑：①檔名要 `.github/workflows/`（開頭有點）②GitHub 網頁編輯器貼上會自動加縮排令 YAML 失效 → 用 **Cmd+A → Shift+Tab** 整段退格修正 ③本機 git token 冇 `workflow` scope，**推唔到 workflow 檔**，要喺 GitHub 網頁改。
+
+---
+
+## 2c. 教練多帳號認證 Stage 1（2026-06-10 完成 ✅）
+
+**目標**：由單一共享密碼登入，升級做「多教練 email+密碼帳號 + admin/coach 角色」。
+
+- **新表**（remote fis-db 已建，閘門 2 驗過現有 7 表零改動）：
+  - `coaches`：id / email(unique) / password_hash / salt / iterations / hash_version / role(admin|coach) / name / status / created_at
+  - `coach_sessions`：token_hash(PK, = SHA-256(raw token)) / coach_id / created_at / expires_at
+- **新 endpoint**（純新增，現有 `/api/coach/login`、`/users`、`user-summary(-v2)`、coach.html 都**冇郁**）：
+  - `POST /api/coach/auth/register`（admin token 或 bootstrap_key〔coaches 表空時〕授權）
+  - `POST /api/coach/auth/login`（email+密碼 → 12h opaque token）
+  - `POST /api/coach/auth/logout`、`GET /api/coach/auth/me`
+- **密碼**：PBKDF2-SHA256、每人 16-byte 隨機 salt、`iterations=100000`（Workers 硬上限）、逐行存 `iterations`+`hash_version`，永不明文。
+- **Session**：32-byte 隨機 token，DB 只存 `SHA-256(token)`，前端只擺 token（唔擺密碼），Bearer header。
+- **Admin seed 完成**：`coach_ae240cddf53d47c6`、email `alexeywong22@gmail.com`、role **admin**（2026-06-10 經 bootstrap_key seed，HTTP 200）。
+- **Bootstrap 已自動關閉**：`coaches` 表非空後，register 帶 bootstrap_key 一律回 403。
+- **備份**：migration 前 `wrangler d1 export` → `backup-fis-db-20260606.sql`（已 gitignore，唔入庫）。
+- ⚠️ **未做（Stage 2）**：coach.html 仲用緊舊單一密碼登入；未接新 auth。`corsHeaders()` 仲只准 `Content-Type`，Stage 2 接 coach.html（跨站 Bearer）要加 `Authorization`。
 
 ---
 
@@ -91,6 +113,8 @@
 - [x] AI 容錯 retry：`runFisStep2`、`analyzePain`、`analyzeProgress` 三個都已加前端重試一次。
 - [ ] 名稱驗證放寬支援中文（目前 worker 限 `^[a-zA-Z0-9_]{3,20}$`）。
 - [ ] **將 `SKOOL_URL`（index.html）由 `YOUR_SKOOL_URL` 換成真實 SKool 連結**（報告卡 CTA + 主頁卡共用）。
+- [ ] **教練 auth Stage 2**：coach.html 接新 `/api/coach/auth/login`（存 token 唔存密碼）、保護頁面用 `/me` 驗 token；`corsHeaders()` 加 `Authorization`；之後逐步淘汰舊 `env[username]` 共享密碼登入。
+- [ ] 教練 auth 加強（按需）：admin 管理教練 UI、session 撤銷/列表、登入失敗 rate-limit；hash 升級 WASM argon2/bcrypt（已留 `hash_version`）。
 
 ### 部署資訊 / 慣例
 - **部署指令**：`export CLOUDFLARE_API_TOKEN=<token> && npm run deploy`（或 `npx wrangler deploy`）。
