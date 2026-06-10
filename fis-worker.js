@@ -53,6 +53,10 @@ return jsonResponse({
           keys: Object.keys(env)
 });
 }
+// 【臨時】驗證 Gemini thinkingConfig 解析到邊個策略（驗完移走）
+if (path === '/api/debug/gemini') {
+return handleDebugGemini(request, env);
+}
 if (path === '/api/coach/user-summary') {
 return handleCoachUserSummary(request, env);
 }
@@ -145,7 +149,7 @@ imageCount++;
 if (imageCount === 0) {
 return jsonResponse({ error: '請上載最少一張圖片（jpg/png）進行分析' }, 400);
 }
-const geminiResult = await callGemini(parts, GEMINI_API_KEY);
+const geminiResult = await callGemini(parts, GEMINI_API_KEY, 60000);
 if (geminiResult.error) {
 return jsonResponse(geminiResult, 502);
 }
@@ -184,7 +188,7 @@ JSON格式如下（status只能係「優先關注」或「狀態良好」，stag
 }
 根據分析數據，精準評估每條筋膜線狀態，recommendations每句控制在30字以內。只輸出JSON。`
 }];
-const geminiResult = await callGemini(parts, GEMINI_API_KEY);
+const geminiResult = await callGemini(parts, GEMINI_API_KEY, 30000);
 if (geminiResult.error) {
 return jsonResponse(geminiResult, 502);
 }
@@ -234,7 +238,7 @@ const parts = [{
 **3. 本次訓練整體力學評估**
 對以上數據作純粹力學狀態總結，評估今日激活效率與張力建立速度係咪匹配。`
 }];
-const geminiResult = await callGemini(parts, GEMINI_API_KEY);
+const geminiResult = await callGemini(parts, GEMINI_API_KEY, 30000);
 if (geminiResult.error) {
 return jsonResponse(geminiResult, 502);
 }
@@ -261,24 +265,41 @@ const parts = [{
 [重要聲明：以下分析屬教育性參考，並非醫療診斷。如有持續疼痛請咨詢醫生。]
 用繁體中文，條理清晰。`
 }];
-const geminiResult = await callGemini(parts, GEMINI_API_KEY);
+const geminiResult = await callGemini(parts, GEMINI_API_KEY, 30000);
 if (geminiResult.error) {
 return jsonResponse(geminiResult, 502);
 }
 return jsonResponse({ result: geminiResult.text });
 }
 
-// 單次 Gemini 呼叫（prompt / body / 解析同原本一致）。加 per-fetch timeout，
-// 並標記 retryable：網絡錯誤 / 503 / 429 先可重試；400/401/403 等即時返錯。
-async function callGeminiOnce(parts, apiKey, timeoutMs) {
-const endpoint = `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
-const body = {
-    contents: [{ parts: parts }],
-    generationConfig: {
-      temperature: 0.4,
-      maxOutputTokens: 8192
+// 解析後快取嘅 Gemini 策略（endpoint 版本 + 有冇 thinkingConfig）。null = 未解析。
+let GEMINI_CFG = null;
+
+// 【臨時】驗證用：跑一次最小 Gemini 呼叫，回報解析到嘅策略 + 耗時（驗完移走）
+async function handleDebugGemini(request, env) {
+const GEMINI_API_KEY = env.GEMINI_API_KEY;
+if (!GEMINI_API_KEY) return jsonResponse({ error: 'GEMINI_API_KEY not configured' }, 500);
+const t0 = Date.now();
+const r = await callGeminiOnce([{ text: 'Reply with the single word OK.' }], GEMINI_API_KEY, 20000);
+return jsonResponse({ ok: !r.error, cfg: r.cfg || null, status: r.status || null, error: r.error || null, ms: Date.now() - t0 });
 }
-};
+
+// 單次 Gemini 呼叫。prompt / parts / 圖片 / temperature 0.4 / maxOutputTokens 8192 完全不變。
+// 新增 thinkingConfig:{thinkingBudget:0}（關思考減延遲），並自動 capability fallback：
+//   v1+thinking → v1beta+thinking → v1beta 去 thinkingConfig（只喺 400 唔識該欄位時先 fallback）。
+// timeoutMs：每次 fetch 嘅 AbortController 上限；abort（timeout）標記 timedOut。
+async function callGeminiOnce(parts, apiKey, timeoutMs) {
+const candidates = GEMINI_CFG ? [GEMINI_CFG] : [
+{ ver: 'v1',     thinking: true },
+{ ver: 'v1beta', thinking: true },
+{ ver: 'v1beta', thinking: false }
+];
+let fieldErr = null;
+for (const cand of candidates) {
+const endpoint = `https://generativelanguage.googleapis.com/${cand.ver}/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+const generationConfig = { temperature: 0.4, maxOutputTokens: 8192 };
+if (cand.thinking) generationConfig.thinkingConfig = { thinkingBudget: 0 };
+const body = { contents: [{ parts: parts }], generationConfig };
 const ctrl = new AbortController();
 const timer = setTimeout(() => ctrl.abort(), timeoutMs);
 let geminiRes;
@@ -291,13 +312,21 @@ geminiRes = await fetch(endpoint, {
 });
 } catch (err) {
 clearTimeout(timer);
-return { error: 'Failed to reach Gemini API: ' + err.message, retryable: true };
+const aborted = !!(err && (err.name === 'AbortError' || err.name === 'TimeoutError'));
+return { error: 'Failed to reach Gemini API: ' + err.message, retryable: true, timedOut: aborted };
 }
 clearTimeout(timer);
 if (!geminiRes.ok) {
 const errText = await geminiRes.text();
 let errDetail;
 try { errDetail = JSON.parse(errText); } catch { errDetail = { raw: errText }; }
+// 400 + 提及 thinking / 未知欄位 → 試下一個 candidate（capability fallback，未鎖定策略時先做）
+const msg = ((errDetail && errDetail.error && errDetail.error.message) || errText || '').toLowerCase();
+if (geminiRes.status === 400 && !GEMINI_CFG &&
+(msg.includes('thinking') || msg.includes('unknown name') || msg.includes('unknown field') || msg.includes('invalid json payload'))) {
+fieldErr = { error: 'Gemini API error 400', status: 400, detail: errDetail };
+continue;
+}
 return {
       error: 'Gemini API error ' + geminiRes.status,
       status: geminiRes.status,
@@ -313,23 +342,32 @@ const text = data?.candidates?.[0]?.content?.parts
 if (!text) {
 return { error: 'Gemini returned no text', rawResponse: data };
 }
-return { text };
+if (!GEMINI_CFG) GEMINI_CFG = cand;   // 鎖定首個成功策略，之後直接重用
+return { text, cfg: cand.ver + (cand.thinking ? '+thinkingBudget0' : '-noThinkingConfig') };
+}
+return fieldErr || { error: 'Gemini API error 400', status: 400 };
 }
 
-// Silent retry wrapper：只喺 503/429/網絡錯誤重試，最多 3 次，
-// 指數退避 ~600ms→1.2s→2.4s（+jitter），有總 budget 防 hang。全部失敗返最後一個 error。
-async function callGemini(parts, apiKey) {
+// Silent retry wrapper。timeoutMs 由 handler 傳（圖片 60s / 純文字 30s）。
+// 重試分類：503/429/網絡 → 最多 3 次；timeout(abort) → 最多 2 次（即再試 1 次）。
+// 退避 ~600ms→1.2s→2.4s（+jitter）。TOTAL_BUDGET 按 timeoutMs 動態計，防 hang。
+async function callGemini(parts, apiKey, timeoutMs) {
 const MAX_ATTEMPTS = 3;
-const BASE_DELAY = 600;            // ms
-const PER_FETCH_TIMEOUT = 15000;   // 每次呼叫上限
-const TOTAL_BUDGET = 25000;        // 總時間上限
+const BASE_DELAY = 600;                               // ms
+const PER_FETCH_TIMEOUT = timeoutMs || 30000;        // 每次呼叫上限（handler 指定）
+let backoffSum = 0;                                   // 退避總和（含 jitter 上限 1.2）
+for (let i = 1; i < MAX_ATTEMPTS; i++) backoffSum += BASE_DELAY * Math.pow(2, i - 1) * 1.2;
+const BUFFER = 2000;
+const TOTAL_BUDGET = PER_FETCH_TIMEOUT * MAX_ATTEMPTS + backoffSum + BUFFER;
 const start = Date.now();
 let last = null;
 for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
 const res = await callGeminiOnce(parts, apiKey, PER_FETCH_TIMEOUT);
 if (!res.error) return res;
 last = res;
-if (!res.retryable || attempt === MAX_ATTEMPTS) break;
+if (!res.retryable) break;                           // 400/401/403/no-text → 唔重試
+const cap = res.timedOut ? 2 : MAX_ATTEMPTS;         // timeout 最多 2 次；503/429/網絡最多 3 次
+if (attempt >= cap) break;
 const delay = Math.round(BASE_DELAY * Math.pow(2, attempt - 1) * (0.8 + Math.random() * 0.4));
 if (Date.now() - start + delay > TOTAL_BUDGET) break;
 await new Promise(r => setTimeout(r, delay));

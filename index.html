@@ -211,7 +211,7 @@ textarea.sym { width: 100%; background: var(--bg3); border: 1px solid rgba(255,2
     <div class="bnav-item active" id="bnav-home-btn"><div class="bnav-icon">HOME</div><div class="bnav-label">主頁</div></div>
     <div class="bnav-item" id="bnav-fis-btn"><div class="bnav-icon">FIS</div><div class="bnav-label">檢測</div></div>
     <div class="bnav-item" id="bnav-progress-btn"><div class="bnav-icon">DATA</div><div class="bnav-label">追蹤</div></div>
-    <div class="bnav-item" id="bnav-pain-btn"><div class="bnav-icon">RX</div><div class="bnav-label">診斷</div></div>
+    <div class="bnav-item" id="bnav-pain-btn"><div class="bnav-icon">RX</div><div class="bnav-label">建議</div></div>
     <div class="bnav-item" id="bnav-warmup-btn"><div class="bnav-icon">GO</div><div class="bnav-label">熱身</div></div>
   </div>
 </div>
@@ -291,7 +291,7 @@ textarea.sym { width: 100%; background: var(--bg3); border: 1px solid rgba(255,2
     <div class="bnav-item" id="bnav-fis-home"><div class="bnav-icon">HOME</div><div class="bnav-label">主頁</div></div>
     <div class="bnav-item active"><div class="bnav-icon">FIS</div><div class="bnav-label">檢測</div></div>
     <div class="bnav-item" id="bnav-fis-progress"><div class="bnav-icon">DATA</div><div class="bnav-label">追蹤</div></div>
-    <div class="bnav-item" id="bnav-fis-pain"><div class="bnav-icon">RX</div><div class="bnav-label">診斷</div></div>
+    <div class="bnav-item" id="bnav-fis-pain"><div class="bnav-icon">RX</div><div class="bnav-label">建議</div></div>
     <div class="bnav-item" id="bnav-fis-warmup"><div class="bnav-icon">GO</div><div class="bnav-label">熱身</div></div>
   </div>
 </div>
@@ -417,7 +417,7 @@ textarea.sym { width: 100%; background: var(--bg3); border: 1px solid rgba(255,2
     <div class="bnav-item" id="bnav-log-home"><div class="bnav-icon">HOME</div><div class="bnav-label">主頁</div></div>
     <div class="bnav-item" id="bnav-log-fis"><div class="bnav-icon">FIS</div><div class="bnav-label">檢測</div></div>
     <div class="bnav-item active"><div class="bnav-icon">DATA</div><div class="bnav-label">追蹤</div></div>
-    <div class="bnav-item" id="bnav-log-pain"><div class="bnav-icon">RX</div><div class="bnav-label">診斷</div></div>
+    <div class="bnav-item" id="bnav-log-pain"><div class="bnav-icon">RX</div><div class="bnav-label">建議</div></div>
     <div class="bnav-item" id="bnav-log-warmup"><div class="bnav-icon">GO</div><div class="bnav-label">熱身</div></div>
   </div>
 </div>
@@ -487,7 +487,7 @@ textarea.sym { width: 100%; background: var(--bg3); border: 1px solid rgba(255,2
     <div class="bnav-item" id="bnav-func-home"><div class="bnav-icon">HOME</div><div class="bnav-label">主頁</div></div>
     <div class="bnav-item" id="bnav-func-fis"><div class="bnav-icon">FIS</div><div class="bnav-label">檢測</div></div>
     <div class="bnav-item active"><div class="bnav-icon">DATA</div><div class="bnav-label">追蹤</div></div>
-    <div class="bnav-item" id="bnav-func-pain"><div class="bnav-icon">RX</div><div class="bnav-label">診斷</div></div>
+    <div class="bnav-item" id="bnav-func-pain"><div class="bnav-icon">RX</div><div class="bnav-label">建議</div></div>
     <div class="bnav-item" id="bnav-func-warmup"><div class="bnav-icon">GO</div><div class="bnav-label">熱身</div></div>
   </div>
 </div>
@@ -509,7 +509,7 @@ textarea.sym { width: 100%; background: var(--bg3); border: 1px solid rgba(255,2
     <div class="bnav-item" id="bnav-report-home"><div class="bnav-icon">HOME</div><div class="bnav-label">主頁</div></div>
     <div class="bnav-item" id="bnav-report-fis"><div class="bnav-icon">FIS</div><div class="bnav-label">檢測</div></div>
     <div class="bnav-item active"><div class="bnav-icon">DATA</div><div class="bnav-label">追蹤</div></div>
-    <div class="bnav-item" id="bnav-report-pain"><div class="bnav-icon">RX</div><div class="bnav-label">診斷</div></div>
+    <div class="bnav-item" id="bnav-report-pain"><div class="bnav-icon">RX</div><div class="bnav-label">建議</div></div>
     <div class="bnav-item" id="bnav-report-warmup"><div class="bnav-icon">GO</div><div class="bnav-label">熱身</div></div>
   </div>
 </div>
@@ -536,9 +536,9 @@ textarea.sym { width: 100%; background: var(--bg3); border: 1px solid rgba(255,2
     </div>
     <div class="sec-label">描述你的症狀</div>
     <textarea class="sym" id="symptomInput" placeholder="例如：推胸時膊頭前方痛，完全感受唔到胸肌發力..."></textarea>
-    <button class="btn-gold" id="btn-analyze-pain" style="margin-top:16px">AI即時診斷</button>
+    <button class="btn-gold" id="btn-analyze-pain" style="margin-top:16px">AI即時建議</button>
     <div class="ai-result" id="painResult">
-      <div class="ai-result-title">AI 診斷結果</div>
+      <div class="ai-result-title">AI 建議結果</div>
       <div class="ai-result-body" id="painResultText"></div>
     </div>
   </div>
@@ -546,7 +546,7 @@ textarea.sym { width: 100%; background: var(--bg3); border: 1px solid rgba(255,2
     <div class="bnav-item" id="bnav-pain-home"><div class="bnav-icon">HOME</div><div class="bnav-label">主頁</div></div>
     <div class="bnav-item" id="bnav-pain-fis"><div class="bnav-icon">FIS</div><div class="bnav-label">檢測</div></div>
     <div class="bnav-item" id="bnav-pain-progress"><div class="bnav-icon">DATA</div><div class="bnav-label">追蹤</div></div>
-    <div class="bnav-item active"><div class="bnav-icon">RX</div><div class="bnav-label">診斷</div></div>
+    <div class="bnav-item active"><div class="bnav-icon">RX</div><div class="bnav-label">建議</div></div>
     <div class="bnav-item" id="bnav-pain-warmup"><div class="bnav-icon">GO</div><div class="bnav-label">熱身</div></div>
   </div>
 </div>
@@ -591,7 +591,7 @@ textarea.sym { width: 100%; background: var(--bg3); border: 1px solid rgba(255,2
     <div class="bnav-item" id="bnav-warmup-home"><div class="bnav-icon">HOME</div><div class="bnav-label">主頁</div></div>
     <div class="bnav-item" id="bnav-warmup-fis"><div class="bnav-icon">FIS</div><div class="bnav-label">檢測</div></div>
     <div class="bnav-item" id="bnav-warmup-progress"><div class="bnav-icon">DATA</div><div class="bnav-label">追蹤</div></div>
-    <div class="bnav-item" id="bnav-warmup-pain"><div class="bnav-icon">RX</div><div class="bnav-label">診斷</div></div>
+    <div class="bnav-item" id="bnav-warmup-pain"><div class="bnav-icon">RX</div><div class="bnav-label">建議</div></div>
     <div class="bnav-item active"><div class="bnav-icon">GO</div><div class="bnav-label">熱身</div></div>
   </div>
 </div>
