@@ -65,6 +65,12 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .module-grid .module-card:nth-child(3) { animation-delay: 0.16s; }
 .module-grid .module-card:nth-child(4) { animation-delay: 0.24s; }
 .module-grid .module-card:nth-child(5) { animation-delay: 0.32s; }
+/* FIS 檢測 loading（轉圈）+ 溫和錯誤 + 再試掣 */
+.fis-loading { display: flex; align-items: center; gap: 10px; color: var(--text-dim); font-size: 13px; padding: 10px 0; }
+.fis-spin { width: 18px; height: 18px; border: 2px solid rgba(255,200,69,0.25); border-top-color: var(--gold); border-radius: 50%; display: inline-block; animation: fisSpin .8s linear infinite; }
+@keyframes fisSpin { to { transform: rotate(360deg); } }
+.fis-error { font-size: 13px; color: #f0a0a0; line-height: 1.6; display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+.fis-retry { background: var(--gold); color: #2a3d63; border: none; border-radius: 8px; padding: 6px 16px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
 /* 新用戶引導頁 */
 #onboarding { padding: 48px 24px 60px; justify-content: flex-start; overflow-y: auto; }
 .ob-q { background: var(--bg3); border: 1px solid var(--gold-dim); border-left: 3px solid var(--gold); border-radius: 12px; padding: 16px 18px; margin-bottom: 14px; font-size: 15px; font-weight: 700; color: var(--text); line-height: 1.5; }
@@ -1091,12 +1097,20 @@ function compressImage(file) {
   });
 }
 
+// FIS 檢測共用：loading（轉圈）+ 溫和失敗訊息（後端已 silent retry 503/429）
+function fisLoadingHTML(label) {
+  return '<div class="fis-loading"><span class="fis-spin"></span>' + (label || '分析緊…') + '</div>';
+}
+function fisRetryHTML(retryFnName) {
+  return '<div class="fis-error">⚠️ AI 分析服務暫時繁忙，請再試一次。<button class="fis-retry" onclick="' + retryFnName + '()">再試</button></div>';
+}
+
 async function runFisStep1() {
   if (selectedFiles.length === 0) { alert('Please upload photos and videos first'); return; }
   var result = document.getElementById('fisStep1Result');
   var resultText = document.getElementById('fisStep1Text');
   result.classList.add('show');
-  resultText.innerHTML = '<div class="progress-bar-wrap"><div class="progress-bar-fill" id="pb1"></div></div><div class="progress-text" id="pt1">0%</div>';
+  resultText.innerHTML = fisLoadingHTML('分析緊…（AI 體態檢測）');
   startProgress('pb1', 'pt1', 90000);
 
   // 從影片自動抽取 10 個時間點截圖（10%–100%），只送截圖、永不送影片本身（根治 Gemini error 400）
@@ -1232,7 +1246,7 @@ async function runFisStep1() {
     stopProgress('pb1', 'pt1');
     if (data.error) {
       fisStep1Result = '';
-      resultText.innerHTML = '<div style="color:#ff6666;font-size:13px">錯誤：' + (data.message || data.error) + '</div>';
+      resultText.innerHTML = fisRetryHTML('runFisStep1');
     } else {
       fisStep1Result = data.result || '';
       // 標記已完成第一次自我檢測 → 之後顯示「加入主畫面」banner
@@ -1256,7 +1270,7 @@ async function runFisStep1() {
     }
   } catch(e) {
     stopProgress('pb1', 'pt1');
-    resultText.innerHTML = '<div style="color:#ff6666;font-size:13px">Network error: ' + e.message + '</div>';
+    resultText.innerHTML = fisRetryHTML('runFisStep1');
   }
 }
 
@@ -1267,7 +1281,7 @@ async function runFisStep2() {
   var result = document.getElementById('fisStep2Result');
   var resultText = document.getElementById('fisStep2Text');
   result.classList.add('show');
-  resultText.innerHTML = '<div class="progress-bar-wrap"><div class="progress-bar-fill" id="pb2"></div></div><div class="progress-text" id="pt2">0%</div>';
+  resultText.innerHTML = fisLoadingHTML('分析緊…（生成筋膜線報告）');
   startProgress('pb2', 'pt2', 30000);
   // 單次嘗試：成功返 data，API error / 空結果 / 網絡錯誤一律 throw
   async function attemptStep2() {
@@ -1289,11 +1303,11 @@ async function runFisStep2() {
       data = await attemptStep2();
     }
   } catch (e2) {
-    // 第二次仍失敗先顯示錯誤
+    // 第二次仍失敗先顯示溫和訊息 + 再試掣
     stopProgress('pb2', 'pt2');
     fisParsedData = null;
     fisStep2Result = '';
-    resultText.innerHTML = '<div style="color:#ff6666;font-size:13px">分析暫時失敗：' + (e2.message || 'AI 服務繁忙，請稍後再試') + '</div>';
+    resultText.innerHTML = fisRetryHTML('runFisStep2');
     return;
   }
 

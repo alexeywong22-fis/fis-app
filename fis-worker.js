@@ -268,7 +268,9 @@ return jsonResponse(geminiResult, 502);
 return jsonResponse({ result: geminiResult.text });
 }
 
-async function callGemini(parts, apiKey) {
+// 單次 Gemini 呼叫（prompt / body / 解析同原本一致）。加 per-fetch timeout，
+// 並標記 retryable：網絡錯誤 / 503 / 429 先可重試；400/401/403 等即時返錯。
+async function callGeminiOnce(parts, apiKey, timeoutMs) {
 const endpoint = `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
 const body = {
     contents: [{ parts: parts }],
@@ -277,16 +279,21 @@ const body = {
       maxOutputTokens: 8192
 }
 };
+const ctrl = new AbortController();
+const timer = setTimeout(() => ctrl.abort(), timeoutMs);
 let geminiRes;
 try {
 geminiRes = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
+      body: JSON.stringify(body),
+      signal: ctrl.signal
 });
 } catch (err) {
-return { error: 'Failed to reach Gemini API: ' + err.message };
+clearTimeout(timer);
+return { error: 'Failed to reach Gemini API: ' + err.message, retryable: true };
 }
+clearTimeout(timer);
 if (!geminiRes.ok) {
 const errText = await geminiRes.text();
 let errDetail;
@@ -294,7 +301,8 @@ try { errDetail = JSON.parse(errText); } catch { errDetail = { raw: errText }; }
 return {
       error: 'Gemini API error ' + geminiRes.status,
       status: geminiRes.status,
-      detail: errDetail
+      detail: errDetail,
+      retryable: (geminiRes.status === 503 || geminiRes.status === 429)
 };
 }
 const data = await geminiRes.json();
@@ -306,6 +314,27 @@ if (!text) {
 return { error: 'Gemini returned no text', rawResponse: data };
 }
 return { text };
+}
+
+// Silent retry wrapper：只喺 503/429/網絡錯誤重試，最多 3 次，
+// 指數退避 ~600ms→1.2s→2.4s（+jitter），有總 budget 防 hang。全部失敗返最後一個 error。
+async function callGemini(parts, apiKey) {
+const MAX_ATTEMPTS = 3;
+const BASE_DELAY = 600;            // ms
+const PER_FETCH_TIMEOUT = 15000;   // 每次呼叫上限
+const TOTAL_BUDGET = 25000;        // 總時間上限
+const start = Date.now();
+let last = null;
+for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+const res = await callGeminiOnce(parts, apiKey, PER_FETCH_TIMEOUT);
+if (!res.error) return res;
+last = res;
+if (!res.retryable || attempt === MAX_ATTEMPTS) break;
+const delay = Math.round(BASE_DELAY * Math.pow(2, attempt - 1) * (0.8 + Math.random() * 0.4));
+if (Date.now() - start + delay > TOTAL_BUDGET) break;
+await new Promise(r => setTimeout(r, delay));
+}
+return last;
 }
 
 function uint8ArrayToBase64(uint8Array) {
