@@ -71,6 +71,9 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 @keyframes fisSpin { to { transform: rotate(360deg); } }
 .fis-error { font-size: 13px; color: #f0a0a0; line-height: 1.6; display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
 .fis-retry { background: var(--gold); color: #2a3d63; border: none; border-radius: 8px; padding: 6px 16px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
+/* 性別必選掣 */
+.gender-btn { flex: 1; background: var(--bg4); border: 1px solid var(--gold-dim); color: var(--text); border-radius: 10px; padding: 12px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; }
+.gender-btn.sel { background: var(--gold); color: #2a3d63; border-color: var(--gold); }
 /* 新用戶引導頁 */
 #onboarding { padding: 48px 24px 60px; justify-content: flex-start; overflow-y: auto; }
 .ob-q { background: var(--bg3); border: 1px solid var(--gold-dim); border-left: 3px solid var(--gold); border-radius: 12px; padding: 16px 18px; margin-bottom: 14px; font-size: 15px; font-weight: 700; color: var(--text); line-height: 1.5; }
@@ -253,7 +256,12 @@ textarea.sym { width: 100%; background: var(--bg3); border: 1px solid rgba(255,2
       <div class="step-num">2</div>
       <div style="flex:1">
         <div class="step-title">AI分析體態特徵</div>
-        <div class="step-desc">揀齊 4 張相片先可以開始</div>
+        <div class="step-desc">揀齊 4 張相片 + 性別先可以開始</div>
+        <div style="margin:10px 0 6px;font-size:12px;color:var(--gold)">性別（必選 · 只用嚟生成針對性報告）</div>
+        <div style="display:flex;gap:10px;margin-bottom:12px">
+          <button type="button" class="gender-btn" id="btn-gender-m">👨 男</button>
+          <button type="button" class="gender-btn" id="btn-gender-f">👩 女</button>
+        </div>
         <button class="btn-gold" id="btn-fis-step1" disabled style="opacity:.5">開始體態分析</button>
         <div class="ai-result" id="fisStep1Result">
           <div class="ai-result-title">體態觀察結果</div>
@@ -851,6 +859,7 @@ function backFromLegal() { goTo(window.__legalReturn || 'home'); }
     }
   }
 var selectedFiles = [];
+var fisGender = null;   // '男' / '女'，client-side only（只用嚟 render 報告，今晚唔送 Worker/D1）
 var fisStep1Result = '';
 var fisStep2Result = '';
 var selectedPart = '';
@@ -955,20 +964,17 @@ function bindAll() {
   var fisFiles = document.getElementById('fisFiles');
   if (fisFiles) { fisFiles.addEventListener('change', function() {
     selectedFiles = Array.from(this.files);
-    var el = document.getElementById('fileCount');
-    var btn = document.getElementById('btn-fis-step1');
-    var heic = selectedFiles.filter(isHeic);
-    var photos = selectedFiles.filter(function(f) { return f.type && f.type.startsWith('image/') && !isHeic(f); });
-    var ready = (heic.length === 0 && photos.length >= 4);
-    if (btn) { btn.disabled = !ready; btn.style.opacity = ready ? '1' : '.5'; }
-    if (el) {
-      var msg = '已選 ' + photos.length + '/4 張相' + (ready ? ' ✓ 可以開始' : '（需揀齊 4 張：① 正面 ② 側面 ③ 背面 ④ 前彎側面）');
-      if (heic.length > 0) {
-        msg += '<br><span style="color:#ff6666">⚠️ 偵測到 ' + heic.length + ' 個 HEIC/HEIF 檔，多數裝置無法分析。請先轉成 JPG／PNG 再上載（iPhone：設定 → 相機 → 格式 → 「最相容」）。</span>';
-      }
-      el.innerHTML = msg;
-    }
+    fisRefreshStart();
   }); }
+  var gm = document.getElementById('btn-gender-m'), gf = document.getElementById('btn-gender-f');
+  function pickGender(g) {
+    fisGender = g;
+    if (gm) gm.classList.toggle('sel', g === '男');
+    if (gf) gf.classList.toggle('sel', g === '女');
+    fisRefreshStart();
+  }
+  if (gm) gm.addEventListener('click', function() { pickGender('男'); });
+  if (gf) gf.addEventListener('click', function() { pickGender('女'); });
 
   var btnFisStep1 = document.getElementById('btn-fis-step1'); if (btnFisStep1) { btnFisStep1.addEventListener('click', runFisStep1); }
   var btnFisStep2 = document.getElementById('btn-fis-step2'); if (btnFisStep2) { btnFisStep2.addEventListener('click', runFisStep2); }
@@ -1137,12 +1143,30 @@ async function aiCallWithRetry(resultText, attemptFn, retryFnName) {
   }
 }
 
+// 4 張相齊 AND 揀咗性別先 enable「開始體態分析」
+function fisRefreshStart() {
+  var el = document.getElementById('fileCount');
+  var btn = document.getElementById('btn-fis-step1');
+  var heic = selectedFiles.filter(isHeic);
+  var photos = selectedFiles.filter(function(f) { return f.type && f.type.startsWith('image/') && !isHeic(f); });
+  var ready = (heic.length === 0 && photos.length >= 4 && !!fisGender);
+  if (btn) { btn.disabled = !ready; btn.style.opacity = ready ? '1' : '.5'; }
+  if (el) {
+    var msg = '已選 ' + photos.length + '/4 張相　·　' + (fisGender ? ('性別：' + fisGender) : '未揀性別') + (ready ? '　✓ 可以開始' : '');
+    if (heic.length > 0) {
+      msg += '<br><span style="color:#ff6666">⚠️ 偵測到 ' + heic.length + ' 個 HEIC/HEIF 檔，多數裝置無法分析。請先轉成 JPG／PNG 再上載（iPhone：設定 → 相機 → 格式 → 「最相容」）。</span>';
+    }
+    el.innerHTML = msg;
+  }
+}
+
 async function runFisStep1() {
   // 相片版：4 張全必需（① 正面 ② 側面 ③ 背面 ④ 站姿前彎側面）
   var photos = selectedFiles.filter(function(f) { return f.type && f.type.startsWith('image/') && !isHeic(f); });
   var heicFiles = selectedFiles.filter(isHeic);
   if (heicFiles.length > 0) { alert('偵測到 HEIC/HEIF 相片，請先轉成 JPG／PNG 再上載（iPhone：設定 → 相機 → 格式 →「最相容」）'); return; }
   if (photos.length < 4) { alert('請揀齊 4 張相：① 正面 ② 側面 ③ 背面 ④ 站姿前彎（側面）'); return; }
+  if (!fisGender) { alert('請先揀性別（男／女），用嚟生成針對性報告'); return; }
   var result = document.getElementById('fisStep1Result');
   var resultText = document.getElementById('fisStep1Text');
   result.classList.add('show');
@@ -1232,6 +1256,25 @@ async function runFisStep2() {
 }
 
 // ── FIS STEP 3 ────────────────────────────────────────────────────────────────
+// 性別 × 五大筋膜線狀態 針對性文案（原字照用）。key = 線名（同 lineKeys.name）。red=優先關注/綠=狀態良好。
+var FIS_LINE_COPY = {
+  '深前線': { ch: '第三章',
+    '男': { red: '深層核心難啟動,腰腹唔夠緊致、發力根基唔穩,大腿內側(內收肌)亦難發力。', green: '深層核心啟動得好,腰腹有緊緻底子、發力根基穩。' },
+    '女': { red: '深層核心收唔緊,小腹易凸、骨盆唔穩,卡住平坦緊緻小腹。', green: '深層核心收得實,小腹平坦底子好、骨盆穩。' } },
+  '側線': { ch: '第三章',
+    '男': { red: '臀中肌(上臀/側臀)難發展,深蹲易膝內扣、骨盆唔穩、側臀凹。', green: '臀中肌(上臀/側臀)啟動好,骨盆穩、深蹲根基靚、側臀有型。' },
+    '女': { red: '上臀(臀中肌)難發展,臀側易凹(hip dip)、翹臀寬度練唔起。', green: '上臀(臀中肌)發展得好,翹臀寬度同骨盆線條有優勢。' } },
+  '螺旋線': { ch: '第四章',
+    '男': { red: '左右肌肉易唔平衡;前鋸肌帶動唔到肩胛,背闊肌難發展,連帶中背菱形肌、腹斜肌(腰線)都難練。', green: '前鋸肌、腹斜肌聯動好,旋轉力強、肩胛穩,背闊肌同腰線都好練。' },
+    '女': { red: '腹斜肌聯動差,馬甲線/纖腰難出;前鋸肌→肩胛唔穩,背闊肌難發展,易高低膊。', green: '腹斜肌聯動好,馬甲線/纖腰有底子、體態對稱、肩胛穩。' } },
+  '淺背線': { ch: '第五章',
+    '男': { red: '後腿(膕繩肌)難發展,練極唔起、硬拉發力差、易圓背。', green: '後鏈強,後腿(膕繩肌)底子好、硬拉發力穩、背線挺拔。' },
+    '女': { red: '下臀(翹臀下緣)難建立,後鏈弱、臀部易扁平下垂。', green: '後鏈傳導好,下臀(翹臀下緣)有底子、臀型托得起。' } },
+  '淺前線': { ch: '第六章',
+    '男': { red: '腹直肌(六塊)難練出,大腿前側中段亦易凹。', green: '前鏈均衡,腹直肌(六塊)易練、大腿前側飽滿。' },
+    '女': { red: '腹部中段易鬆,平坦小腹同腹中線線條難維持。', green: '前鏈穩,平坦小腹同腹中線線條有底子。' } }
+};
+
 async function runFisStep3() {
   if (!fisStep2Result) { alert('Please complete step 3 report card generation first'); return; }
 
@@ -1381,6 +1424,20 @@ async function runFisStep3() {
       '</div>';
     row.appendChild(stageCell);
     card.appendChild(row);
+
+    // ── 性別 × 狀態 針對性文案 + 課程 CTA（金色），緊貼該線狀態 row 下面 ──
+    var copyEntry = (typeof FIS_LINE_COPY !== 'undefined') ? FIS_LINE_COPY[lk.name] : null;
+    if (copyEntry && fisGender && copyEntry[fisGender]) {
+      var ct  = copyEntry[fisGender][isAlert ? 'red' : 'green'] || '';
+      var cta = isAlert
+        ? '→ ' + copyEntry.ch + '睇通原理 + 第九章對應精準動作。'
+        : '→ ' + copyEntry.ch + '深化原理 + 第九章進階動作。';
+      var copyRow = document.createElement('div');
+      copyRow.className = 'fis-anim';
+      copyRow.style.cssText = 'padding:9px 18px 13px;background:' + bg + ';border-bottom:1px solid rgba(0,120,200,0.1);font-size:11px;line-height:1.75;animation-delay:' + (0.11 + idx * 0.06) + 's';
+      copyRow.innerHTML = '<span style="color:#cfe3ff">' + ct + '</span> <span style="color:#ffc845;font-weight:700">' + cta + '</span>';
+      card.appendChild(copyRow);
+    }
   });
 
   /* ── 三個建議框 ── */
