@@ -218,6 +218,7 @@ function renderStudent(d){
   const data=d.dataSection||{};
   const rx=d.rxSection||{};
   const weekly=d.weeklySection||{};
+  const fascia=d.fasciaSelfAssessment||{};
 
   // Compensation pill
   const compRate=parseInt(s.backCompensationRate)||0;
@@ -413,6 +414,35 @@ function renderStudent(d){
         </tbody>
       </table>
     </div></div>`;
+  }
+
+  // ── 06 · 筋膜線自我檢測（FIS 自我檢測，讀 fasciaSelfAssessment）──────────
+  const faLatest=fascia.latest||null;
+  const faLines=(faLatest&&faLatest.fascialLines)||null;
+  if((fascia.total||0)>0 || faLines){
+    const lineMap=[['deepFrontLine','深前線'],['lateralLine','側線'],['spiralLine','螺旋線'],['superficialBackLine','淺背線'],['superficialFrontLine','淺前線']];
+    html+=`<div class="section"><div class="section-title">06 · 筋膜線自我檢測（FIS）</div>
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:12px">
+      <div class="stat-card" style="flex:0 0 auto"><div class="stat-num">${fascia.total||0}</div><div class="stat-label">FIS 自測次數</div></div>
+      <div style="font-size:11px;color:var(--dim);font-family:'DM Mono',monospace">最近檢測：${(fascia.latestAt||'').substring(0,10)||'—'}</div>
+    </div>`;
+    if(faLines){
+      html+=`<div class="hotspot-list">
+      ${lineMap.map(([k,name])=>{
+        const v=faLines[k]||{};
+        const st=v.status||'—';
+        const cls=st==='優先關注'?'pill-red':st==='狀態良好'?'pill-green':'pill-gold';
+        return `<div class="hotspot-item">
+          <div class="hotspot-part">${name}</div>
+          <span class="pill ${cls}">${st}</span>
+          <div class="hotspot-count">${v.stage||'—'}</div>
+        </div>`;
+      }).join('')}
+    </div>`;
+    } else {
+      html+=`<div style="font-size:12px;color:var(--dim)">已有 ${fascia.total} 次 FIS 自我檢測，但最近一次未有可解析嘅五大線數據。</div>`;
+    }
+    html+=`</div>`;
   }
 
   document.getElementById('mainPanel').innerHTML=html;

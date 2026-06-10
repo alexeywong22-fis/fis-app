@@ -897,13 +897,27 @@ const weeklyResult = await env.DB.prepare(`
       FROM weekly_assessments WHERE user_id = ?
       ORDER BY week_date DESC LIMIT 12
     `).bind(user_id).all();
+// FIS 筋膜線自我檢測（fascia_tests，由 /api/fascia-test/save 寫入）—— 純新增，唔影響上面 functional_tests
+const fasciaResult = await env.DB.prepare(`
+      SELECT id, created_at,
+             deep_front_line, lateral_line, spiral_line,
+             superficial_back_line, superficial_front_line, ai_parsed
+      FROM fascia_tests WHERE user_id = ?
+      ORDER BY created_at DESC LIMIT 10
+    `).bind(user_id).all();
+const fasciaTests = fasciaResult.results || [];
+let fasciaLatestParsed = null;
+if (fasciaTests[0] && fasciaTests[0].ai_parsed) {
+  try { fasciaLatestParsed = JSON.parse(fasciaTests[0].ai_parsed); } catch (e) { fasciaLatestParsed = null; }
+}
 return jsonResponse({
 user,
       summary: { totalTrainingDays: user.total_training_days || totalLogs, totalFunctionalTests: functionalTests.length, totalPainDiagnoses: painDiagnoses.length, avgMuscleActivation: avgActivation, backCompensationRate: compensationRate !== null ? compensationRate + '%' : null, painHotspots },
       dataSection: { logs, stats: { avgActivation, compensationRate } },
       fisSection: { baseline: functionalTests[functionalTests.length-1]||null, latest: functionalTests[0]||null, history: functionalTests },
       rxSection: { diagnoses: painDiagnoses, hotspots: painHotspots, active: painDiagnoses.filter(p=>p.status==='active').length },
-      weeklySection: { assessments: weeklyResult.results || [] }
+      weeklySection: { assessments: weeklyResult.results || [] },
+      fasciaSelfAssessment: { total: fasciaTests.length, latestAt: (fasciaTests[0] && fasciaTests[0].created_at) || null, latest: fasciaLatestParsed, history: fasciaTests }
 });
 } catch (e) { return jsonResponse({ error: e.message }, 500); }
 }
