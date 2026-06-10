@@ -1105,21 +1105,34 @@ function fisRetryHTML(retryFnName) {
   return '<div class="fis-error">⚠️ AI 服務一時繁忙（唔係 app 壞咗），請撳「再試」。<button class="fis-retry" onclick="' + retryFnName + '()">再試</button></div>';
 }
 
-// 統一 AI 呼叫：第一次失敗 → 顯示「自動重試緊…」→ 隔 3 秒靜靜重試 1 次 →
-// 仍失敗 → 顯示溫和訊息 + 再試掣（畫面永不出 Gemini/API/503/error 等技術字眼）。
-// 成功返 attemptFn 嘅值；最終失敗 helper 自行 render 錯誤 UI 並返 null。
+// 統一 AI 呼叫（4 個入口共用）：
+// - 等待期顯示有預期、有安撫嘅 spinner 文字；~30s 仲未返就升級安撫。
+// - 100s 安全網（≥ 後端最大 budget ~95s，唔殺死遲返嘅成功）：真係過 100s 冇回應先 abort。
+// - 第一次（非 abort）失敗 → 隔 3 秒靜靜自動重試 1 次；仍失敗 → 溫和訊息 + 再試掣。
+// 畫面永不出 Gemini/API/503/error 等技術字眼。成功返 attemptFn 值；最終失敗 render 錯誤 UI 並返 null。
 async function aiCallWithRetry(resultText, attemptFn, retryFnName) {
+  var DEADLINE_MS = 100000;   // 安全網，≥ 後端最大 budget ~95s（唔好用短 timeout 殺死遲返嘅成功）
+  var ctrl = new AbortController();
+  var killer = setTimeout(function() { ctrl.abort(); }, DEADLINE_MS);
+  resultText.innerHTML = fisLoadingHTML('AI 分析緊…（今晚 AI 較繁忙，可能要 20–40 秒，請稍候）');
+  var upgrade = setTimeout(function() {
+    resultText.innerHTML = fisLoadingHTML('仲喺度處理，多謝耐心…');
+  }, 30000);
   try {
-    return await attemptFn();
-  } catch (e1) {
-    resultText.innerHTML = '<div class="fis-loading"><span class="fis-spin"></span>AI 繁忙，自動重試緊…</div>';
-    await new Promise(function(r) { setTimeout(r, 3000); });
     try {
-      return await attemptFn();
-    } catch (e2) {
-      resultText.innerHTML = fisRetryHTML(retryFnName);
-      return null;
+      return await attemptFn(ctrl.signal);
+    } catch (e1) {
+      if (ctrl.signal.aborted) throw e1;   // 已過 100s 安全網 → 唔自動重試，直接落最終錯誤
+      resultText.innerHTML = fisLoadingHTML('AI 繁忙，自動重試緊…');
+      await new Promise(function(r) { setTimeout(r, 3000); });
+      return await attemptFn(ctrl.signal);
     }
+  } catch (e2) {
+    resultText.innerHTML = fisRetryHTML(retryFnName);
+    return null;
+  } finally {
+    clearTimeout(killer);
+    clearTimeout(upgrade);
   }
 }
 
@@ -1254,11 +1267,12 @@ async function runFisStep1() {
       '5. 注意事項：說明哪些常見訓練動作可能加劇問題\n\n' +
       '請用繁體中文（香港口語書面語）回答，條理清晰，實用易懂。';
 
-  async function attemptStep1() {
+  async function attemptStep1(signal) {
     var res = await fetch(API_BASE + '/api/fis-step1', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ images: imageBase64List, prompt: prompt })
+      body: JSON.stringify({ images: imageBase64List, prompt: prompt }),
+      signal: signal
     });
     var data = await res.json();
     if (data.error || !data.result) { throw new Error(data.message || data.error || 'AI busy'); }
@@ -1299,8 +1313,8 @@ async function runFisStep2() {
   resultText.innerHTML = fisLoadingHTML('分析緊…（生成筋膜線報告）');
   startProgress('pb2', 'pt2', 30000);
   // 單次嘗試：成功返 data，API error / 空結果 / 網絡錯誤一律 throw
-  async function attemptStep2() {
-    var res = await fetch(API_BASE + '/api/fis-step2', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({step1Result: fisStep1Result}) });
+  async function attemptStep2(signal) {
+    var res = await fetch(API_BASE + '/api/fis-step2', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({step1Result: fisStep1Result}), signal: signal });
     var data = await res.json();
     if (data.error || (!data.parsed && !data.result)) {
       throw new Error(data.message || data.error || 'AI 服務繁忙，請稍後再試');
@@ -1594,8 +1608,8 @@ async function analyzeProgress() {
   startProgress('pb-prog', 'pt-prog', 10000);
 
   // 單次嘗試：成功返 result 文字，API error / 空結果 / 網絡錯誤一律 throw
-  async function attemptProgress() {
-    var res = await fetch(API_BASE + '/api/progress', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({rating: ratings.r1, backPain: ratings.r2, tensionSpeed: ratings.r3}) });
+  async function attemptProgress(signal) {
+    var res = await fetch(API_BASE + '/api/progress', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({rating: ratings.r1, backPain: ratings.r2, tensionSpeed: ratings.r3}), signal: signal });
     var data = await res.json();
     if (data.error || !data.result) {
       throw new Error(data.message || data.error || 'AI 服務繁忙，請稍後再試');
@@ -1638,8 +1652,8 @@ async function analyzePain() {
   startProgress('pb-pain', 'pt-pain', 10000);
 
   // 單次嘗試：成功返 result 文字，API error / 空結果 / 網絡錯誤一律 throw
-  async function attemptPain() {
-    var res = await fetch(API_BASE + '/api/pain', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({bodyPart: selectedPart, symptom: symptom}) });
+  async function attemptPain(signal) {
+    var res = await fetch(API_BASE + '/api/pain', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({bodyPart: selectedPart, symptom: symptom}), signal: signal });
     var data = await res.json();
     if (data.error || !data.result) {
       throw new Error(data.message || data.error || 'AI 服務繁忙，請稍後再試');
