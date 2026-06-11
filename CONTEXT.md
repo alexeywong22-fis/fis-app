@@ -138,6 +138,7 @@
 - [x] AI 容錯 retry：前端 `runFisStep2`/`analyzePain`/`analyzeProgress` 各 1 次重試；**後端 `callGemini` 亦加 silent retry（503/429/網絡，3 次指數退避+timeout）覆蓋 fis-step1/2+pain+progress**（`527c7f2`）。
 - [ ] 名稱驗證放寬支援中文（目前 worker 限 `^[a-zA-Z0-9_]{3,20}$`）。
 - [ ] **將 `SKOOL_URL`（index.html）由 `YOUR_SKOOL_URL` 換成真實 SKool 連結**（報告卡 CTA + 主頁卡共用）。
+- [ ] **Gemini model fallback（Stage 1.5，public 推之前先加）**：⚠️ 而家**故意唔加** model fallback（保 FIS 判定一致性 —— 換 model 會令五大線分級漂移）。public launch 前先加：屆時實測幾個 candidate fallback model（例如 `gemini-2.0-flash` 等），揀**對五大線分級漂移最細**嗰個做 503/429 兜底，再上。原則同 `f20c134`（temp 0.1 求 determinism）一致：寧可短暫 503 都唔好靜靜換 model 搞到結果跳。
 - [ ] **教練 auth Stage 2**：coach.html 接新 `/api/coach/auth/login`（存 token 唔存密碼）、保護頁面用 `/me` 驗 token；`corsHeaders()` 加 `Authorization`；之後逐步淘汰舊 `env[username]` 共享密碼登入。
 - [ ] 教練 auth 加強（按需）：admin 管理教練 UI、session 撤銷/列表、登入失敗 rate-limit；hash 升級 WASM argon2/bcrypt（已留 `hash_version`）。
 - [ ] **清 `handleFisStep3` 死碼（Stage 2，launch 前唔好掂 worker）**：`fis-worker.js:466-475` 個 handler + router `path === '/api/fis-step3'`（line 96-97）。前端 `runFisStep3()`（"生成視覺化圖片" 掣）係 client 自己 render 報告卡，從來冇 fetch `/api/fis-step3`，個 response `imageUrl` 寫死 `https://…github.io/fis-app/fis-bg.png`（全 repo 唯一寫死 `/fis-app/` 嘅實際 code）永遠冇人用 → 死碼。搬 root domain **零影響**，所以拖到 Stage 2 清，避免 launch 前重新部署 worker。
