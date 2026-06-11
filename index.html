@@ -812,18 +812,25 @@ function maybeShowA2HS() {
   var standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
   if (standalone) return;
 
-  var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent || '');
+  var ua = navigator.userAgent || '';
+  var isIOS = /iphone|ipad|ipod/i.test(ua);
+  var isInApp = /Instagram|FBAN|FBAV|FB_IAB|Messenger|Line\//i.test(ua);
   var textEl = document.getElementById('a2hs-text');
   var installBtn = document.getElementById('a2hs-install');
 
-  if (fisDeferredPrompt && !isIOS) {
+  if (isInApp) {
+    // IG/FB/Line/Messenger 內置瀏覽器裝唔到 → 先去真瀏覽器
+    textEl.innerHTML = '📲 想加到主畫面？請撳<strong>右上角 ⋯</strong> →「<strong>喺瀏覽器開啟</strong>」，再加到主畫面';
+    installBtn.style.display = 'none';
+  } else if (fisDeferredPrompt && !isIOS) {
     textEl.innerHTML = '📲 將 <strong>FIS 綜合系統</strong> 加到主畫面，隨時快速使用';
     installBtn.style.display = '';
   } else if (isIOS) {
     textEl.innerHTML = '📲 將 <strong>FIS</strong> 加到主畫面：撳底部 <strong>分享 ⎙</strong> →「加入主畫面」';
     installBtn.style.display = 'none';
   } else {
-    textEl.innerHTML = '📲 想快速使用？喺瀏覽器選單揀「加到主畫面 / 安裝」';
+    // Android（未收到 beforeinstallprompt）
+    textEl.innerHTML = '📲 將 FIS 加到主畫面：撳 <strong>⋮</strong> →「安裝應用程式」';
     installBtn.style.display = 'none';
   }
   banner.classList.add('show');
