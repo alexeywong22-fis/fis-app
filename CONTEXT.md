@@ -85,6 +85,18 @@
 
 ---
 
+## 2c. PWA 四項改善（2026-06-12）
+
+| Commit | 內容 |
+|---|---|
+| `963e21f` | **A · 修主畫面圖示載入慢**：原 `fis-icon.png`（1024²/1.6MB）令 add-to-home 圖示 4–8 秒先出。用 macOS `sips` 縮出 `icon-180/192/512.png`（62KB/70KB/410KB）。`index.html` head：apple-touch-icon→icon-180、icon→icon-192、manifest 入 link。`manifest.json`：`start_url`/`scope` 改**相對 `.`**、icons 換細檔（192/512 any + 512 maskable）。⚠️ 機器冇 pngquant/optipng，只 sips |
+| `dc93bb1` | **C · 加入主畫面提示偵測 in-app 瀏覽器**：`maybeShowA2HS()` 用 UA 分流——IG/FB/Messenger/Line（`/Instagram\|FBAN\|FBAV\|FB_IAB\|Messenger\|Line\//`）→「右上角 ⋯ → 喺瀏覽器開啟」（內置瀏覽器裝唔到 PWA）;有 `beforeinstallprompt` 且非 iOS→安裝掣;iOS→「分享 ⎙ → 加入主畫面」;其餘 Android→「⋮ → 安裝應用程式」。純前端 |
+| `e0ce834` | **B · Service Worker（precache + 安全更新提示）**：新增 `sw.js`——HTML **network-first**（線上永遠攞最新、唔鎖舊版）+ 靜態 **cache-first**;precache app shell（`./` `./index.html` `./manifest.json` 3 icon）;`CACHE='fis-v1'` 版本號 + activate 刪舊 cache + clientsClaim;**唔自動 skipWaiting**（等用家撳掣先換版）;同源先掂、`/api/`＋跨域（Gemini/Worker/字型）唔掂;**全相對路徑**（日後搬 root domain 唔使改）;檔頭留 **kill switch** 註解。`index.html`：`register('./sw.js')` + `updatefound`→`statechange`(installed+有 controller)→彈 `#sw-update-bar`「有新版本，撳一下更新」→撳→`postMessage SKIP_WAITING`→`controllerchange`→reload 一次。⚠️ **Alexey 真機試更新提示** |
+
+> **D · Gemini 錯誤診斷**（無 commit）：fis-step1/2 偶發錯誤確認係 Google 端 **503「high demand」過載**（外部、transient，**唔關 quota／唔係 429**）;查時健康 200。已有 `callGemini` 503/429/網絡 retry 兜住，毋須建 debug。
+
+---
+
 ## 2b. GitHub Actions 自動部署（2026-06-06 設定完成）
 
 - `.github/workflows/deploy.yml`（**經 GitHub 網頁建立**，commit `9aa53f3`）：push 到 `main` → `cloudflare/wrangler-action@v3` 自動部署 fis-app worker。✅ 已驗證綠剔（Deploy Worker #6）。
