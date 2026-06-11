@@ -1581,6 +1581,14 @@ async function runFisStep3() {
     'display:flex;flex-direction:column;gap:8px;' +
     'animation-delay:0.45s';
 
+  // 動態「訓練起點」：按報告卡實際 5 條線 tier 計（唔再寫死🔴🟡）
+  var _tiers = lineKeys.map(function(lk) { var st = (lines[lk.key] || {}).status; return st === '優先關注' ? 'red' : st === '發展中' ? 'mid' : 'green'; });
+  var _hasRed = _tiers.indexOf('red') >= 0;
+  var _hasMid = _tiers.indexOf('mid') >= 0;
+  var dynamicStartingPoint = _hasRed ? '由🔴／🟡線 Stage 1 起'
+    : _hasMid ? '由🟡線 Stage 1 起'
+    : '全線狀態良好,由🟢線進階動作起';
+
   recKeys.forEach(function(rk, ri) {
     var box = document.createElement('div');
     box.className = 'fis-anim';
@@ -1609,7 +1617,7 @@ async function runFisStep3() {
     bodyEl.style.cssText =
       'font-size:12px;color:#c0dcf8;line-height:1.65;word-break:break-word;' +
       'text-shadow:0 0 3px rgba(0,150,255,0.2)';
-    bodyEl.innerHTML = md(recs[rk.key] || '—');
+    bodyEl.innerHTML = md(rk.key === 'startingPoint' ? dynamicStartingPoint : (recs[rk.key] || '—'));
 
     textWrap.appendChild(lbl);
     textWrap.appendChild(bodyEl);
