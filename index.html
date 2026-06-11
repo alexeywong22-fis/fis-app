@@ -765,6 +765,14 @@ textarea.sym { width: 100%; background: var(--bg3); border: 1px solid rgba(255,2
   </div>
 </div>
 
+<!-- Service Worker 更新提示 bar -->
+<div id="sw-update-bar" style="display:none;position:fixed;left:12px;right:12px;bottom:12px;z-index:2500;background:var(--bg3);border:1px solid var(--gold-dim);border-radius:14px;padding:12px 16px;box-shadow:0 8px 28px rgba(0,0,0,0.45)">
+  <div style="display:flex;align-items:center;gap:12px">
+    <div style="flex:1;font-size:13px;color:var(--text)">✨ 有新版本，撳一下更新</div>
+    <button id="sw-update-btn" class="btn-gold" style="width:auto;margin:0;padding:8px 16px">更新</button>
+  </div>
+</div>
+
 <!-- 加入主畫面 banner（完成第一次自我檢測後顯示） -->
 <div class="a2hs-banner" id="a2hs-banner">
   <div class="a2hs-row">
@@ -2205,6 +2213,37 @@ async function loadHistory() {
     }
     list.innerHTML = html;
   } catch(e) {}
+}
+
+// ── Service Worker：註冊 + 安全更新提示（相對路徑，network-first，唔鎖舊版）──
+function fisShowUpdate(reg) {
+  var bar = document.getElementById('sw-update-bar');
+  if (!bar) return;
+  bar.style.display = 'block';
+  var btn = document.getElementById('sw-update-btn');
+  if (btn) btn.onclick = function() {
+    if (reg && reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });  // 用家撳掣先 skipWaiting
+    bar.style.display = 'none';
+  };
+}
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('./sw.js').then(function(reg) {
+      reg.addEventListener('updatefound', function() {
+        var nw = reg.installing;
+        if (!nw) return;
+        nw.addEventListener('statechange', function() {
+          // 有舊 controller = 真‧更新（唔係首次安裝）→ 先彈提示，唔自動換
+          if (nw.state === 'installed' && navigator.serviceWorker.controller) fisShowUpdate(reg);
+        });
+      });
+    }).catch(function() {});
+    var swReloaded = false;
+    navigator.serviceWorker.addEventListener('controllerchange', function() {
+      if (swReloaded) return; swReloaded = true;
+      window.location.reload();   // 撳更新 → skipWaiting → controller 換 → reload 一次攞新版
+    });
+  });
 }
 
 window.addEventListener('DOMContentLoaded', function() {
