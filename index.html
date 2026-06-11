@@ -74,6 +74,24 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 /* 性別必選掣 */
 .gender-btn { flex: 1; background: var(--bg4); border: 1px solid var(--gold-dim); color: var(--text); border-radius: 10px; padding: 12px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; }
 .gender-btn.sel { background: var(--gold); color: #2a3d63; border-color: var(--gold); }
+/* Email 帳戶 UI */
+.fis-acct-state { font-size: 11px; color: var(--text-dim); margin-top: 8px; }
+.fis-acct-state a { color: var(--gold-dim); text-decoration: underline; cursor: pointer; }
+.fis-save-card { margin-top: 16px; background: rgba(255,200,69,0.08); border: 1px solid var(--gold-dim); border-radius: 12px; padding: 16px; }
+.fis-save-title { font-size: 15px; font-weight: 700; color: var(--gold); margin-bottom: 4px; }
+.fis-save-sub { font-size: 12px; color: var(--text-dim); line-height: 1.6; margin-bottom: 12px; }
+.fis-save-btns { display: flex; gap: 10px; }
+.fis-save-btns button { flex: 1; border: none; border-radius: 10px; padding: 11px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
+.fis-save-reg { background: var(--gold); color: #2a3d63; }
+.fis-save-later { background: rgba(255,255,255,0.08); color: var(--text-dim); }
+.auth-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.auth-modal { width: 100%; max-width: 340px; background: var(--bg3); border: 1px solid var(--gold-dim); border-radius: 16px; padding: 22px; }
+.auth-modal-title { font-size: 17px; font-weight: 800; color: var(--text); margin-bottom: 14px; }
+.auth-modal-input { width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--gold-dim); border-radius: 10px; padding: 11px 12px; color: var(--text); font-family: inherit; font-size: 14px; outline: none; margin-bottom: 10px; }
+.auth-modal-input:focus { border-color: var(--gold); }
+.auth-modal-msg { font-size: 12px; color: #ff8888; min-height: 16px; margin-bottom: 8px; }
+.auth-modal-foot { margin-top: 12px; text-align: center; font-size: 12px; color: var(--text-dim); }
+.auth-modal-foot a { color: var(--gold-dim); text-decoration: underline; cursor: pointer; }
 /* 新用戶引導頁 */
 #onboarding { padding: 48px 24px 60px; justify-content: flex-start; overflow-y: auto; }
 .ob-q { background: var(--bg3); border: 1px solid var(--gold-dim); border-left: 3px solid var(--gold); border-radius: 12px; padding: 16px 18px; margin-bottom: 14px; font-size: 15px; font-weight: 700; color: var(--text); line-height: 1.5; }
@@ -200,6 +218,7 @@ textarea.sym { width: 100%; background: var(--bg3); border: 1px solid rgba(255,2
     <div class="home-title">訓練<span>工具</span></div>
     <div class="home-sub" id="home-sub">TRAINING TOOLKIT - ALEXEY WONG</div>
     <div class="home-username" id="home-username"></div>
+    <div class="fis-acct-state" id="fis-acct-state"></div>
     <div class="home-line"></div>
   </div>
   <div class="module-grid">
@@ -734,6 +753,18 @@ textarea.sym { width: 100%; background: var(--bg3); border: 1px solid rgba(255,2
   </div>
 </div>
 
+<!-- Email 帳戶 modal（v1 密碼）-->
+<div class="auth-overlay" id="auth-modal" style="display:none">
+  <div class="auth-modal">
+    <div class="auth-modal-title" id="auth-modal-title">註冊帳戶</div>
+    <input type="email" id="auth-email" class="auth-modal-input" placeholder="email" autocomplete="email">
+    <input type="password" id="auth-pass" class="auth-modal-input" placeholder="密碼（最少 8 位）" autocomplete="current-password">
+    <div class="auth-modal-msg" id="auth-msg"></div>
+    <button class="btn-gold" id="auth-submit" style="width:100%">確認</button>
+    <div class="auth-modal-foot"><a id="auth-toggle"></a>　·　<a id="auth-cancel">取消</a></div>
+  </div>
+</div>
+
 <!-- 加入主畫面 banner（完成第一次自我檢測後顯示） -->
 <div class="a2hs-banner" id="a2hs-banner">
   <div class="a2hs-row">
@@ -878,6 +909,95 @@ function goTo(screenId) {
 
 function bindNav(id, dest) { var el = document.getElementById(id); if (el) el.addEventListener('click', function(){ goTo(dest); }); }
 
+// ── Email 帳戶登入 v1（密碼，全 body-based）──────────────────────────────────
+var FIS_ACCOUNT = null;
+var authMode = 'register';
+function fisAccountToken() { try { return localStorage.getItem('fis_account_token') || ''; } catch(e) { return ''; } }
+function fisSetSession(token, primaryUserId, email) {
+  try { localStorage.setItem('fis_account_token', token); localStorage.setItem('fis_user_id', primaryUserId); } catch(e) {}
+  window.FIS_USER_ID = primaryUserId;   // 切去 account 嘅 primary_user_id（v1 唔 merge）
+  FIS_ACCOUNT = { email: email, primary_user_id: primaryUserId };
+}
+function fisClearSession() { try { localStorage.removeItem('fis_account_token'); } catch(e) {} FIS_ACCOUNT = null; }
+
+function renderAccountState() {
+  var el = document.getElementById('fis-acct-state');
+  if (!el) return;
+  if (FIS_ACCOUNT && FIS_ACCOUNT.email) {
+    el.innerHTML = '✓ 已登入：' + FIS_ACCOUNT.email + '　<a id="fis-acct-logout">登出</a>';
+    var lo = document.getElementById('fis-acct-logout'); if (lo) lo.addEventListener('click', accountLogout);
+  } else {
+    el.innerHTML = '<a id="fis-acct-login">登入 / 註冊帳戶</a>（跨裝置同步）';
+    var li = document.getElementById('fis-acct-login'); if (li) li.addEventListener('click', function() { openAuthModal('login'); });
+  }
+}
+
+function openAuthModal(mode) {
+  authMode = mode || 'register';
+  var m = document.getElementById('auth-modal');
+  var title = document.getElementById('auth-modal-title');
+  var toggle = document.getElementById('auth-toggle');
+  var msg = document.getElementById('auth-msg');
+  var emailI = document.getElementById('auth-email');
+  var passI = document.getElementById('auth-pass');
+  if (msg) msg.textContent = '';
+  if (emailI) emailI.value = '';
+  if (passI) passI.value = '';
+  if (title) title.textContent = (authMode === 'register') ? '註冊帳戶' : '登入帳戶';
+  if (toggle) toggle.textContent = (authMode === 'register') ? '已有帳戶？登入' : '未有帳戶？註冊';
+  if (m) m.style.display = 'flex';
+  if (emailI) setTimeout(function() { emailI.focus(); }, 50);
+}
+function closeAuthModal() { var m = document.getElementById('auth-modal'); if (m) m.style.display = 'none'; }
+
+async function accountSubmit() {
+  var email = (document.getElementById('auth-email').value || '').trim().toLowerCase();
+  var password = document.getElementById('auth-pass').value || '';
+  var msg = document.getElementById('auth-msg');
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { msg.textContent = '請輸入有效 email'; return; }
+  if (password.length < 8) { msg.textContent = '密碼最少 8 位'; return; }
+  msg.textContent = '處理緊…';
+  try {
+    var bodyObj = { email: email, password: password };
+    if (authMode === 'register') bodyObj.currentUserId = window.FIS_USER_ID;
+    var r = await fetch(API_BASE + '/api/account/auth/' + authMode, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(bodyObj) });
+    var d = await r.json();
+    if (d && d.success) {
+      fisSetSession(d.token, d.primary_user_id, d.email);
+      closeAuthModal();
+      renderAccountState();
+      var sc = document.getElementById('fis-save-card'); if (sc) sc.style.display = 'none';
+      try { setupUsernameEditor(); } catch(e) {}
+      return;
+    }
+    msg.textContent = (authMode === 'register')
+      ? (d && d.error === 'Email already registered' ? '此 email 已註冊，請改用登入' : '註冊失敗，請檢查資料再試')
+      : 'email 或密碼錯誤';
+  } catch (e) { msg.textContent = '連線失敗，請再試'; }
+}
+
+async function accountLogout() {
+  var t = fisAccountToken();
+  fisClearSession();
+  renderAccountState();
+  if (t) { try { await fetch(API_BASE + '/api/account/auth/logout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: t }) }); } catch(e) {} }
+}
+
+async function accountSessionCheck() {
+  var t = fisAccountToken();
+  if (!t) { renderAccountState(); return; }
+  try {
+    var r = await fetch(API_BASE + '/api/account/auth/me', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: t }) });
+    var d = await r.json();
+    if (d && d.success) {
+      FIS_ACCOUNT = { email: d.email, primary_user_id: d.primary_user_id };
+      window.FIS_USER_ID = d.primary_user_id;
+      try { localStorage.setItem('fis_user_id', d.primary_user_id); } catch(e) {}
+    } else { fisClearSession(); }
+  } catch (e) { /* 離線：保留 token，唔登出 */ }
+  renderAccountState();
+}
+
 function bindAll() {
   var enterBtn = document.getElementById('enterBtn');
   if (enterBtn) { enterBtn.addEventListener('click', function() { try { localStorage.setItem('fis_agreed', '1'); } catch(e) {} goTo('home'); }); }
@@ -975,6 +1095,12 @@ function bindAll() {
   }
   if (gm) gm.addEventListener('click', function() { pickGender('男'); });
   if (gf) gf.addEventListener('click', function() { pickGender('女'); });
+
+  // Email 帳戶 modal 綁定
+  var asub = document.getElementById('auth-submit'); if (asub) asub.addEventListener('click', accountSubmit);
+  var atog = document.getElementById('auth-toggle'); if (atog) atog.addEventListener('click', function() { openAuthModal(authMode === 'register' ? 'login' : 'register'); });
+  var acan = document.getElementById('auth-cancel'); if (acan) acan.addEventListener('click', closeAuthModal);
+  var apass = document.getElementById('auth-pass'); if (apass) apass.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); accountSubmit(); } });
 
   var btnFisStep1 = document.getElementById('btn-fis-step1'); if (btnFisStep1) { btnFisStep1.addEventListener('click', runFisStep1); }
   var btnFisStep2 = document.getElementById('btn-fis-step2'); if (btnFisStep2) { btnFisStep2.addEventListener('click', runFisStep2); }
@@ -1519,6 +1645,22 @@ async function runFisStep3() {
     imageResult.appendChild(cta);
   }
 
+  // 報告卡後：未登入先彈「保存」卡（登入咗唔再彈）
+  var oldSave = document.getElementById('fis-save-card');
+  if (oldSave) oldSave.remove();
+  if (!FIS_ACCOUNT && !fisAccountToken()) {
+    var sv = document.createElement('div');
+    sv.id = 'fis-save-card';
+    sv.className = 'fis-save-card';
+    sv.innerHTML =
+      '<div class="fis-save-title">保存你的筋膜線報告</div>' +
+      '<div class="fis-save-sub">註冊帳戶,即可跨裝置同步,長期追蹤訓練進度。</div>' +
+      '<div class="fis-save-btns"><button class="fis-save-reg" id="fis-save-reg">註冊帳戶</button><button class="fis-save-later" id="fis-save-later">稍後再說</button></div>';
+    imageResult.appendChild(sv);
+    var rb = document.getElementById('fis-save-reg'); if (rb) rb.addEventListener('click', function() { openAuthModal('register'); });
+    var lb = document.getElementById('fis-save-later'); if (lb) lb.addEventListener('click', function() { sv.style.display = 'none'; });
+  }
+
   card.scrollIntoView({behavior:'smooth'});
 
   // 自動儲存測試結果落 D1
@@ -2052,6 +2194,7 @@ async function loadHistory() {
 
 window.addEventListener('DOMContentLoaded', function() {
   bindAll();
+  accountSessionCheck();   // Email 帳戶：app load 驗 session（有效 → 確保 fis_user_id = primary_user_id）
   try {
     if (localStorage.getItem('fis_agreed') === '1') { goTo('home'); maybeShowA2HS(); }
     else if (localStorage.getItem('fis_onboarded') !== '1') { goTo('onboarding'); }

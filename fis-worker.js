@@ -40,6 +40,19 @@ return handleCoachAuthLogout(request, env);
 if (path === '/api/coach/auth/me' && request.method === 'GET') {
 return handleCoachAuthMe(request, env);
 }
+// ── 用戶 email 帳戶登入 v1（密碼）：全 body-based，零 CORS 改動。鏡像教練 PBKDF2/session pattern ──
+if (path === '/api/account/auth/register' && request.method === 'POST') {
+return handleAccountRegister(request, env);
+}
+if (path === '/api/account/auth/login' && request.method === 'POST') {
+return handleAccountLogin(request, env);
+}
+if (path === '/api/account/auth/logout' && request.method === 'POST') {
+return handleAccountLogout(request, env);
+}
+if (path === '/api/account/auth/me' && request.method === 'POST') {
+return handleAccountMe(request, env);
+}
 if (path === '/api/weekly/save' && request.method === 'POST') {
 return handleWeeklySave(request, env);
 }
@@ -1106,5 +1119,108 @@ try {
 const c = await coachFromToken(request, env);
 if (!c) return jsonResponse({ error: 'Unauthorized' }, 401);
 return jsonResponse({ success: true, id: c.id, email: c.email, role: c.role, name: c.name });
+} catch (e) { return jsonResponse({ error: e.message }, 500); }
+}
+
+// ============================================================================
+// 用戶 email 帳戶登入 v1（密碼）。全 body-based（token 喺 body，零 CORS 改動）。
+// 重用教練 crypto helper（coachPbkdf2 / coachSha256Hex / coachBufToB64 / coachB64ToBytes
+// / coachBase64Url / timingSafeEqual）+ COACH_PBKDF2_ITERATIONS(100000) / COACH_HASH_VERSION。
+// 表：user_accounts / user_account_sessions（migrations/0002_user_accounts.sql）。
+// ============================================================================
+const ACCOUNT_SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;   // 30 日
+
+// 由 body 嘅 raw token 取回有效帳戶（過期自動清），失敗返 null
+async function accountFromToken(token, env) {
+if (!token || typeof token !== 'string') return null;
+const tokenHash = await coachSha256Hex(token.trim());
+const row = await env.DB.prepare(
+'SELECT s.account_id, s.expires_at, a.email, a.primary_user_id, a.status FROM user_account_sessions s JOIN user_accounts a ON a.id = s.account_id WHERE s.token_hash = ?'
+).bind(tokenHash).first();
+if (!row) return null;
+if (new Date(row.expires_at).getTime() < Date.now()) {
+await env.DB.prepare('DELETE FROM user_account_sessions WHERE token_hash = ?').bind(tokenHash).run();
+return null;
+}
+if (row.status !== 'active') return null;
+return { id: row.account_id, email: row.email, primary_user_id: row.primary_user_id };
+}
+
+async function handleAccountRegister(request, env) {
+if (!env.DB) return jsonResponse({ error: 'DB not configured' }, 500);
+let body;
+try { body = await request.json(); } catch (e) { return jsonResponse({ error: 'Invalid JSON body' }, 400); }
+const email = (body.email || '').trim().toLowerCase();
+const password = body.password || '';
+const currentUserId = body.currentUserId || null;
+try {
+if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return jsonResponse({ error: 'Invalid email' }, 400);
+if (typeof password !== 'string' || password.length < 8) return jsonResponse({ error: 'Password must be at least 8 characters' }, 400);
+if (!currentUserId) return jsonResponse({ error: 'Missing currentUserId' }, 400);
+// 確認要 bind 嘅匿名 usr_ 存在
+const u = await env.DB.prepare('SELECT id FROM users WHERE id = ?').bind(currentUserId).first();
+if (!u) return jsonResponse({ error: 'currentUserId not found' }, 400);
+// email unique
+const existing = await env.DB.prepare('SELECT id FROM user_accounts WHERE email = ?').bind(email).first();
+if (existing) return jsonResponse({ error: 'Email already registered' }, 409);
+const salt = crypto.getRandomValues(new Uint8Array(16));
+const hash = await coachPbkdf2(password, salt, COACH_PBKDF2_ITERATIONS);
+const id = 'acct_' + crypto.randomUUID().replace(/-/g, '').substring(0, 16);
+await env.DB.prepare(
+'INSERT INTO user_accounts (id, email, password_hash, salt, iterations, hash_version, primary_user_id) VALUES (?, ?, ?, ?, ?, ?, ?)'
+).bind(id, email, coachBufToB64(hash), coachBufToB64(salt), COACH_PBKDF2_ITERATIONS, COACH_HASH_VERSION, currentUserId).run();
+const token = coachBase64Url(crypto.getRandomValues(new Uint8Array(32)));
+const tokenHash = await coachSha256Hex(token);
+const expires = new Date(Date.now() + ACCOUNT_SESSION_TTL_MS).toISOString();
+await env.DB.prepare('INSERT INTO user_account_sessions (token_hash, account_id, expires_at) VALUES (?, ?, ?)').bind(tokenHash, id, expires).run();
+return jsonResponse({ success: true, token, expires_at: expires, primary_user_id: currentUserId, email });
+} catch (e) { return jsonResponse({ error: e.message }, 500); }
+}
+
+async function handleAccountLogin(request, env) {
+if (!env.DB) return jsonResponse({ error: 'DB not configured' }, 500);
+let body;
+try { body = await request.json(); } catch (e) { return jsonResponse({ error: 'Invalid JSON body' }, 400); }
+const email = (body.email || '').trim().toLowerCase();
+const password = body.password || '';
+try {
+const a = await env.DB.prepare('SELECT id, password_hash, salt, iterations, primary_user_id, status FROM user_accounts WHERE email = ?').bind(email).first();
+// 搵唔到 email 都照行一次 hash + 固定延遲，減少 timing / 帳號枚舉
+const saltBytes = a ? coachB64ToBytes(a.salt) : crypto.getRandomValues(new Uint8Array(16));
+const iters = a ? a.iterations : COACH_PBKDF2_ITERATIONS;
+const derived = await coachPbkdf2(password, saltBytes, iters);
+const ok = a && a.status === 'active' && timingSafeEqual(coachBufToB64(derived), a.password_hash);
+if (!ok) {
+await new Promise(r => setTimeout(r, 200));
+return jsonResponse({ error: 'Invalid email or password' }, 401);
+}
+const token = coachBase64Url(crypto.getRandomValues(new Uint8Array(32)));
+const tokenHash = await coachSha256Hex(token);
+const expires = new Date(Date.now() + ACCOUNT_SESSION_TTL_MS).toISOString();
+await env.DB.prepare('INSERT INTO user_account_sessions (token_hash, account_id, expires_at) VALUES (?, ?, ?)').bind(tokenHash, a.id, expires).run();
+return jsonResponse({ success: true, token, expires_at: expires, primary_user_id: a.primary_user_id, email });
+} catch (e) { return jsonResponse({ error: e.message }, 500); }
+}
+
+async function handleAccountLogout(request, env) {
+if (!env.DB) return jsonResponse({ error: 'DB not configured' }, 500);
+try {
+let body; try { body = await request.json(); } catch (e) { body = {}; }
+const token = body.token || '';
+if (token) {
+const tokenHash = await coachSha256Hex(String(token).trim());
+await env.DB.prepare('DELETE FROM user_account_sessions WHERE token_hash = ?').bind(tokenHash).run();
+}
+return jsonResponse({ success: true });
+} catch (e) { return jsonResponse({ error: e.message }, 500); }
+}
+
+async function handleAccountMe(request, env) {
+if (!env.DB) return jsonResponse({ error: 'DB not configured' }, 500);
+try {
+let body; try { body = await request.json(); } catch (e) { body = {}; }
+const acct = await accountFromToken(body.token || '', env);
+if (!acct) return jsonResponse({ error: 'Unauthorized' }, 401);
+return jsonResponse({ success: true, email: acct.email, primary_user_id: acct.primary_user_id });
 } catch (e) { return jsonResponse({ error: e.message }, 500); }
 }
