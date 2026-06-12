@@ -94,6 +94,7 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Serif TC','Hiragin
 .pill-green{background:rgba(34,211,160,0.1);color:var(--green)}
 .pill-red{background:rgba(245,101,101,0.1);color:var(--red)}
 .pill-amber{background:rgba(240,169,59,0.14);color:#f0a93b}
+.pill-transition{background:linear-gradient(135deg,rgba(240,169,59,0.14),rgba(34,211,160,0.14));color:#9ed36a}
 /* Loading */
 .loading{display:flex;align-items:center;justify-content:center;padding:40px;color:var(--dim)}
 .spinner{display:inline-block;width:20px;height:20px;border:2px solid rgba(255,200,69,0.2);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;margin-right:10px}
@@ -432,7 +433,7 @@ function renderStudent(d){
       ${lineMap.map(([k,name])=>{
         const v=faLines[k]||{};
         const st=v.status||'—';
-        const cls=st==='優先關注'?'pill-red':st==='發展中'?'pill-amber':st==='狀態良好'?'pill-green':'pill-gold';
+        const cls=st==='優先關注'?'pill-red':st==='發展中'?'pill-amber':st==='過渡'?'pill-transition':st==='狀態良好'?'pill-green':'pill-gold';
         return `<div class="hotspot-item">
           <div class="hotspot-part">${name}</div>
           <span class="pill ${cls}">${st}</span>

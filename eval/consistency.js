@@ -2,7 +2,7 @@
 'use strict';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// FIS 一致性 eval harness — 量度「現狀」(temperature 0.1) 嘅真實 tier flip rate。
+// FIS 一致性 eval harness — 量度 tier flip rate（config: temperature 0 + seed 42，已部署）。
 // ⚠️ 唔改任何 worker / generationConfig。1:1 複製 app 真實 call：
 //    POST /api/fis-step1 {images:[4 data URL]} → result（圖→文字）
 //    POST /api/fis-step2 {step1Result}         → parsed.fascialLines（文字→tier）
@@ -147,6 +147,7 @@ async function getStep2(step1Result) {
 function tierLabel(status) {
   return status === '優先關注' ? '🔴優先關注'
     : status === '發展中' ? '🟡發展中'
+    : status === '過渡' ? '🟡→🟢過渡'
     : status === '狀態良好' ? '🟢狀態良好'
     : ('❓' + status);
 }
@@ -167,7 +168,7 @@ function tierLabel(status) {
   const images = files.map(f => toDataUrl(f.file));
 
   console.log(`▶️  N=${N}　gender=${gender}（唔送 API、唔影響 tier）　mode=${fast ? 'fast（step1 ×1 + step2 ×N，隔離分級引擎）' : 'full（step1→step2 每 iter，真 end-to-end）'}`);
-  console.log(`    endpoint：${API_BASE}（read-only）　config：temperature 0.1（現狀，未改 worker）\n`);
+  console.log(`    endpoint：${API_BASE}（read-only）　config：temperature 0 + seed 42（已部署）\n`);
 
   // fast mode：先攞一次 step1Result
   let fixedStep1 = null;
@@ -233,7 +234,7 @@ function tierLabel(status) {
   const baseline = {
     generatedAt: new Date().toISOString(),
     apiBase: API_BASE,
-    config: 'temperature 0.1（現狀，未改 worker / generationConfig）',
+    config: 'temperature 0 + seed 42（已部署）',
     mode: fast ? 'fast (step1 once, step2 xN — 隔離分級引擎)' : 'full pipeline (fis-step1 -> fis-step2 每 iter)',
     gender, genderNote: 'gender 唔送 API、唔影響 tier，只作記錄',
     N, successN, errors,

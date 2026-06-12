@@ -1569,6 +1569,16 @@ var FIS_LINE_COPY = {
     '女': { red: '腹部中段易鬆,平坦小腹同腹中線線條難維持。', mid: '前鏈收緊緊,平坦小腹同腹中線開始維持,但未完全穩。', green: '前鏈穩,平坦小腹同腹中線線條有底子。' } }
 };
 
+// 過渡(🟡→🟢)專屬文案：gender-neutral，每線一句（語氣：由發展過渡緊去良好、差少少到位）。
+// ⚠️ 唔 fallback 去 mid，label「過渡」同文案要一致。
+var FIS_TRANSITION_COPY = {
+  '深前線': '深層核心由發展過渡緊去良好,腰腹／骨盆穩定差少少就完全到位。',
+  '側線':   '臀中肌／骨盆穩定由發展過渡緊去良好,差少少就完全接通。',
+  '螺旋線': '腹斜肌／前鋸肌聯動由發展過渡緊去良好,旋轉力同左右對稱差少少到位。',
+  '淺背線': '後鏈由發展過渡緊去良好,硬拉發力同挺拔差少少就穩。',
+  '淺前線': '前鏈由發展過渡緊去良好,腹部中段線條差少少就維持得住。'
+};
+
 async function runFisStep3() {
   if (!fisStep2Result) { alert('Please complete step 3 report card generation first'); return; }
 
@@ -1673,19 +1683,22 @@ async function runFisStep3() {
     var d      = lines[lk.key] || {};
     var status = d.status || '—';
     var stage  = d.stage  || '—';
-    // 三級：優先關注🔴 / 發展中🟡 / 狀態良好🟢
-    var tier  = status === '優先關注' ? 'red' : status === '發展中' ? 'mid' : 'green';
-    var color = tier === 'red' ? '#ff5555' : tier === 'mid' ? '#f0a93b' : '#44cc88';
+    // 四級：優先關注🔴 / 發展中🟡 / 過渡🟡→🟢 / 狀態良好🟢（尾段 'green' = 未知 status fallback）
+    var tier  = status === '優先關注' ? 'red' : status === '發展中' ? 'mid' : status === '過渡' ? 'transition' : 'green';
+    var color = tier === 'red' ? '#ff5555' : tier === 'mid' ? '#f0a93b' : tier === 'transition' ? '#9ed36a' : '#44cc88';
+    var dotBg = tier === 'transition' ? 'linear-gradient(135deg,#f0a93b,#44cc88)' : color;   // 過渡：狀態燈漸變🟡→🟢
     var bg    = idx % 2 === 0 ? 'rgba(0,60,140,0.12)' : 'rgba(0,40,100,0.06)';
 
-    // 三級進度條：待加強35% / 發展中65% / 良好90%
-    var barPct   = tier === 'red' ? '35%' : tier === 'mid' ? '65%' : '90%';
+    // 進度條：待加強35% / 發展中65% / 過渡78% / 良好90%
+    var barPct   = tier === 'red' ? '35%' : tier === 'mid' ? '65%' : tier === 'transition' ? '78%' : '90%';
     var barColor = tier === 'red'
       ? 'linear-gradient(90deg,#ff4444,#ff8844)'
       : tier === 'mid'
       ? 'linear-gradient(90deg,#ff8844,#f0a93b)'
+      : tier === 'transition'
+      ? 'linear-gradient(90deg,#f0a93b,#44dd88)'
       : 'linear-gradient(90deg,#44aaff,#44dd88)';
-    var stageLabel = stage;
+    var stageLabel = tier === 'transition' ? 'Stage 1→2' : stage;   // 過渡強制顯示 Stage 1→2（穩陣，唔靠 model 出字）
 
     var row = document.createElement('div');
     row.className = 'fis-anim fis-row-hover';
@@ -1707,7 +1720,7 @@ async function runFisStep3() {
     statusCell.style.cssText = 'flex:1.5;display:flex;align-items:center;justify-content:center;gap:5px';
     statusCell.innerHTML =
       '<span style="width:8px;height:8px;border-radius:50%;flex-shrink:0;display:inline-block;' +
-      'background:' + color + ';box-shadow:0 0 8px ' + color + '"></span>' +
+      'background:' + dotBg + ';box-shadow:0 0 8px ' + color + '"></span>' +
       '<span style="color:' + color + ';font-size:11px;font-weight:700;text-shadow:0 0 5px ' + color + ';white-space:nowrap">' + status + '</span>';
     row.appendChild(statusCell);
 
@@ -1724,18 +1737,25 @@ async function runFisStep3() {
 
     // ── 性別 × 狀態 針對性文案 + 課程 CTA（金色），緊貼該線狀態 row 下面 ──
     var copyEntry = (typeof FIS_LINE_COPY !== 'undefined') ? FIS_LINE_COPY[lk.name] : null;
-    if (copyEntry && fisGender && copyEntry[fisGender]) {
-      var ct  = copyEntry[fisGender][tier] || '';
+    if (copyEntry && fisGender) {
+      // 過渡：gender-neutral 專屬文案（唔 fallback mid）；其餘：性別 × tier 文案
+      var ct = (tier === 'transition')
+        ? ((typeof FIS_TRANSITION_COPY !== 'undefined' && FIS_TRANSITION_COPY[lk.name]) || '')
+        : ((copyEntry[fisGender] && copyEntry[fisGender][tier]) || '');
       var cta = tier === 'red'
         ? '→ ' + copyEntry.ch + '睇通原理 + 第九章對應精準動作。'
         : tier === 'mid'
         ? '→ ' + copyEntry.ch + '鞏固原理 + 第九章持續精準動作。'
+        : tier === 'transition'
+        ? '→ ' + copyEntry.ch + '鞏固原理 + 第九章過渡鞏固動作。'
         : '→ ' + copyEntry.ch + '深化原理 + 第九章進階動作。';
-      var copyRow = document.createElement('div');
-      copyRow.className = 'fis-anim';
-      copyRow.style.cssText = 'padding:9px 18px 13px;background:' + bg + ';border-bottom:1px solid rgba(0,120,200,0.1);font-size:11px;line-height:1.75;animation-delay:' + (0.11 + idx * 0.06) + 's';
-      copyRow.innerHTML = '<span style="color:#cfe3ff">' + ct + '</span> <span style="color:#ffc845;font-weight:700">' + cta + '</span>';
-      card.appendChild(copyRow);
+      if (ct) {
+        var copyRow = document.createElement('div');
+        copyRow.className = 'fis-anim';
+        copyRow.style.cssText = 'padding:9px 18px 13px;background:' + bg + ';border-bottom:1px solid rgba(0,120,200,0.1);font-size:11px;line-height:1.75;animation-delay:' + (0.11 + idx * 0.06) + 's';
+        copyRow.innerHTML = '<span style="color:#cfe3ff">' + ct + '</span> <span style="color:#ffc845;font-weight:700">' + cta + '</span>';
+        card.appendChild(copyRow);
+      }
     }
   });
 
@@ -1750,7 +1770,8 @@ async function runFisStep3() {
     'animation-delay:0.45s';
 
   // 動態「訓練起點」：按報告卡實際 5 條線 tier 計（唔再寫死🔴🟡）
-  var _tiers = lineKeys.map(function(lk) { var st = (lines[lk.key] || {}).status; return st === '優先關注' ? 'red' : st === '發展中' ? 'mid' : 'green'; });
+  // 過渡當 mid 計（保守，唔過早叫人跳 Stage 2）
+  var _tiers = lineKeys.map(function(lk) { var st = (lines[lk.key] || {}).status; return st === '優先關注' ? 'red' : (st === '發展中' || st === '過渡') ? 'mid' : 'green'; });
   var _hasRed = _tiers.indexOf('red') >= 0;
   var _hasMid = _tiers.indexOf('mid') >= 0;
   var dynamicStartingPoint = _hasRed ? '由🔴／🟡線 Stage 1 起'
