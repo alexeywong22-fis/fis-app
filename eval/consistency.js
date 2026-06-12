@@ -33,7 +33,8 @@ const PHOTOS = [
   { slot: '背面',     bases: ['3-back', 'back'] },
   { slot: '前彎側面', bases: ['4-bend', '4-forwardbend', 'bend', 'forwardbend'] },
 ];
-const EXTS = ['.jpg', '.jpeg', '.png'];
+// .heic = iPhone 預設；sips 讀 HEIC 冇問題（下面 -s format jpeg 轉出 JPEG）。大細階都收。
+const EXTS = ['.heic', '.jpg', '.jpeg', '.png'];
 
 const LINES = [
   { key: 'deepFrontLine',        name: '深前線' },
@@ -56,9 +57,13 @@ for (const a of argv) {
 }
 
 function findPhoto(p) {
+  let entries = [];
+  try { entries = fs.readdirSync(PHOTO_DIR); } catch (e) { return null; }
+  // 大細階不敏感比對（檔名 base 同副檔名）：收 1-front.HEIC / 1-FRONT.heic / front.jpg 等
   for (const b of p.bases) for (const e of EXTS) {
-    const f = path.join(PHOTO_DIR, b + e);
-    if (fs.existsSync(f)) return f;
+    const want = (b + e).toLowerCase();
+    const hit = entries.find(f => f.toLowerCase() === want);
+    if (hit) return path.join(PHOTO_DIR, hit);
   }
   return null;
 }
@@ -73,6 +78,10 @@ function toDataUrl(file) {
     return 'data:image/jpeg;base64,' + b64;
   } catch (e) {
     const ext = path.extname(file).toLowerCase();
+    if (ext === '.heic') {
+      console.error(`   ❌ HEIC 需要 sips 轉 JPEG，但 sips 失敗（${e.message}）。請喺 macOS 跑，或先手動轉 ${path.basename(file)} 做 JPG。`);
+      process.exit(1);
+    }
     const mime = ext === '.png' ? 'image/png' : 'image/jpeg';
     console.log(`   ⚠️ sips 壓縮失敗（${e.message}），改送原圖 ${path.basename(file)}`);
     return 'data:' + mime + ';base64,' + fs.readFileSync(file).toString('base64');

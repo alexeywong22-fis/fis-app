@@ -13,8 +13,8 @@
 | ③ 背面     | `3-back.jpg` |
 | ④ 站姿前彎（側面） | `4-bend.jpg` |
 
-- 支援 `.jpg` / `.jpeg` / `.png`。
-- harness 會用 macOS `sips` 自動壓縮到「長邊 1200px / JPEG 80%」，**1:1 複製 app 嘅 `compressImage`**，唔使自己 resize。
+- 支援 `.heic`（iPhone 預設）/ `.jpg` / `.jpeg` / `.png`，大細階都收。
+- harness 會用 macOS `sips` 自動將 HEIC 轉 JPEG + 壓縮到「長邊 1200px / JPEG 80%」，**1:1 複製 app 嘅 `compressImage('image/jpeg')`**，**Alexey 唔使手動轉檔**。
 - ⚠️ `eval/photos/` 入面嘅相**唔會 commit**（私人身體相，已 `.gitignore`）。
 
 ## 2. 跑
