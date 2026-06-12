@@ -278,7 +278,7 @@ function renderStudent(d){
     html+=`<div class="section"><div class="section-title">01 · FIS 體態相片對比</div>
     <div class="split-screen">
       <div class="split-side">
-        <div class="split-label">基準（第 ${baseline?.training_day_index||'—'} 天）</div>
+        <div class="split-label">基準（第 ${esc(baseline?.training_day_index||'—')} 天）</div>
         <div class="split-photos">
           ${photoEl(baseline?.photo_front_url,'正')}
           ${photoEl(baseline?.photo_side_url,'側')}
@@ -286,7 +286,7 @@ function renderStudent(d){
         </div>
       </div>
       <div class="split-side">
-        <div class="split-label">最新（第 ${latest?.training_day_index||'—'} 天）</div>
+        <div class="split-label">最新（第 ${esc(latest?.training_day_index||'—')} 天）</div>
         <div class="split-photos">
           ${photoEl(latest?.photo_front_url,'正')}
           ${photoEl(latest?.photo_side_url,'側')}
@@ -323,8 +323,8 @@ function renderStudent(d){
           const dt=(l.logged_at||'').substring(5,10);
           return `<div class="trend-bar-group">
             <div class="trend-bar-wrap"><div class="trend-bar" style="height:${h}%;background:${col}"></div></div>
-            <div class="trend-date">${dt}</div>
-            <div class="trend-val">${l.muscle_activation}</div>
+            <div class="trend-date">${esc(dt)}</div>
+            <div class="trend-val">${esc(l.muscle_activation)}</div>
           </div>`;
         }).join('')}
       </div>
@@ -338,7 +338,7 @@ function renderStudent(d){
             const compPill=l.back_compensation==='有'?'pill-red':l.back_compensation==='無'?'pill-green':'pill-gold';
             return `<tr>
               <td style="font-family:'DM Mono',monospace;font-size:11px">${(l.logged_at||'').substring(0,10)}</td>
-              <td><span class="pill ${l.muscle_activation>=3?'pill-green':l.muscle_activation===2?'pill-gold':'pill-red'}">${l.muscle_activation}/4</span></td>
+              <td><span class="pill ${l.muscle_activation>=3?'pill-green':l.muscle_activation===2?'pill-gold':'pill-red'}">${esc(l.muscle_activation)}/4</span></td>
               <td><span class="pill ${compPill}">${esc(l.back_compensation||'—')}</span></td>
               <td style="font-size:11px;color:var(--dim)">${esc(l.tension_speed||'—')}</td>
               <td style="font-size:11px;color:var(--dim);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc((l.notes||'').substring(0,60))||'—'}</td>
@@ -379,7 +379,7 @@ function renderStudent(d){
           const dt=(a.week_date||'').substring(5,10);
           return `<div class="trend-bar-group">
             <div class="trend-bar-wrap"><div class="trend-bar" style="height:${h}%;background:${col}"></div></div>
-            <div class="trend-date">${dt}</div>
+            <div class="trend-date">${esc(dt)}</div>
             <div class="trend-val">${sc}</div>
           </div>`;
         }).join('')}
@@ -412,7 +412,7 @@ function renderStudent(d){
           const h=Math.round((best/maxBal)*100);
           return `<div class="trend-bar-group">
             <div class="trend-bar-wrap"><div class="trend-bar" style="height:${h}%;background:var(--green)"></div></div>
-            <div class="trend-date">D${t.training_day_index??'—'}</div>
+            <div class="trend-date">D${esc(t.training_day_index??'—')}</div>
             <div class="trend-val">${best||'—'}</div>
           </div>`;
         }).join('')}
@@ -425,10 +425,10 @@ function renderStudent(d){
           ${funcHistory.slice(0,10).map(t=>{
             const compPill=t.squat_compensation==='有'?'pill-red':t.squat_compensation==='無'?'pill-green':'pill-gold';
             return `<tr>
-              <td style="font-family:'DM Mono',monospace;font-size:11px">第 ${t.training_day_index??'—'} 天</td>
-              <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--dim)">${(t.tested_at||'').substring(0,10)||'—'}</td>
-              <td style="font-family:'DM Mono',monospace;font-size:12px">${t.single_leg_left??'—'}</td>
-              <td style="font-family:'DM Mono',monospace;font-size:12px">${t.single_leg_right??'—'}</td>
+              <td style="font-family:'DM Mono',monospace;font-size:11px">第 ${esc(t.training_day_index??'—')} 天</td>
+              <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--dim)">${esc((t.tested_at||'').substring(0,10))||'—'}</td>
+              <td style="font-family:'DM Mono',monospace;font-size:12px">${esc(t.single_leg_left??'—')}</td>
+              <td style="font-family:'DM Mono',monospace;font-size:12px">${esc(t.single_leg_right??'—')}</td>
               <td><span class="pill pill-gold">${esc(t.jefferson_curl_level??'—')}</span></td>
               <td><span class="pill ${compPill}">${esc(t.squat_compensation||'—')}</span></td>
             </tr>`;
@@ -457,7 +457,7 @@ function renderStudent(d){
         return `<div class="hotspot-item">
           <div class="hotspot-part">${name}</div>
           <span class="pill ${cls}">${esc(st)}</span>
-          <div class="hotspot-count">${v.stage||'—'}</div>
+          <div class="hotspot-count">${esc(v.stage||'—')}</div>
         </div>`;
       }).join('')}
     </div>`;
@@ -476,11 +476,11 @@ function photoEl(url,label){
 }
 
 function metricRow(label,before,after,unit){
-  const b=before??'—',a=after??'—';
+  const b=esc(before??'—'),a=esc(after??'—');   // before/after = 學員提交數值（未驗證）→ esc 防 XSS
   const diff=(typeof before==='number'&&typeof after==='number')?Math.round((after-before)*10)/10:null;
   const col=diff>0?'var(--green)':diff<0?'var(--red)':'var(--dim)';
   return `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;font-size:12px">
-    <span style="color:var(--dim)">${label}</span>
+    <span style="color:var(--dim)">${esc(label)}</span>
     <span style="font-family:'DM Mono',monospace">${b}${unit} → <strong style="color:var(--gold)">${a}${unit}</strong></span>
     ${diff!==null?`<span style="font-size:11px;color:${col}">${diff>0?'+':''}${diff}${unit}</span>`:''}
   </div>`;
