@@ -1800,9 +1800,9 @@ async function runFisStep3() {
 
   imageResult.appendChild(card);
 
-  // pre-render 報告卡做 PNG（等動畫 ~0.8s 完成先截），俾「下載圖片」喺 user gesture 內即時 share/download
+  // pre-render 報告卡做 PNG（等動畫完成先截 + onclone 強制最終狀態雙保險），俾「下載圖片」即時 share/download
   fisReportBlob = null; fisReportFile = null;
-  setTimeout(fisRenderReportImage, 800);
+  setTimeout(fisRenderReportImage, 1200);
 
   // 報告卡下面加「想知解決方法？」CTA → SKool 課程（開關開咗先顯示）
   var oldCta = document.getElementById('fis-skool-cta');
@@ -1856,11 +1856,24 @@ async function runFisStep3() {
 }
 
 // 報告卡 DOM → PNG canvas → blob/File（html2canvas）。存 module 變數俾 downloadImage 即時用。
-function fisRenderReportImage() {
+// ⚠️ rows 有入場動畫（.fis-anim fisSlideIn opacity:0→1）；html2canvas clone 內動畫會由 opacity:0
+//    重新開始 → 截到空白中段。用 onclone 喺 cloned DOM force 最終狀態，保證影到完整報告。
+async function fisRenderReportImage() {
   var card = document.getElementById('fis-report-card');
-  if (!card || typeof html2canvas === 'undefined') return Promise.resolve();
-  return html2canvas(card, { scale: 2, backgroundColor: '#050d1a', useCORS: true, logging: false }).then(function (canvas) {
-    return new Promise(function (resolve) {
+  if (!card || typeof html2canvas === 'undefined') return;
+  try { if (document.fonts && document.fonts.ready) await document.fonts.ready; } catch (e) {}   // 字體載齊先截，免缺字
+  try {
+    var canvas = await html2canvas(card, {
+      scale: 2, backgroundColor: '#050d1a', useCORS: true, logging: false,
+      onclone: function (clonedDoc) {
+        try {
+          var st = clonedDoc.createElement('style');
+          st.textContent = '#fis-report-card,#fis-report-card *{opacity:1 !important;transform:none !important;animation:none !important;transition:none !important;}';
+          clonedDoc.head.appendChild(st);
+        } catch (e) {}
+      }
+    });
+    await new Promise(function (resolve) {
       canvas.toBlob(function (blob) {
         if (blob) {
           fisReportBlob = blob;
@@ -1869,7 +1882,7 @@ function fisRenderReportImage() {
         resolve();
       }, 'image/png');
     });
-  }).catch(function (e) { console.warn('report image render fail:', e && e.message); });
+  } catch (e) { console.warn('report image render fail:', e && e.message); }
 }
 
 // iOS-friendly：Web Share（彈原生分享 → 儲存影像到相簿）→ desktop <a download> → 長按後備。
