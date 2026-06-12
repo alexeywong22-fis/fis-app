@@ -1320,26 +1320,67 @@ function fisRefreshStart() {
 }
 
 // ── 相片 cache（frontend-only）：同 4 張相 + 同性別 → 直接返之前存低嘅報告，skip Gemini ──
-// key = SHA-256( 每張「原始」File bytes 各自 SHA-256 → 排序（次序無關）→ + gender )，v1 prefix、LRU 10。
+// ⚠️ 唔可以 hash File bytes：iOS 每次揀同一張相會 re-encode 出唔同 bytes → byte 指紋永遠 miss。
+// 改用「感知內容 hash」（perceptual）：每張 downscale 16×16 灰階 → aHash(mean 閾值) + dHash(水平相鄰差)。
+// 同一張相就算 re-encode，downscale 後視覺內容幾乎一樣 → 同 fingerprint。v2 prefix、LRU 10。
 function fisHex(buf) {
   var b = new Uint8Array(buf), s = '';
   for (var i = 0; i < b.length; i++) s += b[i].toString(16).padStart(2, '0');
   return s;
 }
+function fisBitsToHex(bits) {
+  var hex = '';
+  for (var i = 0; i < bits.length; i += 4) hex += parseInt(bits.substr(i, 4).padEnd(4, '0'), 2).toString(16);
+  return hex;
+}
+// File → 細灰階 canvas → 灰階陣列（抗 iOS re-encode：downscale 平滑掉編碼噪聲）
+function fisLoadGray(file, size) {
+  return new Promise(function (resolve, reject) {
+    var url = URL.createObjectURL(file);
+    var img = new Image();
+    img.onload = function () {
+      try {
+        var cv = document.createElement('canvas');
+        cv.width = size; cv.height = size;
+        var ctx = cv.getContext('2d');
+        ctx.drawImage(img, 0, 0, size, size);
+        var data = ctx.getImageData(0, 0, size, size).data;
+        URL.revokeObjectURL(url);
+        var gray = new Array(size * size);
+        for (var i = 0, p = 0; i < data.length; i += 4, p++) gray[p] = data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114;
+        resolve(gray);
+      } catch (e) { URL.revokeObjectURL(url); reject(e); }
+    };
+    img.onerror = function () { URL.revokeObjectURL(url); reject(new Error('img load fail')); };
+    img.src = url;
+  });
+}
+// aHash（mean 閾值）+ dHash（水平相鄰差，抗整體光暗/gamma 飄）→ 合成 hex fingerprint
+function fisPerceptualHash(gray, size) {
+  var sum = 0, i;
+  for (i = 0; i < gray.length; i++) sum += gray[i];
+  var mean = sum / gray.length;
+  var a = '';
+  for (i = 0; i < gray.length; i++) a += (gray[i] >= mean ? '1' : '0');
+  var d = '';
+  for (var y = 0; y < size; y++) for (var x = 0; x < size - 1; x++) { var idx = y * size + x; d += (gray[idx] < gray[idx + 1] ? '1' : '0'); }
+  return fisBitsToHex(a) + fisBitsToHex(d);
+}
 async function fisPhotoCacheKey(photos, gender) {
   if (!photos || photos.length < 4 || !window.crypto || !crypto.subtle) return '';
-  var hashes = [];
+  var SIZE = 16;
+  var prints = [];
   for (var i = 0; i < photos.length; i++) {
-    var buf = await photos[i].arrayBuffer();                 // 原始 bytes（壓縮前）
-    hashes.push(fisHex(await crypto.subtle.digest('SHA-256', buf)));
+    var gray = await fisLoadGray(photos[i], SIZE);           // 視覺內容（唔係 File bytes）
+    prints.push(fisPerceptualHash(gray, SIZE));
   }
-  hashes.sort();                                             // 排序 → 揀相次序唔同都同 key
-  var joined = hashes.join('|') + '|g=' + (gender || '');
-  return 'fis_rep_v1_' + fisHex(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(joined)));
+  prints.sort();                                             // 排序 → 揀相次序唔同都同 key
+  var joined = prints.join('|') + '|g=' + (gender || '');
+  return 'fis_rep_v2_' + fisHex(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(joined)));
 }
 function fisCacheStore(key, entry) {
   if (!key) return;
-  var IDX = 'fis_rep_v1_keys';
+  var IDX = 'fis_rep_v2_keys';
   function readIdx() { try { return JSON.parse(localStorage.getItem(IDX) || '[]'); } catch (e) { return []; } }
   try {
     localStorage.setItem(key, JSON.stringify(entry));
