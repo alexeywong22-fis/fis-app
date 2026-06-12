@@ -11,6 +11,8 @@
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="manifest" href="manifest.json">
 <title>FIS Training Toolkit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+HK:wght@300;400;500;700;900&family=Bebas+Neue&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -863,26 +865,35 @@ function backFromLegal() { goTo(window.__legalReturn || 'home'); }
   // ── 匿名用戶初始化 ────────────────────────────────────────
   window.FIS_USER_ID = localStorage.getItem('fis_user_id') || null;
 
-  async function initUser() {
+  // 重試 + 8s timeout；由 DOMContentLoaded 之後先 call（避免太早撞 SW install 令首次 fetch 失敗 → 學員名永遠「載入中」）
+  async function initUser(attempt) {
+    attempt = attempt || 1;
+    var ctrl = new AbortController();
+    var timer = setTimeout(function () { ctrl.abort(); }, 8000);
     try {
       var res = await fetch(API_BASE + '/api/user/init', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: window.FIS_USER_ID })
+        body: JSON.stringify({ userId: window.FIS_USER_ID }),
+        signal: ctrl.signal
       });
+      clearTimeout(timer);
       var data = await res.json();
       if (data.userId) {
         window.FIS_USER_ID = data.userId;
         localStorage.setItem('fis_user_id', window.FIS_USER_ID);
         if (data.name) { localStorage.setItem('fis_username', data.name); }
-        if (typeof setupUsernameEditor === 'function') { setupUsernameEditor(); }
+        if (typeof setupUsernameEditor === 'function') { setupUsernameEditor(); }   // 保證 re-render：載入中… → 名
         console.log(data.existing ? 'Existing user: ' + window.FIS_USER_ID : 'New user: ' + window.FIS_USER_ID);
+        return;
       }
+      throw new Error('no userId in response');
     } catch(e) {
-      console.warn('User init failed:', e.message);
+      clearTimeout(timer);
+      console.warn('User init failed (attempt ' + attempt + '): ' + (e && e.message));
+      if (attempt < 3) setTimeout(function () { initUser(attempt + 1); }, 1200 * attempt);   // 重試最多 3 次
     }
   }
-  initUser();
 
   // ── 顯示/更新用戶名 ──────────────────────────────────────────────────────
   async function updateUsername(newName) {
@@ -972,10 +983,13 @@ async function accountSubmit() {
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { msg.textContent = '請輸入有效 email'; return; }
   if (password.length < 8) { msg.textContent = '密碼最少 8 位'; return; }
   msg.textContent = '處理緊…';
+  var ctrl = new AbortController();
+  var timer = setTimeout(function () { ctrl.abort(); }, 15000);   // 15s 安全網：永遠唔會卡喺「處理緊…」
   try {
     var bodyObj = { email: email, password: password };
     if (authMode === 'register') bodyObj.currentUserId = window.FIS_USER_ID;
-    var r = await fetch(API_BASE + '/api/account/auth/' + authMode, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(bodyObj) });
+    var r = await fetch(API_BASE + '/api/account/auth/' + authMode, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(bodyObj), signal: ctrl.signal });
+    clearTimeout(timer);
     var d = await r.json();
     if (d && d.success) {
       fisSetSession(d.token, d.primary_user_id, d.email);
@@ -987,8 +1001,11 @@ async function accountSubmit() {
     }
     msg.textContent = (authMode === 'register')
       ? (d && d.error === 'Email already registered' ? '此 email 已註冊，請改用登入' : '註冊失敗，請檢查資料再試')
-      : 'email 或密碼錯誤';
-  } catch (e) { msg.textContent = '連線失敗，請再試'; }
+      : '電郵或密碼錯誤';
+  } catch (e) {
+    clearTimeout(timer);
+    msg.textContent = (e && e.name === 'AbortError') ? '連線逾時，請再試' : '連線失敗，請再試';
+  }
 }
 
 async function accountLogout() {
@@ -1264,7 +1281,7 @@ async function aiCallWithRetry(resultText, attemptFn, retryFnName) {
   var killer = setTimeout(function() { ctrl.abort(); }, DEADLINE_MS);
   resultText.innerHTML = fisLoadingHTML('AI 分析緊…（今晚 AI 較繁忙，可能要 20–40 秒，請稍候）');
   var upgrade = setTimeout(function() {
-    resultText.innerHTML = fisLoadingHTML('仲喺度處理，多謝耐心…');
+    resultText.innerHTML = fisLoadingHTML('仲喺度處理，多謝耐心等候…');
   }, 30000);
   try {
     try {
@@ -1481,7 +1498,7 @@ async function runFisStep3() {
   // Logo 佔位符（預設隱藏，將來放 Logo）
   var logoSlot = document.createElement('div');
   logoSlot.id = 'fis-logo-slot';
-  logoSlot.style.cssText = 'display:none;width:120px;flex-shrink:0';
+  logoSlot.style.cssText = 'visibility:hidden;width:120px;flex-shrink:0';   // 保留 120px 佔位 → 標題左右對稱、真置中（將來放 logo）
   logoSlot.setAttribute('data-placeholder', 'logo');
   header.appendChild(logoSlot);
 
@@ -2248,6 +2265,7 @@ if ('serviceWorker' in navigator) {
 
 window.addEventListener('DOMContentLoaded', function() {
   bindAll();
+  initUser();               // 匿名用戶初始化（移到 DOM ready 後 + 重試，根治「學員 載入中…」卡死）
   accountSessionCheck();   // Email 帳戶：app load 驗 session（有效 → 確保 fis_user_id = primary_user_id）
   try {
     if (localStorage.getItem('fis_agreed') === '1') { goTo('home'); maybeShowA2HS(); }
