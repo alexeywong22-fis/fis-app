@@ -185,6 +185,8 @@ let coachUsers=[];          // 完整學員 list（loadUsers 攞到，toggle 時
 let coachRegOnly=false;     // 「只睇已註冊」篩選狀態
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function toggleRegOnly(){coachRegOnly=document.getElementById('regOnly').checked;renderUserList();}
+// 學員列表用事件委派（取代 inline onclick，避免學員名插入 JS 字串 = stored XSS）
+document.addEventListener('click',function(e){var it=e.target.closest&&e.target.closest('.user-item[data-uid]');if(it)loadStudent(it.getAttribute('data-uid'));});
 
 function renderUserList(){
   const list=document.getElementById('userList');
@@ -199,10 +201,10 @@ function renderUserList(){
     const reg=u.is_registered==1;
     const badge=reg?'<span class="user-badge">已註冊</span>':'';
     const emailLine=(reg&&u.email)?`<div class="user-item-email">${esc(u.email)}</div>`:'';
-    return `<div class="user-item" id="ui-${u.id}" onclick="loadStudent('${u.id}','${u.name}')">
-      <div class="user-avatar">${initial}</div>
+    return `<div class="user-item" id="ui-${esc(u.id)}" data-uid="${esc(u.id)}">
+      <div class="user-avatar">${esc(initial)}</div>
       <div style="flex:1;min-width:0">
-        <div class="user-item-name">${u.name||u.id.substring(0,12)}${badge}</div>
+        <div class="user-item-name">${esc(u.name||u.id.substring(0,12))}${badge}</div>
         ${emailLine}
         <div class="user-item-meta">日誌 ${u.log_count} · 測試 ${u.fascia_count} · 痛點 ${u.pain_count}</div>
       </div>
@@ -247,8 +249,8 @@ function renderStudent(d){
   let html=`
   <div class="detail-header">
     <div>
-      <div class="detail-name">${u.name||'未命名學員'}</div>
-      <div class="detail-id">${u.id}</div>
+      <div class="detail-name">${esc(u.name||'未命名學員')}</div>
+      <div class="detail-id">${esc(u.id)}</div>
       <div class="badges">
         <span class="badge badge-gold">🏋️ ${s.totalTrainingDays||0} 實質訓練日</span>
         <span class="badge badge-green">⚡ 發力 ${s.avgMuscleActivation||'—'}/4</span>
@@ -337,9 +339,9 @@ function renderStudent(d){
             return `<tr>
               <td style="font-family:'DM Mono',monospace;font-size:11px">${(l.logged_at||'').substring(0,10)}</td>
               <td><span class="pill ${l.muscle_activation>=3?'pill-green':l.muscle_activation===2?'pill-gold':'pill-red'}">${l.muscle_activation}/4</span></td>
-              <td><span class="pill ${compPill}">${l.back_compensation||'—'}</span></td>
-              <td style="font-size:11px;color:var(--dim)">${l.tension_speed||'—'}</td>
-              <td style="font-size:11px;color:var(--dim);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${(l.notes||'').substring(0,60)||'—'}</td>
+              <td><span class="pill ${compPill}">${esc(l.back_compensation||'—')}</span></td>
+              <td style="font-size:11px;color:var(--dim)">${esc(l.tension_speed||'—')}</td>
+              <td style="font-size:11px;color:var(--dim);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc((l.notes||'').substring(0,60))||'—'}</td>
             </tr>`;
           }).join('')}
         </tbody>
@@ -355,7 +357,7 @@ function renderStudent(d){
     <div class="hotspot-list">
       ${hotspots.map(h=>`<div class="hotspot-item">
         <div style="font-size:16px">🔴</div>
-        <div class="hotspot-part">${h.part}</div>
+        <div class="hotspot-part">${esc(h.part)}</div>
         <div class="hotspot-bar-wrap"><div class="hotspot-bar" style="width:${Math.round(h.count/maxCount*100)}%"></div></div>
         <div class="hotspot-count">${h.count}次</div>
       </div>`).join('')}
@@ -385,11 +387,11 @@ function renderStudent(d){
     </div>
     <div style="display:flex;flex-direction:column;gap:8px;margin-top:14px">
       ${assessments.slice(0,4).map(a=>`<div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;display:flex;align-items:center;gap:12px">
-        <div style="font-size:11px;color:var(--dim);font-family:'DM Mono',monospace;min-width:80px">${a.week_date}</div>
-        <div style="font-size:24px;font-weight:900;color:var(--gold);font-family:'DM Mono',monospace">${a.score}</div>
+        <div style="font-size:11px;color:var(--dim);font-family:'DM Mono',monospace;min-width:80px">${esc(a.week_date)}</div>
+        <div style="font-size:24px;font-weight:900;color:var(--gold);font-family:'DM Mono',monospace">${esc(a.score)}</div>
         <div style="flex:1">
-          ${a.improvement?`<div style="font-size:12px;color:var(--green)">✅ ${a.improvement}</div>`:''}
-          ${a.next_focus?`<div style="font-size:12px;color:var(--dim)">→ ${a.next_focus}</div>`:''}
+          ${a.improvement?`<div style="font-size:12px;color:var(--green)">✅ ${esc(a.improvement)}</div>`:''}
+          ${a.next_focus?`<div style="font-size:12px;color:var(--dim)">→ ${esc(a.next_focus)}</div>`:''}
         </div>
       </div>`).join('')}
     </div></div>`;
@@ -427,8 +429,8 @@ function renderStudent(d){
               <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--dim)">${(t.tested_at||'').substring(0,10)||'—'}</td>
               <td style="font-family:'DM Mono',monospace;font-size:12px">${t.single_leg_left??'—'}</td>
               <td style="font-family:'DM Mono',monospace;font-size:12px">${t.single_leg_right??'—'}</td>
-              <td><span class="pill pill-gold">${t.jefferson_curl_level??'—'}</span></td>
-              <td><span class="pill ${compPill}">${t.squat_compensation||'—'}</span></td>
+              <td><span class="pill pill-gold">${esc(t.jefferson_curl_level??'—')}</span></td>
+              <td><span class="pill ${compPill}">${esc(t.squat_compensation||'—')}</span></td>
             </tr>`;
           }).join('')}
         </tbody>
@@ -454,7 +456,7 @@ function renderStudent(d){
         const cls=st==='優先關注'?'pill-red':st==='發展中'?'pill-amber':st==='過渡'?'pill-transition':st==='狀態良好'?'pill-green':'pill-gold';
         return `<div class="hotspot-item">
           <div class="hotspot-part">${name}</div>
-          <span class="pill ${cls}">${st}</span>
+          <span class="pill ${cls}">${esc(st)}</span>
           <div class="hotspot-count">${v.stage||'—'}</div>
         </div>`;
       }).join('')}
@@ -469,8 +471,8 @@ function renderStudent(d){
 }
 
 function photoEl(url,label){
-  if(url) return `<img class="split-photo" src="${url}" alt="${label}面" loading="lazy" onerror="this.style.display='none'">`;
-  return `<div class="no-photo">${label}面</div>`;
+  if(url) return `<img class="split-photo" src="${esc(url)}" alt="${esc(label)}面" loading="lazy" onerror="this.style.display='none'">`;
+  return `<div class="no-photo">${esc(label)}面</div>`;
 }
 
 function metricRow(label,before,after,unit){

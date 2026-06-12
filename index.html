@@ -1295,7 +1295,7 @@ function fisLoadingHTML(label) {
   return '<div class="fis-loading"><span class="fis-spin"></span>' + (label || '分析緊…') + '</div>';
 }
 function fisRetryHTML(retryFnName) {
-  return '<div class="fis-error">⚠️ AI 服務一時繁忙（唔係 app 壞咗），請撳「再試」。<button class="fis-retry" onclick="' + retryFnName + '()">再試</button></div>';
+  return '<div class="fis-error">⚠️ AI 暫時繁忙，請稍後再試（唔係 app 壞咗）。<button class="fis-retry" onclick="' + retryFnName + '()">再試</button></div>';
 }
 
 // 統一 AI 呼叫（4 個入口共用）：
