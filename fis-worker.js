@@ -344,7 +344,8 @@ return jsonResponse({ result: geminiResult.text });
 // 解析後快取嘅 Gemini 策略（endpoint 版本 + 有冇 thinkingConfig）。null = 未解析。
 let GEMINI_CFG = null;
 
-// 單次 Gemini 呼叫。prompt / parts / 圖片 / temperature 0.1（分類任務求一致）/ maxOutputTokens 8192。
+// 單次 Gemini 呼叫。prompt / parts / 圖片 / temperature 0 + seed 42（求 determinism，根治 step1 視覺→文字飄移令側線/淺前線跳色）/ maxOutputTokens 8192。
+// ⚠️ 共用：step1 / step2 / pain / progress 全部行呢個 config。eval 基線實錘跳色 100% 嚟自 step1（step2 分級清白）。
 // 新增 thinkingConfig:{thinkingBudget:0}（關思考減延遲），並自動 capability fallback：
 //   v1+thinking → v1beta+thinking → v1beta 去 thinkingConfig（只喺 400 唔識該欄位時先 fallback）。
 // timeoutMs：每次 fetch 嘅 AbortController 上限；abort（timeout）標記 timedOut。
@@ -357,7 +358,7 @@ const candidates = GEMINI_CFG ? [GEMINI_CFG] : [
 let fieldErr = null;
 for (const cand of candidates) {
 const endpoint = `https://generativelanguage.googleapis.com/${cand.ver}/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
-const generationConfig = { temperature: 0.1, maxOutputTokens: 8192 };
+const generationConfig = { temperature: 0, seed: 42, maxOutputTokens: 8192 };
 if (cand.thinking) generationConfig.thinkingConfig = { thinkingBudget: 0 };
 const body = { contents: [{ parts: parts }], generationConfig };
 const ctrl = new AbortController();
