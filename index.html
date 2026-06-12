@@ -919,6 +919,7 @@ var selectedFiles = [];
 var fisGender = null;   // '男' / '女'，client-side only（只用嚟 render 報告，今晚唔送 Worker/D1）
 var fisStep1Result = '';
 var fisStep2Result = '';
+var fisCurrentCacheKey = '';   // 相片 cache：今次分析嘅 key（runFisStep1 算、runFisStep2 成功後存）
 var selectedPart = '';
 var ratings = { r1: null, r2: null, r3: null };
 
@@ -1318,6 +1319,62 @@ function fisRefreshStart() {
   }
 }
 
+// ── 相片 cache（frontend-only）：同 4 張相 + 同性別 → 直接返之前存低嘅報告，skip Gemini ──
+// key = SHA-256( 每張「原始」File bytes 各自 SHA-256 → 排序（次序無關）→ + gender )，v1 prefix、LRU 10。
+function fisHex(buf) {
+  var b = new Uint8Array(buf), s = '';
+  for (var i = 0; i < b.length; i++) s += b[i].toString(16).padStart(2, '0');
+  return s;
+}
+async function fisPhotoCacheKey(photos, gender) {
+  if (!photos || photos.length < 4 || !window.crypto || !crypto.subtle) return '';
+  var hashes = [];
+  for (var i = 0; i < photos.length; i++) {
+    var buf = await photos[i].arrayBuffer();                 // 原始 bytes（壓縮前）
+    hashes.push(fisHex(await crypto.subtle.digest('SHA-256', buf)));
+  }
+  hashes.sort();                                             // 排序 → 揀相次序唔同都同 key
+  var joined = hashes.join('|') + '|g=' + (gender || '');
+  return 'fis_rep_v1_' + fisHex(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(joined)));
+}
+function fisCacheStore(key, entry) {
+  if (!key) return;
+  var IDX = 'fis_rep_v1_keys';
+  function readIdx() { try { return JSON.parse(localStorage.getItem(IDX) || '[]'); } catch (e) { return []; } }
+  try {
+    localStorage.setItem(key, JSON.stringify(entry));
+    var keys = readIdx().filter(function (k) { return k !== key; });   // move-to-end = 最近用
+    keys.push(key);
+    while (keys.length > 10) { try { localStorage.removeItem(keys.shift()); } catch (e) {} }   // LRU 刪最舊
+    localStorage.setItem(IDX, JSON.stringify(keys));
+  } catch (e) {
+    // quota 爆：evict 最舊一份再試一次，仲唔得就靜靜放棄（唔阻正常流程）
+    try {
+      var ks = readIdx();
+      if (ks.length) { localStorage.removeItem(ks.shift()); localStorage.setItem(IDX, JSON.stringify(ks)); localStorage.setItem(key, JSON.stringify(entry)); }
+    } catch (e2) { console.warn('FIS cache store skip:', e2 && e2.message); }
+  }
+}
+// HIT replay：填 step1/step2 完成面板（含「沿用之前」細字）+ 即 render 報告卡
+function fisCacheReplay() {
+  var note = '<div style="margin-bottom:8px;padding:8px 10px;background:rgba(255,200,69,0.10);border:1px solid rgba(255,200,69,0.3);border-radius:8px;font-size:11px;color:#ffc845">⚡ 沿用你之前相同相片嘅分析結果（即時返報告，唔使再等 AI）</div>';
+  var s1 = document.getElementById('fisStep1Result'), s1t = document.getElementById('fisStep1Text');
+  if (s1) s1.classList.add('show');
+  if (s1t) s1t.innerHTML = note +
+    '<div style="font-size:12px;line-height:2;color:#4af">' +
+    '<div>[✔] 體態三維幾何數據採樣 <span style="color:#ffc845">... 100%</span></div>' +
+    '<div>[✔] 五大筋膜鏈張力掃描 <span style="color:#ffc845">... 100%</span></div>' +
+    '<div>[✔] 靜態代償模式識別 <span style="color:#ffc845">... 100%</span></div></div>';
+  var s2 = document.getElementById('fisStep2Result'), s2t = document.getElementById('fisStep2Text');
+  if (s2) s2.classList.add('show');
+  if (s2t) s2t.innerHTML =
+    '<div style="font-size:12px;line-height:2;color:#4af">' +
+    '<div>[✔] 五大筋膜線評級封裝 <span style="color:#ffc845">... 100%</span></div></div>';
+  try { localStorage.setItem('fis_first_assess', '1'); } catch (e) {}
+  if (typeof runFisStep3 === 'function') runFisStep3();
+  setTimeout(function () { var c = document.getElementById('fis-report-card'); if (c) c.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 200);
+}
+
 async function runFisStep1() {
   // 相片版：4 張全必需（① 正面 ② 側面 ③ 背面 ④ 站姿前彎側面）
   var photos = selectedFiles.filter(function(f) { return f.type && f.type.startsWith('image/') && !isHeic(f); });
@@ -1325,6 +1382,26 @@ async function runFisStep1() {
   if (heicFiles.length > 0) { alert('偵測到 HEIC/HEIF 相片，請先轉成 JPG／PNG 再上載（iPhone：設定 → 相機 → 格式 →「最相容」）'); return; }
   if (photos.length < 4) { alert('請揀齊 4 張相：① 正面 ② 側面 ③ 背面 ④ 站姿前彎（側面）'); return; }
   if (!fisGender) { alert('請先揀性別（男／女），用嚟生成針對性報告'); return; }
+
+  // ── 相片 cache 查詢：HIT → 直接返之前報告、skip Gemini；MISS → 照分析（key 留俾 step2 存）──
+  fisCurrentCacheKey = '';
+  try {
+    fisCurrentCacheKey = await fisPhotoCacheKey(photos, fisGender);
+    if (fisCurrentCacheKey) {
+      var _raw = localStorage.getItem(fisCurrentCacheKey);
+      if (_raw) {
+        var _c = JSON.parse(_raw);
+        if (_c && _c.parsed) {
+          fisStep1Result = _c.step1Result || '';
+          fisStep2Result = _c.step2Result || '';
+          fisParsedData  = _c.parsed || null;
+          fisCacheReplay();
+          return;
+        }
+      }
+    }
+  } catch (e) { console.warn('FIS cache lookup skip:', e && e.message); }
+
   var result = document.getElementById('fisStep1Result');
   var resultText = document.getElementById('fisStep1Text');
   result.classList.add('show');
@@ -1398,6 +1475,12 @@ async function runFisStep2() {
   stopProgress('pb2', 'pt2');
   fisParsedData = data.parsed || null;
   fisStep2Result = data.result || '';
+  // 寫入相片 cache（同 4 張相 + 同性別 → 下次即時返報告）。全程 fail-safe。
+  try {
+    if (fisCurrentCacheKey && fisParsedData) {
+      fisCacheStore(fisCurrentCacheKey, { ts: Date.now(), gender: fisGender, step1Result: fisStep1Result, step2Result: fisStep2Result, parsed: fisParsedData });
+    }
+  } catch (e) { console.warn('FIS cache store skip:', e && e.message); }
   resultText.innerHTML =
     '<div style="font-size:12px;line-height:2;color:#4af;margin-bottom:8px">' +
     '<div>[✔] 筋膜鏈動力學代償矩陣分析 <span style="color:#ffc845">... 100%</span></div>' +
