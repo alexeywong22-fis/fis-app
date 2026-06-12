@@ -862,9 +862,22 @@ async function installA2HS() {
 function openLegal(id) {
   var active = document.querySelector('.screen.active');
   window.__legalReturn = active ? active.id : 'home';
+  // 若由 auth modal 撳入嚟：先收埋 modal（只 display:none、唔清空 input），令法律頁完整顯示喺最前；返到時重開
+  var m = document.getElementById('auth-modal');
+  if (m && m.style.display === 'flex') {
+    window.__legalFromAuth = true;
+    m.style.display = 'none';
+  }
   goTo(id);
 }
-function backFromLegal() { goTo(window.__legalReturn || 'home'); }
+function backFromLegal() {
+  goTo(window.__legalReturn || 'home');
+  if (window.__legalFromAuth) {
+    window.__legalFromAuth = false;
+    var m = document.getElementById('auth-modal');
+    if (m) m.style.display = 'flex';   // 重開 modal，之前輸入嘅 email/密碼仍喺度（冇 call openAuthModal 清空）
+  }
+}
 
   // ── 匿名用戶初始化 ────────────────────────────────────────
   window.FIS_USER_ID = localStorage.getItem('fis_user_id') || null;
