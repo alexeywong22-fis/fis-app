@@ -117,6 +117,14 @@
 | **基線結論** | `--fast`（step1 鎖死）→ **5 線全 100% 一致**；`full`（step1 每次重跑）→ **側線 90%、淺前線 80% 跳**。∴ 跳色 100% 嚟自 **step1 視覺→文字飄移**，step2 分級引擎清白 |
 | `5d5b222` | **Gemini `generationConfig`：`temperature 0.1→0` + 加 `seed:42`**（`fis-worker.js:361`，step1/step2/pain/progress **共用** `callGeminiOnce`）。根治 step1 跳色。topK/topP 留預設、maxOutputTokens 8192 / thinkingBudget 0 不變。seed 安全：鎖定 endpoint = v1beta（v1 唔收 thinkingConfig 會 fallback），v1beta 支援 seed;就算 v1 嗌都被現有 capability fallback（`unknown field`）接住跳走。**GitHub Actions「Deploy Worker」綠剔 + smoke test 200 確認 seed 收貨**。只動 generationConfig，易 revert。⚠️ 待用 `eval/consistency.js` full mode 覆測側線/淺前線是否升返 100% |
 
+> **A 前端相片 cache + 下載圖片 + 登入顯示名（多個 commit，純前端）**：① 相片 cache（`fis_rep_v2_` 感知 hash aHash+dHash 抗 iOS re-encode、LRU 10、HIT 即返報告）② 下載圖片 html2canvas（vendored 同源、Web Share/iOS + `<a download>`/desktop、onclone force 最終狀態修空白）③ 登入後顯示自訂名（重用 initUser fetch primary_user_id 個名，零 worker/schema）。
+
+## 2f. 誠實踩界 UX — 第 4 級「過渡」（2026-06-12）
+
+| Commit | 內容 |
+|---|---|
+| `b7e7eca` | **加第 4 級 `過渡`(Stage 1→2)，真踩界唔再硬跳 🟡/🟢**。step2 prompt（部署 worker）：過渡 bucket + 雙邊界 tie-break（上邊界 🟡↔🟢 / Stage 1↔2 唔肯定→過渡；下邊界 🔴↔🟡 維持🟡）+ 防 over-trigger（混合/偏弱→🟡、明顯全好→🟢、未評估→🟡）；映射 過渡→status「過渡」/stage「Stage 1→2」；trainingPlan 過渡→9.3A。index.html：tier `transition`（文字 `#9ed36a`、dot 漸變🟡→🟢、bar 78%、stage 強制「Stage 1→2」）+ 專屬 gender-neutral 5 句 `FIS_TRANSITION_COPY`（唔 fallback mid）+ startingPoint 過渡當 mid。coach.html `.pill-transition`。eval tierLabel 加過渡。**Deploy Worker 綠剔 + smoke test 200 確認出緊「過渡」**。⚠️ **B 穩定效果待用 `eval/consistency.js` 重跑 baseline 量度（唔假設）**。fascia_tests `stageNum('Stage 1→2')=null`（數字欄），status「過渡」存 ai_parsed → coach 照讀 |
+
 ---
 
 ## 2b. GitHub Actions 自動部署（2026-06-06 設定完成）
