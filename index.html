@@ -882,9 +882,14 @@ function backFromLegal() { goTo(window.__legalReturn || 'home'); }
       clearTimeout(timer);
       var data = await res.json();
       if (data.userId) {
+        // 守衛：登入狀態下 server 話搵唔到（existing:false）→ 唔好攞新 mint 嘅 id 蓋過 account 嘅 primary_user_id（保 linkage）
+        if (!data.existing && FIS_ACCOUNT && FIS_ACCOUNT.primary_user_id) {
+          if (typeof setupUsernameEditor === 'function') { setupUsernameEditor(); }
+          return;
+        }
         window.FIS_USER_ID = data.userId;
         localStorage.setItem('fis_user_id', window.FIS_USER_ID);
-        if (data.name) { localStorage.setItem('fis_username', data.name); }
+        if (data.name) { localStorage.setItem('fis_username', data.name); }   // account 名為準，覆蓋本地
         if (typeof setupUsernameEditor === 'function') { setupUsernameEditor(); }   // 保證 re-render：載入中… → 名
         console.log(data.existing ? 'Existing user: ' + window.FIS_USER_ID : 'New user: ' + window.FIS_USER_ID);
         return;
@@ -1001,7 +1006,7 @@ async function accountSubmit() {
       closeAuthModal();
       renderAccountState();
       var sc = document.getElementById('fis-save-card'); if (sc) sc.style.display = 'none';
-      try { setupUsernameEditor(); } catch(e) {}
+      try { initUser(); } catch(e) {}   // fisSetSession 已 set fis_user_id=primary_user_id → fetch account 名 + render chip（覆蓋本地 anon 名）
       return;
     }
     msg.textContent = (authMode === 'register')
@@ -1022,17 +1027,19 @@ async function accountLogout() {
 
 async function accountSessionCheck() {
   var t = fisAccountToken();
-  if (!t) { renderAccountState(); return; }
-  try {
-    var r = await fetch(API_BASE + '/api/account/auth/me', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: t }) });
-    var d = await r.json();
-    if (d && d.success) {
-      FIS_ACCOUNT = { email: d.email, primary_user_id: d.primary_user_id };
-      window.FIS_USER_ID = d.primary_user_id;
-      try { localStorage.setItem('fis_user_id', d.primary_user_id); } catch(e) {}
-    } else { fisClearSession(); }
-  } catch (e) { /* 離線：保留 token，唔登出 */ }
+  if (t) {
+    try {
+      var r = await fetch(API_BASE + '/api/account/auth/me', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: t }) });
+      var d = await r.json();
+      if (d && d.success) {
+        FIS_ACCOUNT = { email: d.email, primary_user_id: d.primary_user_id };
+        window.FIS_USER_ID = d.primary_user_id;
+        try { localStorage.setItem('fis_user_id', d.primary_user_id); } catch(e) {}
+      } else { fisClearSession(); }
+    } catch (e) { /* 離線：保留 token，唔登出 */ }
+  }
   renderAccountState();
+  initUser();   // 單一 init 入口：用最終正確 id（登入就 primary_user_id）fetch 名 + render chip（保住 retry/timeout、唔卡載入中）
 }
 
 function bindAll() {
@@ -1174,14 +1181,15 @@ function setupUsernameEditor() {
     var chip = document.createElement('div');
     chip.className = 'hu-chip';
     var label = document.createElement('span'); label.className = 'hu-label'; label.textContent = '學員';
-    var nm = document.createElement('span'); nm.className = 'hu-name'; nm.textContent = ready ? (name || '設定名稱') : '載入中…';
+    // B：離線/init 未返但 localStorage 有名 → 先顯示快取名（唔卡「載入中」）；init 成功會 re-render refresh
+    var nm = document.createElement('span'); nm.className = 'hu-name'; nm.textContent = ready ? (name || '設定名稱') : (name || '載入中…');
     var pen = document.createElement('span'); pen.className = 'hu-pencil'; pen.textContent = ready ? '✎' : '';
     chip.appendChild(label); chip.appendChild(nm); chip.appendChild(pen);
     if (ready) {
       chip.title = '撳一下改名';
       chip.addEventListener('click', renderEdit);
     } else {
-      chip.title = '帳號初始化中，請稍候…';
+      chip.title = name ? '帳號初始化中…（顯示緊上次嘅名）' : '帳號初始化中，請稍候…';
       chip.style.opacity = '0.6';
       chip.style.cursor = 'default';
     }
@@ -2450,8 +2458,7 @@ if ('serviceWorker' in navigator) {
 
 window.addEventListener('DOMContentLoaded', function() {
   bindAll();
-  initUser();               // 匿名用戶初始化（移到 DOM ready 後 + 重試，根治「學員 載入中…」卡死）
-  accountSessionCheck();   // Email 帳戶：app load 驗 session（有效 → 確保 fis_user_id = primary_user_id）
+  accountSessionCheck();   // 驗 session（登入→fis_user_id=primary_user_id）後內部叫 initUser()：單一 init、用最終 id fetch 名（保住「載入中」修復）
   try {
     if (localStorage.getItem('fis_agreed') === '1') { goTo('home'); maybeShowA2HS(); }
     else if (localStorage.getItem('fis_onboarded') !== '1') { goTo('onboarding'); }
