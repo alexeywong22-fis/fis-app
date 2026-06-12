@@ -53,6 +53,16 @@ return handleAccountLogout(request, env);
 if (path === '/api/account/auth/me' && request.method === 'POST') {
 return handleAccountMe(request, env);
 }
+// Email OTP（無密碼登入 + 密碼重設），body-based，跟 account 同一 pattern
+if (path === '/api/account/otp/request' && request.method === 'POST') {
+return handleOtpRequest(request, env);
+}
+if (path === '/api/account/otp/verify' && request.method === 'POST') {
+return handleOtpVerify(request, env);
+}
+if (path === '/api/account/password/reset' && request.method === 'POST') {
+return handlePasswordReset(request, env);
+}
 if (path === '/api/weekly/save' && request.method === 'POST') {
 return handleWeeklySave(request, env);
 }
@@ -1238,5 +1248,137 @@ let body; try { body = await request.json(); } catch (e) { body = {}; }
 const acct = await accountFromToken(body.token || '', env);
 if (!acct) return jsonResponse({ error: 'Unauthorized' }, 401);
 return jsonResponse({ success: true, email: acct.email, primary_user_id: acct.primary_user_id });
+} catch (e) { return jsonResponse({ error: e.message }, 500); }
+}
+
+// ── Email OTP 原語 ───────────────────────────────────────────────────────────
+// 重用：coachPbkdf2 / coachSha256Hex / timingSafeEqual / coachBase64Url、user_account_sessions、ACCOUNT_SESSION_TTL_MS。
+const OTP_TTL_MS = 10 * 60 * 1000;           // 驗證碼 10 分鐘有效
+const OTP_MAX_ATTEMPTS = 5;                  // 同一碼最多試 5 次，超過即作廢
+const OTP_HOURLY_LIMIT = 5;                  // 每 email+purpose 每小時最多請求 5 次
+// 寄件人：先用 Resend 測試域名；驗證 alexeywong.com 後改 'FIS <noreply@alexeywong.com>'
+const OTP_FROM = 'FIS <onboarding@resend.dev>';
+
+// 出 session token（同 login/register 一致：random token、DB 只存 SHA-256）
+async function issueAccountSession(accountId, env) {
+const token = coachBase64Url(crypto.getRandomValues(new Uint8Array(32)));
+const tokenHash = await coachSha256Hex(token);
+const expires = new Date(Date.now() + ACCOUNT_SESSION_TTL_MS).toISOString();
+await env.DB.prepare('INSERT INTO user_account_sessions (token_hash, account_id, expires_at) VALUES (?, ?, ?)').bind(tokenHash, accountId, expires).run();
+return { token, expires };
+}
+
+// Resend 寄 6 位碼。失敗只 log（對外仍 generic），唔 throw。
+async function sendOtpEmail(email, code, purpose, env) {
+const key = env.RESEND_API_KEY;
+if (!key) { console.warn('RESEND_API_KEY not set; OTP not emailed'); return false; }
+const isReset = purpose === 'reset';
+const subject = isReset ? 'FIS 密碼重設驗證碼' : 'FIS 登入驗證碼';
+const lead = isReset ? '你要求重設 FIS 帳戶密碼。' : '你要求用驗證碼登入 FIS。';
+const html =
+'<div style="font-family:-apple-system,\'Noto Sans HK\',sans-serif;max-width:480px;margin:0 auto;background:#2a3d63;color:#fdf5e5;border-radius:14px;padding:28px">' +
+'<div style="font-size:13px;letter-spacing:3px;color:#ffc845;font-weight:700">FIS 筋膜整合系統</div>' +
+'<p style="font-size:14px;line-height:1.7;margin:16px 0 8px">' + lead + ' 請喺 App 內輸入以下 6 位驗證碼：</p>' +
+'<div style="font-size:34px;font-weight:900;letter-spacing:10px;color:#ffc845;text-align:center;background:rgba(255,200,69,0.1);border:1px solid rgba(255,200,69,0.4);border-radius:10px;padding:14px 0;margin:14px 0">' + code + '</div>' +
+'<p style="font-size:12px;color:#ccd6e8;line-height:1.7;margin:8px 0">⏱ 10 分鐘內有效。為咗你嘅帳戶安全，<strong>唔好將驗證碼分享俾任何人</strong>（包括自稱 FIS 職員）。如果唔係你本人要求，可以忽略呢封電郵。</p>' +
+'<hr style="border:none;border-top:1px solid rgba(255,200,69,0.15);margin:18px 0">' +
+'<p style="font-size:11px;color:#93a4c4;line-height:1.6;margin:0">FIS 屬教育性體態訓練參考工具，並非醫療診斷。本郵件由系統自動發送，請勿直接回覆。</p>' +
+'</div>';
+try {
+const r = await fetch('https://api.resend.com/emails', {
+method: 'POST',
+headers: { 'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json' },
+body: JSON.stringify({ from: OTP_FROM, to: [email], subject, html })
+});
+if (!r.ok) { console.warn('Resend send failed ' + r.status + ': ' + (await r.text().catch(() => ''))); return false; }
+return true;
+} catch (e) { console.warn('Resend error: ' + (e && e.message)); return false; }
+}
+
+// 驗證最新一張有效 OTP。consume=true → 成功後標 used。返 { ok, account }。
+async function checkOtp(email, purpose, code, env, consume) {
+if (!/^\d{6}$/.test(String(code || ''))) return { ok: false };
+const row = await env.DB.prepare(
+"SELECT id, code_hash, expires_at, attempts FROM email_otps WHERE email = ? AND purpose = ? AND used = 0 ORDER BY created_at DESC LIMIT 1"
+).bind(email, purpose).first();
+if (!row) return { ok: false };
+if (new Date(row.expires_at).getTime() < Date.now() || row.attempts >= OTP_MAX_ATTEMPTS) {
+await env.DB.prepare('UPDATE email_otps SET used = 1 WHERE id = ?').bind(row.id).run();
+return { ok: false };
+}
+await env.DB.prepare('UPDATE email_otps SET attempts = attempts + 1 WHERE id = ?').bind(row.id).run();
+const codeHash = await coachSha256Hex(purpose + ':' + email + ':' + String(code));
+if (!timingSafeEqual(codeHash, row.code_hash)) return { ok: false };
+if (consume) await env.DB.prepare('UPDATE email_otps SET used = 1 WHERE id = ?').bind(row.id).run();
+const account = await env.DB.prepare("SELECT id, primary_user_id FROM user_accounts WHERE email = ? AND status = 'active'").bind(email).first();
+if (!account) return { ok: false };
+return { ok: true, account };
+}
+
+// POST /api/account/otp/request { email, purpose } —— 一律 generic（防枚舉），只喺帳戶真存在時先寄
+async function handleOtpRequest(request, env) {
+if (!env.DB) return jsonResponse({ error: 'DB not configured' }, 500);
+let body; try { body = await request.json(); } catch (e) { return jsonResponse({ error: 'Invalid JSON body' }, 400); }
+const email = (body.email || '').trim().toLowerCase();
+const purpose = body.purpose === 'reset' ? 'reset' : 'login';
+const generic = jsonResponse({ success: true, message: '如已有帳戶，驗證碼已寄出（10 分鐘內有效）' });
+try {
+if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return generic;
+// 限速（用 SQL datetime 比較，避時區問題）：60 秒 cooldown + 每小時上限
+const cd = await env.DB.prepare("SELECT COUNT(*) AS c FROM email_otps WHERE email = ? AND purpose = ? AND created_at > datetime('now','-60 seconds')").bind(email, purpose).first();
+if (cd && cd.c > 0) return generic;
+const hr = await env.DB.prepare("SELECT COUNT(*) AS c FROM email_otps WHERE email = ? AND purpose = ? AND created_at > datetime('now','-1 hour')").bind(email, purpose).first();
+if (hr && hr.c >= OTP_HOURLY_LIMIT) return generic;
+// 帳戶必須存在（login 同 reset 都係）；唔存在照回 generic、唔寄
+const acct = await env.DB.prepare("SELECT id FROM user_accounts WHERE email = ? AND status = 'active'").bind(email).first();
+if (!acct) return generic;
+// 作廢之前未用嘅碼，只留最新一張有效
+await env.DB.prepare('UPDATE email_otps SET used = 1 WHERE email = ? AND purpose = ? AND used = 0').bind(email, purpose).run();
+const code = String(crypto.getRandomValues(new Uint32Array(1))[0] % 1000000).padStart(6, '0');
+const codeHash = await coachSha256Hex(purpose + ':' + email + ':' + code);
+const id = 'otp_' + crypto.randomUUID().replace(/-/g, '').substring(0, 16);
+const expires = new Date(Date.now() + OTP_TTL_MS).toISOString();
+await env.DB.prepare('INSERT INTO email_otps (id, email, code_hash, purpose, expires_at) VALUES (?, ?, ?, ?, ?)').bind(id, email, codeHash, purpose, expires).run();
+await sendOtpEmail(email, code, purpose, env);
+return generic;
+} catch (e) { console.warn('otp request error: ' + (e && e.message)); return generic; }
+}
+
+// POST /api/account/otp/verify { email, purpose, code } —— login=消耗+出 session；reset=非消耗 peek
+async function handleOtpVerify(request, env) {
+if (!env.DB) return jsonResponse({ error: 'DB not configured' }, 500);
+let body; try { body = await request.json(); } catch (e) { return jsonResponse({ error: 'Invalid JSON body' }, 400); }
+const email = (body.email || '').trim().toLowerCase();
+const purpose = body.purpose === 'reset' ? 'reset' : 'login';
+const invalid = jsonResponse({ error: 'OTP_INVALID', message: '驗證碼錯誤或已過期' }, 401);
+try {
+if (purpose === 'reset') {
+const r = await checkOtp(email, 'reset', body.code, env, false);   // 非消耗：畀前端進入新密碼步驟
+return r.ok ? jsonResponse({ success: true }) : invalid;
+}
+const r = await checkOtp(email, 'login', body.code, env, true);     // login：消耗 + 出 session
+if (!r.ok) return invalid;
+await env.DB.prepare('UPDATE user_accounts SET email_verified = 1 WHERE id = ?').bind(r.account.id).run();
+const sess = await issueAccountSession(r.account.id, env);
+return jsonResponse({ success: true, token: sess.token, expires_at: sess.expires, primary_user_id: r.account.primary_user_id, email });
+} catch (e) { return invalid; }
+}
+
+// POST /api/account/password/reset { email, code, newPassword } —— 消耗碼 + 改密碼 + 自動登入
+async function handlePasswordReset(request, env) {
+if (!env.DB) return jsonResponse({ error: 'DB not configured' }, 500);
+let body; try { body = await request.json(); } catch (e) { return jsonResponse({ error: 'Invalid JSON body' }, 400); }
+const email = (body.email || '').trim().toLowerCase();
+const newPassword = body.newPassword || '';
+try {
+if (typeof newPassword !== 'string' || newPassword.length < 8) return jsonResponse({ error: 'WEAK_PASSWORD', message: '密碼最少 8 位' }, 400);
+const r = await checkOtp(email, 'reset', body.code, env, true);     // 消耗
+if (!r.ok) return jsonResponse({ error: 'OTP_INVALID', message: '驗證碼錯誤或已過期' }, 401);
+const salt = crypto.getRandomValues(new Uint8Array(16));
+const hash = await coachPbkdf2(newPassword, salt, COACH_PBKDF2_ITERATIONS);
+await env.DB.prepare('UPDATE user_accounts SET password_hash = ?, salt = ?, iterations = ?, hash_version = ?, email_verified = 1 WHERE id = ?')
+.bind(coachBufToB64(hash), coachBufToB64(salt), COACH_PBKDF2_ITERATIONS, COACH_HASH_VERSION, r.account.id).run();
+const sess = await issueAccountSession(r.account.id, env);          // 自動登入
+return jsonResponse({ success: true, token: sess.token, expires_at: sess.expires, primary_user_id: r.account.primary_user_id, email });
 } catch (e) { return jsonResponse({ error: e.message }, 500); }
 }

@@ -758,16 +758,29 @@ textarea.sym { width: 100%; background: var(--bg3); border: 1px solid rgba(255,2
   </div>
 </div>
 
-<!-- Email 帳戶 modal（v1 密碼）-->
+<!-- Email 帳戶 modal（密碼 + 驗證碼登入 + 密碼重設）-->
 <div class="auth-overlay" id="auth-modal" style="display:none">
   <div class="auth-modal">
     <div class="auth-modal-title" id="auth-modal-title">註冊帳戶</div>
     <input type="email" id="auth-email" class="auth-modal-input" placeholder="email" autocomplete="email">
-    <input type="password" id="auth-pass" class="auth-modal-input" placeholder="密碼（最少 8 位）" autocomplete="current-password">
-    <div class="auth-modal-msg" id="auth-msg"></div>
-    <div style="font-size:11px;color:var(--text-dim);line-height:1.6;margin:2px 0 10px;text-align:center">你嘅電郵僅用作登入及帳戶識別，不會用作推廣。註冊即表示你已閱讀並同意我哋嘅<a data-legal="terms" style="color:var(--gold-dim);text-decoration:underline;cursor:pointer">服務條款</a>及<a data-legal="privacy" style="color:var(--gold-dim);text-decoration:underline;cursor:pointer">私隱政策</a>。</div>
-    <button class="btn-gold" id="auth-submit" style="width:100%">確認</button>
-    <div class="auth-modal-foot"><a id="auth-toggle"></a>　·　<a id="auth-cancel">取消</a></div>
+    <!-- 密碼 view -->
+    <div id="auth-pw-view">
+      <input type="password" id="auth-pass" class="auth-modal-input" placeholder="密碼（最少 8 位）" autocomplete="current-password">
+      <div class="auth-modal-msg" id="auth-msg"></div>
+      <div style="font-size:11px;color:var(--text-dim);line-height:1.6;margin:2px 0 10px;text-align:center">你嘅電郵僅用作登入及帳戶識別，不會用作推廣。註冊即表示你已閱讀並同意我哋嘅<a data-legal="terms" style="color:var(--gold-dim);text-decoration:underline;cursor:pointer">服務條款</a>及<a data-legal="privacy" style="color:var(--gold-dim);text-decoration:underline;cursor:pointer">私隱政策</a>。</div>
+      <button class="btn-gold" id="auth-submit" style="width:100%">確認</button>
+      <div class="auth-modal-foot" id="auth-altlinks" style="display:none"><a id="auth-otp-login">用驗證碼登入</a>　·　<a id="auth-reset">忘記密碼？</a></div>
+      <div class="auth-modal-foot"><a id="auth-toggle"></a>　·　<a id="auth-cancel">取消</a></div>
+    </div>
+    <!-- 驗證碼 / 重設 view -->
+    <div id="auth-otp-view" style="display:none">
+      <div id="otp-hint" style="font-size:12px;color:var(--text-dim);line-height:1.6;margin:2px 0 10px;text-align:center"></div>
+      <input type="text" id="otp-code" class="auth-modal-input" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="6 位驗證碼" style="text-align:center;letter-spacing:8px;font-size:20px;font-weight:700">
+      <input type="password" id="otp-newpass" class="auth-modal-input" placeholder="新密碼（最少 8 位）" autocomplete="new-password" style="display:none">
+      <div class="auth-modal-msg" id="otp-msg"></div>
+      <button class="btn-gold" id="otp-submit" style="width:100%">驗證</button>
+      <div class="auth-modal-foot"><a id="otp-resend">重新寄</a>　·　<a id="otp-back">返回</a></div>
+    </div>
   </div>
 </div>
 
@@ -996,10 +1009,99 @@ function openAuthModal(mode) {
   if (passI) passI.value = '';
   if (title) title.textContent = (authMode === 'register') ? '註冊帳戶' : '登入帳戶';
   if (toggle) toggle.textContent = (authMode === 'register') ? '已有帳戶？登入' : '未有帳戶？註冊';
+  authShowView('password');   // 確保返到密碼 view
+  var alt = document.getElementById('auth-altlinks'); if (alt) alt.style.display = (authMode === 'login') ? 'block' : 'none';   // 驗證碼/忘記密碼 只喺登入模式出
+  if (otpResendTimer) { clearInterval(otpResendTimer); otpResendTimer = null; }
   if (m) m.style.display = 'flex';
   if (emailI) setTimeout(function() { emailI.focus(); }, 50);
 }
-function closeAuthModal() { var m = document.getElementById('auth-modal'); if (m) m.style.display = 'none'; }
+function closeAuthModal() { var m = document.getElementById('auth-modal'); if (m) m.style.display = 'none'; if (otpResendTimer) { clearInterval(otpResendTimer); otpResendTimer = null; } }
+
+// ── Email OTP（無密碼登入 + 密碼重設）：碼輸入返 app（PWA-safe），唔靠 magic link ──
+var otpEmail = '', otpPurpose = 'login', otpResendTimer = null;
+function authShowView(v) {
+  var pw = document.getElementById('auth-pw-view'), otp = document.getElementById('auth-otp-view');
+  if (pw) pw.style.display = (v === 'otp') ? 'none' : 'block';
+  if (otp) otp.style.display = (v === 'otp') ? 'block' : 'none';
+}
+function otpStartCooldown(sec) {
+  var link = document.getElementById('otp-resend'); if (!link) return;
+  if (otpResendTimer) { clearInterval(otpResendTimer); otpResendTimer = null; }
+  var left = sec;
+  link.style.pointerEvents = 'none'; link.style.opacity = '0.5'; link.textContent = '重新寄（' + left + 's）';
+  otpResendTimer = setInterval(function() {
+    left--;
+    if (left <= 0) { clearInterval(otpResendTimer); otpResendTimer = null; link.textContent = '重新寄'; link.style.pointerEvents = ''; link.style.opacity = ''; }
+    else { link.textContent = '重新寄（' + left + 's）'; }
+  }, 1000);
+}
+async function startOtp(purpose) {
+  var email = (document.getElementById('auth-email').value || '').trim().toLowerCase();
+  var msg = document.getElementById('auth-msg');
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { if (msg) msg.textContent = '請先輸入有效 email'; return; }
+  otpEmail = email; otpPurpose = purpose;
+  var code = document.getElementById('otp-code'); if (code) code.value = '';
+  var np = document.getElementById('otp-newpass'); if (np) { np.value = ''; np.style.display = 'none'; }
+  var omsg = document.getElementById('otp-msg'); if (omsg) omsg.textContent = '';
+  var sub = document.getElementById('otp-submit'); if (sub) { sub.textContent = '驗證'; sub.disabled = false; }
+  document.getElementById('auth-modal-title').textContent = (purpose === 'reset') ? '重設密碼' : '驗證碼登入';
+  document.getElementById('otp-hint').textContent = '驗證碼已寄去 ' + email + '（如該 email 有帳戶）。請查收並輸入 6 位碼，10 分鐘內有效。';
+  authShowView('otp');
+  otpStartCooldown(60);
+  try { await fetch(API_BASE + '/api/account/otp/request', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: email, purpose: purpose }) }); } catch (e) {}
+  setTimeout(function() { if (code) code.focus(); }, 50);
+}
+async function otpResend() {
+  if (otpResendTimer) return;   // cooldown 中，唔俾撳
+  otpStartCooldown(60);
+  var omsg = document.getElementById('otp-msg'); if (omsg) omsg.textContent = '已重新寄出驗證碼。';
+  try { await fetch(API_BASE + '/api/account/otp/request', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: otpEmail, purpose: otpPurpose }) }); } catch (e) {}
+}
+function otpOnAuthed(d) {   // 同 password login 一致
+  fisSetSession(d.token, d.primary_user_id, d.email);
+  if (otpResendTimer) { clearInterval(otpResendTimer); otpResendTimer = null; }
+  closeAuthModal();
+  renderAccountState();
+  var sc = document.getElementById('fis-save-card'); if (sc) sc.style.display = 'none';
+  try { initUser(); } catch (e) {}
+}
+async function otpSubmit() {
+  var omsg = document.getElementById('otp-msg');
+  var code = (document.getElementById('otp-code').value || '').trim();
+  if (!/^\d{6}$/.test(code)) { if (omsg) omsg.textContent = '請輸入 6 位驗證碼'; return; }
+  var sub = document.getElementById('otp-submit');
+  var npInput = document.getElementById('otp-newpass');
+  // 重設第二步：已 verify、新密碼 input 顯示緊 → 改密碼 + 自動登入
+  if (otpPurpose === 'reset' && npInput && npInput.style.display !== 'none') {
+    var np = npInput.value || '';
+    if (np.length < 8) { if (omsg) omsg.textContent = '新密碼最少 8 位'; return; }
+    if (sub) sub.disabled = true; if (omsg) omsg.textContent = '重設緊…';
+    try {
+      var rr = await fetch(API_BASE + '/api/account/password/reset', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: otpEmail, code: code, newPassword: np }) });
+      var dd = await rr.json();
+      if (sub) sub.disabled = false;
+      if (dd && dd.success) { otpOnAuthed(dd); return; }
+      if (omsg) omsg.textContent = (dd && dd.error === 'WEAK_PASSWORD') ? '新密碼最少 8 位' : '驗證碼錯誤或已過期';
+    } catch (e) { if (sub) sub.disabled = false; if (omsg) omsg.textContent = '連線失敗，請再試'; }
+    return;
+  }
+  // verify 步
+  if (sub) sub.disabled = true; if (omsg) omsg.textContent = '驗證緊…';
+  try {
+    var r = await fetch(API_BASE + '/api/account/otp/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: otpEmail, purpose: otpPurpose, code: code }) });
+    var d = await r.json();
+    if (sub) sub.disabled = false;
+    if (d && d.success) {
+      if (otpPurpose === 'login') { otpOnAuthed(d); return; }
+      // reset：verify 成功 → 顯示新密碼 input、掣轉「重設密碼」
+      if (npInput) { npInput.style.display = 'block'; setTimeout(function() { npInput.focus(); }, 50); }
+      if (sub) sub.textContent = '重設密碼';
+      if (omsg) omsg.textContent = '驗證成功，請輸入新密碼。';
+      return;
+    }
+    if (omsg) omsg.textContent = '驗證碼錯誤或已過期';
+  } catch (e) { if (sub) sub.disabled = false; if (omsg) omsg.textContent = '連線失敗，請再試'; }
+}
 
 async function accountSubmit() {
   var email = (document.getElementById('auth-email').value || '').trim().toLowerCase();
@@ -1160,6 +1262,14 @@ function bindAll() {
   var atog = document.getElementById('auth-toggle'); if (atog) atog.addEventListener('click', function() { openAuthModal(authMode === 'register' ? 'login' : 'register'); });
   var acan = document.getElementById('auth-cancel'); if (acan) acan.addEventListener('click', closeAuthModal);
   var apass = document.getElementById('auth-pass'); if (apass) apass.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); accountSubmit(); } });
+  // Email OTP（驗證碼登入 / 忘記密碼）綁定
+  var aotp = document.getElementById('auth-otp-login'); if (aotp) aotp.addEventListener('click', function() { startOtp('login'); });
+  var arst = document.getElementById('auth-reset'); if (arst) arst.addEventListener('click', function() { startOtp('reset'); });
+  var osub = document.getElementById('otp-submit'); if (osub) osub.addEventListener('click', otpSubmit);
+  var ores = document.getElementById('otp-resend'); if (ores) ores.addEventListener('click', otpResend);
+  var obak = document.getElementById('otp-back'); if (obak) obak.addEventListener('click', function() { openAuthModal('login'); });
+  var ocode = document.getElementById('otp-code'); if (ocode) ocode.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); otpSubmit(); } });
+  var onp = document.getElementById('otp-newpass'); if (onp) onp.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); otpSubmit(); } });
 
   var btnFisStep1 = document.getElementById('btn-fis-step1'); if (btnFisStep1) { btnFisStep1.addEventListener('click', runFisStep1); }
   var btnFisStep2 = document.getElementById('btn-fis-step2'); if (btnFisStep2) { btnFisStep2.addEventListener('click', runFisStep2); }

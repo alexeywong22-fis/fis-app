@@ -22,6 +22,7 @@ database_id = "6bf1dc99-d448-4e1a-8267-64f7ed8198a4"
 # Secret 一旦設定就會跨部署自動保留，wrangler deploy 唔會覆蓋佢哋。
 #
 #   - GEMINI_API_KEY          ← Gemini AI key
+#   - RESEND_API_KEY          ← Resend 寄 email OTP（無密碼登入/密碼重設）；用 `npx wrangler secret put RESEND_API_KEY`
 #   - <每個教練 username>      ← 教練密碼（code 用 env[username] 讀取，
 #                                例如教練帳號 alexeywong22 就要
 #                                `npx wrangler secret put alexeywong22`）
