@@ -172,6 +172,7 @@
 - [ ] **教練 auth Stage 2**：coach.html 接新 `/api/coach/auth/login`（存 token 唔存密碼）、保護頁面用 `/me` 驗 token；`corsHeaders()` 加 `Authorization`；之後逐步淘汰舊 `env[username]` 共享密碼登入。
 - [ ] 教練 auth 加強（按需）：admin 管理教練 UI、session 撤銷/列表、登入失敗 rate-limit；hash 升級 WASM argon2/bcrypt（已留 `hash_version`）。
 - [ ] **清 `handleFisStep3` 死碼（Stage 2，launch 前唔好掂 worker）**：`fis-worker.js:466-475` 個 handler + router `path === '/api/fis-step3'`（line 96-97）。前端 `runFisStep3()`（"生成視覺化圖片" 掣）係 client 自己 render 報告卡，從來冇 fetch `/api/fis-step3`，個 response `imageUrl` 寫死 `https://…github.io/fis-app/fis-bg.png`（全 repo 唯一寫死 `/fis-app/` 嘅實際 code）永遠冇人用 → 死碼。搬 root domain **零影響**，所以拖到 Stage 2 清，避免 launch 前重新部署 worker。
+- [ ] **[Phase 1.5/2 · 決策 2026-06-12] 體態相儲存（R2）—— 暫緩**，維持「相即送 Gemini 即棄、永不儲存」現狀（privacy by default）。將來要做必須同時具備：① 明示 consent ② privacy policy（覆蓋儲存+保留+刪除）③ 安全存取控制 ④ 年齡驗證 ⑤ 保留期。唔可以單獨 bolt R2 上去。法律組（6/7/14）優先，次序排喺 privacy 基建之後。
 
 ### 部署資訊 / 慣例
 - **部署指令**：`export CLOUDFLARE_API_TOKEN=<token> && npm run deploy`（或 `npx wrangler deploy`）。
