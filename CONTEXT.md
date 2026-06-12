@@ -109,6 +109,16 @@
 
 ---
 
+## 2e. 一致性 eval + Gemini determinism 修復（2026-06-12）
+
+| Commit | 內容 |
+|---|---|
+| `4ec8d57`+`fe65362` | **FIS 一致性 eval harness**（`eval/consistency.js`，standalone node，零依賴）：1:1 複製真實 call `POST /api/fis-step1{images}` → `/api/fis-step2{step1Result}` → parse 5 線 tier。`sips` 壓相（長邊 1200px/JPEG80%，收 **HEIC**/jpg/png 大細階）= app `compressImage`。CLI：`N`（預設10）、`男/女`（gender **唔送 API、唔影響 tier**，只記錄）、`--fast`（step1 鎖一次 + step2 ×N，隔離分級引擎）。503/錯誤 retry ×3、唔當 flip。print 每線 tier 分佈 + 一致% + 螺旋線 ⭐，存 `eval/baseline.json`。私人測試相 `.gitignore`。**read-only，跑 N 次唔污染 D1** |
+| **基線結論** | `--fast`（step1 鎖死）→ **5 線全 100% 一致**；`full`（step1 每次重跑）→ **側線 90%、淺前線 80% 跳**。∴ 跳色 100% 嚟自 **step1 視覺→文字飄移**，step2 分級引擎清白 |
+| `5d5b222` | **Gemini `generationConfig`：`temperature 0.1→0` + 加 `seed:42`**（`fis-worker.js:361`，step1/step2/pain/progress **共用** `callGeminiOnce`）。根治 step1 跳色。topK/topP 留預設、maxOutputTokens 8192 / thinkingBudget 0 不變。seed 安全：鎖定 endpoint = v1beta（v1 唔收 thinkingConfig 會 fallback），v1beta 支援 seed;就算 v1 嗌都被現有 capability fallback（`unknown field`）接住跳走。**GitHub Actions「Deploy Worker」綠剔 + smoke test 200 確認 seed 收貨**。只動 generationConfig，易 revert。⚠️ 待用 `eval/consistency.js` full mode 覆測側線/淺前線是否升返 100% |
+
+---
+
 ## 2b. GitHub Actions 自動部署（2026-06-06 設定完成）
 
 - `.github/workflows/deploy.yml`（**經 GitHub 網頁建立**，commit `9aa53f3`）：push 到 `main` → `cloudflare/wrangler-action@v3` 自動部署 fis-app worker。✅ 已驗證綠剔（Deploy Worker #6）。
