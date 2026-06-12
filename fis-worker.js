@@ -813,11 +813,14 @@ const users = await env.DB.prepare(`
         COUNT(DISTINCT ft.id) as fascia_count,
         COUNT(DISTINCT pl.id) as log_count,
         COUNT(DISTINCT pd.id) as pain_count,
-        MAX(pl.logged_at) as last_active
+        MAX(pl.logged_at) as last_active,
+        MAX(ua.email) as email,
+        MAX(CASE WHEN ua.id IS NOT NULL THEN 1 ELSE 0 END) as is_registered
       FROM users u
       LEFT JOIN fascia_tests ft ON ft.user_id = u.id
       LEFT JOIN progress_logs pl ON pl.user_id = u.id
       LEFT JOIN pain_diagnoses pd ON pd.user_id = u.id
+      LEFT JOIN user_accounts ua ON ua.primary_user_id = u.id
       GROUP BY u.id
       ORDER BY last_active DESC NULLS LAST
     `).all();
