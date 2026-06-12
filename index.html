@@ -702,7 +702,8 @@ textarea.sym { width: 100%; background: var(--bg3); border: 1px solid rgba(255,2
       <li><strong>帳戶識別碼</strong>：匿名用戶 ID（自動生成）；</li>
       <li><strong>用戶自訂名稱</strong>（如你選擇設定）；</li>
       <li><strong>訓練數據</strong>：發力感評分、腰部代償、張力速度、痛點部位及症狀描述、功能性測試數據、每週自評；</li>
-      <li><strong>影像</strong>：你上載作體態分析嘅相片及影片（影片會喺你嘅裝置抽取截圖）；</li>
+      <li><strong>影像</strong>：你上載作體態分析嘅相片，只會即時傳送作 AI 分析，分析後不會儲存於我哋伺服器（詳見第 4 節）；</li>
+      <li><strong>電郵地址</strong>（如你註冊帳戶）：僅用作登入及帳戶識別，不會用作任何推廣用途；</li>
       <li><strong>技術性資料</strong>：瀏覽器本地儲存（localStorage）所需嘅設定值。</li>
     </ul>
 
@@ -710,14 +711,14 @@ textarea.sym { width: 100%; background: var(--bg3); border: 1px solid rgba(255,2
     <div class="legal-p">我哋收集上述資料係為咗提供 AI 體態分析、訓練追蹤及個人化建議。GDPR 下嘅法律依據為：你嘅<strong>同意</strong>（提供影像及健康相關數據）及<strong>合法權益</strong>（提供及改善服務）。你可隨時撤回同意。</div>
 
     <div class="legal-h">4. AI 處理及第三方</div>
-    <div class="legal-p">你嘅相片、影片截圖及訓練數據會傳送至 <strong>Google Gemini</strong>（Google 提供嘅 AI 服務）進行分析。資料亦儲存於 <strong>Cloudflare</strong>（D1 資料庫及 Workers 平台）。該等第三方按其自身私隱政策處理資料。</div>
+    <div class="legal-p">你上載嘅相片及你提供嘅訓練數據會傳送至 <strong>Google Gemini</strong>（Google 提供嘅 AI 服務）進行分析，該第三方按其自身私隱政策處理資料。<strong>重要：你上載嘅相片只用作即時分析，分析完成後不會由我哋保留或儲存</strong>；我哋只會將分析所得嘅文字結果（例如體態評級、訓練數據記錄）儲存於 <strong>Cloudflare</strong>（D1 資料庫及 Workers 平台）。</div>
 
     <div class="legal-h">5. 資料儲存及保留</div>
     <div class="legal-p">資料儲存於 Cloudflare 基礎設施。我哋只會喺達成上述目的所需嘅期間內保留你嘅資料；你亦可要求刪除（見第 9 節）。</div>
 
     <div class="legal-h">6. 資料共享及披露</div>
     <ul class="legal-list">
-      <li><strong>你嘅教練</strong>：如你係教練學員，教練可透過後台查看你嘅訓練數據及體態相片，作指導用途；</li>
+      <li><strong>你嘅教練</strong>：如你係教練學員，教練可透過後台查看你嘅訓練數據及分析結果（文字），作指導用途；教練無法查看你上載嘅原始相片；</li>
       <li><strong>服務供應商</strong>：Google、Cloudflare（用於 AI 處理及儲存）；</li>
       <li><strong>法律要求</strong>：當法律要求或為保障權利時，我哋可能披露資料。</li>
     </ul>
@@ -764,6 +765,7 @@ textarea.sym { width: 100%; background: var(--bg3); border: 1px solid rgba(255,2
     <input type="email" id="auth-email" class="auth-modal-input" placeholder="email" autocomplete="email">
     <input type="password" id="auth-pass" class="auth-modal-input" placeholder="密碼（最少 8 位）" autocomplete="current-password">
     <div class="auth-modal-msg" id="auth-msg"></div>
+    <div style="font-size:11px;color:var(--text-dim);line-height:1.6;margin:2px 0 10px;text-align:center">你嘅電郵僅用作登入及帳戶識別，不會用作推廣。註冊即表示你已閱讀並同意我哋嘅<a data-legal="terms" style="color:var(--gold-dim);text-decoration:underline;cursor:pointer">服務條款</a>及<a data-legal="privacy" style="color:var(--gold-dim);text-decoration:underline;cursor:pointer">私隱政策</a>。</div>
     <button class="btn-gold" id="auth-submit" style="width:100%">確認</button>
     <div class="auth-modal-foot"><a id="auth-toggle"></a>　·　<a id="auth-cancel">取消</a></div>
   </div>
