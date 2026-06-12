@@ -1498,7 +1498,7 @@ async function runFisStep3() {
   // Logo 佔位符（預設隱藏，將來放 Logo）
   var logoSlot = document.createElement('div');
   logoSlot.id = 'fis-logo-slot';
-  logoSlot.style.cssText = 'visibility:hidden;width:120px;flex-shrink:0';   // 保留 120px 佔位 → 標題左右對稱、真置中（將來放 logo）
+  logoSlot.style.cssText = 'display:none';   // 0 寬 → 標題 flex:1 用全闊 + text-align:center 置中（將來放 logo 先改返）
   logoSlot.setAttribute('data-placeholder', 'logo');
   header.appendChild(logoSlot);
 
@@ -1513,7 +1513,7 @@ async function runFisStep3() {
 
   // 右側空白平衡（對應 logo slot）
   var rightPad = document.createElement('div');
-  rightPad.style.cssText = 'width:120px;flex-shrink:0';
+  rightPad.style.cssText = 'display:none';   // 兩邊都 0 寬 → 標題用全闊唔窄
   header.appendChild(rightPad);
 
   card.appendChild(header);
