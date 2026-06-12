@@ -7,11 +7,12 @@
 //    self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(ks=>Promise.all(ks.map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
 //    （即清晒 cache、唔再 precache），push 後用家下次開即解鎖。
 
-const CACHE = 'fis-v3';
+const CACHE = 'fis-v4';
 const PRECACHE = [
   './',
   './index.html',
   './manifest.json',
+  './html2canvas.min.js',
   './icon-180.png',
   './icon-192.png',
   './icon-512.png'

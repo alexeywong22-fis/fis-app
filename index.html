@@ -14,8 +14,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+HK:wght@300;400;500;700;900&family=Bebas+Neue&display=swap" rel="stylesheet">
-<!-- html2canvas：報告卡 → 圖片（下載／分享）。defer 唔阻 parse；offline 時 downloadImage 有 fallback -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+<!-- html2canvas：報告卡 → 圖片（下載／分享）。vendored 同源（offline + 大陸/SEA 可靠）；defer 唔阻 parse；downloadImage 有 fallback -->
+<script src="./html2canvas.min.js" defer></script>
 <style>
 :root {
   --gold: #ffc845;
