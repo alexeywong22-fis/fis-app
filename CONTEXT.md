@@ -97,6 +97,18 @@
 
 ---
 
+## 2d. 自訂域名上線 + 真機 bug 修復（2026-06-12）
+
+| Commit | 內容 |
+|---|---|
+| `d40a7f1` | **in-app 偵測加 WeChat / QQ**：`isInApp` regex 加 `MicroMessenger`（WeChat，原本已被 `Messenger` 子字串誤中，今次寫明）、`MQQBrowser` + `QQ/`（手機 QQ 內置瀏覽器）→ 一律「右上角 ⋯ → 喺瀏覽器開啟」。HK share link 常用，避免畀錯指示 |
+| `316adc1` | **自訂域名 `fis.alexeywong.com` 上線**：加 `CNAME`（一行 `fis.alexeywong.com`）放 repo 根 = Pages source（deploy-from-branch，Actions 只部署 worker、唔掂 Pages，唔會洗走）。DNS（systemdns.com 託管）`CNAME → alexeywong22-fis.github.io → Pages IP 185.199.108-111.153`，全相對路徑搬根域名零改動。GitHub 自動簽 Let's Encrypt，實測 `HTTP/2 200` + serve FIS app + `http→301→https`（Enforce HTTPS 已剔）。⚠️ **Worker `API_BASE`（workers.dev）係另一域名、唔受影響;唔好掂 worker** |
+| `267c50f` | **真機 6 項修復**（純前端 + sw bump）：🔴**A 學員名永遠「載入中」**——`initUser` 由 script-eval 移到 **DOMContentLoaded 後**（太早 call 會撞 SW install 令首次 fetch 失敗 → 卡死;browser tab 都中，非 standalone-only）+ 8s timeout(AbortController) + 重試最多 3 次 + 成功保證 `setupUsernameEditor()` re-render。🔴**B 登入錯密碼卡「處理緊…」**——`accountSubmit` fetch 加 **15s timeout**（永遠唔 hang）+ AbortError→「連線逾時」+ 401 文案改**「電郵或密碼錯誤」**。🟢 FIS loading「多謝耐心」→「多謝耐心等候」。🟡**報告卡標題置中**——header flex 左 `logoSlot` `display:none`（0 寬）右 `rightPad` 120px 令標題偏左 ~60px;`logoSlot` 改 `visibility:hidden` 保留 120px → 真置中。① 字體加 `preconnect`（googleapis+gstatic）減 FOUT。🧹 `sw.js` CACHE **fis-v2→fis-v3** 逼真機攞新版。**診斷實證**：init 200 / login 401 / preflight 204 / live==local，後端 100% 健康，bug 全 client 端（init 時序 race）|
+
+> ⚠️ **後端全程冇改**（依 launch 前唔掂 worker 原則）：以上真機修復全部係 `index.html` + `sw.js`。
+
+---
+
 ## 2b. GitHub Actions 自動部署（2026-06-06 設定完成）
 
 - `.github/workflows/deploy.yml`（**經 GitHub 網頁建立**，commit `9aa53f3`）：push 到 `main` → `cloudflare/wrangler-action@v3` 自動部署 fis-app worker。✅ 已驗證綠剔（Deploy Worker #6）。
