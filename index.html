@@ -975,6 +975,19 @@ function bindNav(id, dest) { var el = document.getElementById(id); if (el) el.ad
 
 // ── Email 帳戶登入 v1（密碼，全 body-based）──────────────────────────────────
 var FIS_ACCOUNT = null;
+window.FIS_COURSE_ACCESS = false;   // 課程權益（server /me 為準）；未知時預設當「未付」
+// 按 course_access 更新 Skool CTA 文案（報告卡後 + 主頁次要入口兩處）
+function fisRenderCourseCtas() {
+  var has = !!window.FIS_COURSE_ACCESS;
+  var cta = document.getElementById('fis-skool-cta');
+  if (cta) cta.textContent = has ? '🎓 進入完整課程' : '🎓 報名完整 FIS 筋膜整合課程';
+  var home = document.getElementById('btn-skool');
+  if (home) {
+    var nm = home.querySelector('.module-name'), ds = home.querySelector('.module-desc');
+    if (nm) nm.textContent = has ? '進入完整課程' : 'FIS 筋膜整合課程';
+    if (ds) ds.textContent = has ? '你已擁有課程權益，撳入去繼續學' : '加入社群，跟完整課程逐步改善體態';
+  }
+}
 var authMode = 'register';
 function fisAccountToken() { try { return localStorage.getItem('fis_account_token') || ''; } catch(e) { return ''; } }
 function fisSetSession(token, primaryUserId, email) {
@@ -1061,9 +1074,8 @@ function otpOnAuthed(d) {   // 同 password login 一致
   fisSetSession(d.token, d.primary_user_id, d.email);
   if (otpResendTimer) { clearInterval(otpResendTimer); otpResendTimer = null; }
   closeAuthModal();
-  renderAccountState();
   var sc = document.getElementById('fis-save-card'); if (sc) sc.style.display = 'none';
-  try { initUser(); } catch (e) {}
+  try { accountSessionCheck(); } catch (e) {}   // 刷新 /me：course_access + 帳戶狀態 + CTA + 名
 }
 async function otpSubmit() {
   var omsg = document.getElementById('otp-msg');
@@ -1123,7 +1135,7 @@ async function accountSubmit() {
       closeAuthModal();
       renderAccountState();
       var sc = document.getElementById('fis-save-card'); if (sc) sc.style.display = 'none';
-      try { initUser(); } catch(e) {}   // fisSetSession 已 set fis_user_id=primary_user_id → fetch account 名 + render chip（覆蓋本地 anon 名）
+      try { accountSessionCheck(); } catch(e) {}   // 刷新 /me：course_access + 帳戶狀態 + CTA + 名（覆蓋本地 anon 名）
       return;
     }
     msg.textContent = (authMode === 'register')
@@ -1138,7 +1150,9 @@ async function accountSubmit() {
 async function accountLogout() {
   var t = fisAccountToken();
   fisClearSession();
+  window.FIS_COURSE_ACCESS = false;   // 登出 → 失去權益 → CTA 變返「報名」
   renderAccountState();
+  fisRenderCourseCtas();
   if (t) { try { await fetch(API_BASE + '/api/account/auth/logout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: t }) }); } catch(e) {} }
 }
 
@@ -1152,10 +1166,12 @@ async function accountSessionCheck() {
         FIS_ACCOUNT = { email: d.email, primary_user_id: d.primary_user_id };
         window.FIS_USER_ID = d.primary_user_id;
         try { localStorage.setItem('fis_user_id', d.primary_user_id); } catch(e) {}
-      } else { fisClearSession(); }
-    } catch (e) { /* 離線：保留 token，唔登出 */ }
-  }
+        window.FIS_COURSE_ACCESS = !!d.course_access;   // server 旗標為 single source of truth
+      } else { fisClearSession(); window.FIS_COURSE_ACCESS = false; }
+    } catch (e) { /* 離線：保留 token，course_access 維持上次已知值 */ }
+  } else { window.FIS_COURSE_ACCESS = false; }   // 未登入/匿名 → 未付
   renderAccountState();
+  fisRenderCourseCtas();   // 按 course_access re-render CTA 文案
   initUser();   // 單一 init 入口：用最終正確 id（登入就 primary_user_id）fetch 名 + render chip（保住 retry/timeout、唔卡載入中）
 }
 
@@ -1966,7 +1982,7 @@ async function runFisStep3() {
     cta.id = 'fis-skool-cta';
     cta.className = 'btn-gold';
     cta.style.cssText = 'width:100%;margin-top:16px';
-    cta.textContent = '🎓 報名完整 FIS 筋膜整合課程';
+    cta.textContent = window.FIS_COURSE_ACCESS ? '🎓 進入完整課程' : '🎓 報名完整 FIS 筋膜整合課程';
     cta.addEventListener('click', openSkool);
     imageResult.appendChild(cta);
   }

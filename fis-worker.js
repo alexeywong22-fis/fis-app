@@ -63,6 +63,10 @@ return handleOtpVerify(request, env);
 if (path === '/api/account/password/reset' && request.method === 'POST') {
 return handlePasswordReset(request, env);
 }
+// Admin：設課程權益（coach_key gated，同 /api/coach/* 一致）
+if (path === '/api/admin/set-entitlement' && request.method === 'POST') {
+return handleAdminSetEntitlement(request, env);
+}
 if (path === '/api/weekly/save' && request.method === 'POST') {
 return handleWeeklySave(request, env);
 }
@@ -1247,7 +1251,10 @@ try {
 let body; try { body = await request.json(); } catch (e) { body = {}; }
 const acct = await accountFromToken(body.token || '', env);
 if (!acct) return jsonResponse({ error: 'Unauthorized' }, 401);
-return jsonResponse({ success: true, email: acct.email, primary_user_id: acct.primary_user_id });
+// course_access 用獨立 try/catch query（欄未 migrate 都唔會整爛 /me / session 驗證）
+let courseAccess = 0;
+try { const row = await env.DB.prepare('SELECT course_access FROM user_accounts WHERE id = ?').bind(acct.id).first(); courseAccess = (row && row.course_access) || 0; } catch (e) { courseAccess = 0; }
+return jsonResponse({ success: true, email: acct.email, primary_user_id: acct.primary_user_id, course_access: !!courseAccess });
 } catch (e) { return jsonResponse({ error: e.message }, 500); }
 }
 
@@ -1380,5 +1387,26 @@ await env.DB.prepare('UPDATE user_accounts SET password_hash = ?, salt = ?, iter
 .bind(coachBufToB64(hash), coachBufToB64(salt), COACH_PBKDF2_ITERATIONS, COACH_HASH_VERSION, r.account.id).run();
 const sess = await issueAccountSession(r.account.id, env);          // 自動登入
 return jsonResponse({ success: true, token: sess.token, expires_at: sess.expires, primary_user_id: r.account.primary_user_id, email });
+} catch (e) { return jsonResponse({ error: e.message }, 500); }
+}
+
+// POST /api/admin/set-entitlement { coach_key, email | emails[], course_access } —— coach_key gated
+async function handleAdminSetEntitlement(request, env) {
+if (!env.DB) return jsonResponse({ error: 'DB not configured' }, 500);
+let body; try { body = await request.json(); } catch (e) { return jsonResponse({ error: 'Invalid JSON body' }, 400); }
+const validKey = env['alexeywong22'] || '';
+if (!body.coach_key || !timingSafeEqual(body.coach_key, validKey)) {
+await new Promise(r => setTimeout(r, 200));
+return jsonResponse({ error: 'Forbidden: invalid coach_key' }, 403);
+}
+let emails = Array.isArray(body.emails) ? body.emails : (body.email ? [body.email] : []);
+emails = emails.map(e => String(e || '').trim().toLowerCase()).filter(Boolean);
+if (!emails.length) return jsonResponse({ error: 'Missing email or emails[]' }, 400);
+const access = (body.course_access === 1 || body.course_access === true || body.course_access === '1') ? 1 : 0;
+try {
+const placeholders = emails.map(() => '?').join(',');
+const res = await env.DB.prepare('UPDATE user_accounts SET course_access = ? WHERE email IN (' + placeholders + ')').bind(access, ...emails).run();
+const updated = (res && res.meta && res.meta.changes) || 0;
+return jsonResponse({ success: true, updated, course_access: access });
 } catch (e) { return jsonResponse({ error: e.message }, 500); }
 }
