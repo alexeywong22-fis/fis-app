@@ -230,7 +230,7 @@ textarea.sym { width: 100%; background: var(--bg3); border: 1px solid rgba(255,2
     <div class="module-card" id="btn-progress"><div class="module-icon">DATA</div><div class="module-num">02 - 追蹤</div><div class="module-name">進步追蹤系統</div><div class="module-desc">AI分析今日訓練數據</div></div>
     <div class="module-card" id="btn-pain"><div class="module-icon">RX</div><div class="module-num">03 - 建議</div><div class="module-name">訓練痛點分析</div><div class="module-desc">即時搵出筋膜線根源</div></div>
     <div class="module-card" id="btn-warmup"><div class="module-icon">GO</div><div class="module-num">04 - 熱身</div><div class="module-name">今日熱身激活</div><div class="module-desc">上下身個人化熱身方案</div></div>
-    <div class="module-card" id="btn-skool" style="display:none;grid-column:1 / -1;background:linear-gradient(135deg,rgba(255,200,69,0.16),rgba(255,200,69,0.04));border-color:rgba(255,200,69,0.4);min-height:auto"><div class="module-icon">★</div><div class="module-num">SKOOL · 課程</div><div class="module-name">FIS 筋膜訓練課程</div><div class="module-desc">加入社群，跟住一步步解決你嘅體態問題</div></div>
+    <div class="module-card" id="btn-skool" style="display:none;grid-column:1 / -1;background:linear-gradient(135deg,rgba(255,200,69,0.16),rgba(255,200,69,0.04));border-color:rgba(255,200,69,0.4);min-height:auto"><div class="module-icon">★</div><div class="module-num">SKOOL · 課程</div><div class="module-name">FIS 筋膜整合課程</div><div class="module-desc">加入社群，跟完整課程逐步改善體態</div></div>
   </div>
   <div class="legal-links" style="padding:24px 20px 100px"><a data-legal="terms">服務條款</a> · <a data-legal="privacy">私隱政策</a><br><span style="font-size:10px">© 2026 FIS 筋膜整合系統 · Alexey Wong</span></div>
   <div class="bnav">
@@ -805,8 +805,8 @@ textarea.sym { width: 100%; background: var(--bg3); border: 1px solid rgba(255,2
 var API_BASE = 'https://fis-app.alexeywong22.workers.dev';
 // ── SKool 課程開關 ──────────────────────────────────────────────────────────
 // 日後開咗 SKool 之後：將 SKOOL_ENABLED 設 true + 填 SKOOL_URL，主頁卡片同報告卡 CTA 就會自動出返。
-var SKOOL_ENABLED = false;
-var SKOOL_URL = 'YOUR_SKOOL_URL';
+var SKOOL_ENABLED = true;
+var SKOOL_URL = 'https://www.skool.com/alexey-wong-4164/about';   // 易改常量
 function openSkool() {
   if (SKOOL_URL && SKOOL_URL !== 'YOUR_SKOOL_URL') {
     window.open(SKOOL_URL, '_blank', 'noopener');
@@ -1966,7 +1966,7 @@ async function runFisStep3() {
     cta.id = 'fis-skool-cta';
     cta.className = 'btn-gold';
     cta.style.cssText = 'width:100%;margin-top:16px';
-    cta.textContent = '想知解決方法？→ 加入 FIS SKool 課程';
+    cta.textContent = '🎓 報名完整 FIS 筋膜整合課程';
     cta.addEventListener('click', openSkool);
     imageResult.appendChild(cta);
   }
