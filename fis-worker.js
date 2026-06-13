@@ -1199,6 +1199,12 @@ const id = 'acct_' + crypto.randomUUID().replace(/-/g, '').substring(0, 16);
 await env.DB.prepare(
 'INSERT INTO user_accounts (id, email, password_hash, salt, iterations, hash_version, primary_user_id) VALUES (?, ?, ?, ?, ?, ?, ?)'
 ).bind(id, email, coachBufToB64(hash), coachBufToB64(salt), COACH_PBKDF2_ITERATIONS, COACH_HASH_VERSION, currentUserId).run();
+// 創始 allowlist：email 喺 founding_grants → 自動 course_access=1（set-and-forget）。
+// try/catch：founding_grants / course_access 未 migrate 或查唔到，一律唔阻礙正常註冊。
+try {
+const grant = await env.DB.prepare('SELECT email FROM founding_grants WHERE email = ?').bind(email).first();
+if (grant) await env.DB.prepare('UPDATE user_accounts SET course_access = 1 WHERE id = ?').bind(id).run();
+} catch (e) { /* 名單表 / course_access 欄未存在都唔阻礙註冊 */ }
 const token = coachBase64Url(crypto.getRandomValues(new Uint8Array(32)));
 const tokenHash = await coachSha256Hex(token);
 const expires = new Date(Date.now() + ACCOUNT_SESSION_TTL_MS).toISOString();
