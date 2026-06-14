@@ -1939,6 +1939,15 @@ async function runFisStep3() {
         card.appendChild(copyRow);
       }
     }
+
+    // 🟢 線：純文字框架註（靜態達標 ≠ 動態已驗證）。其餘狀態唔加；唔改任何評級/判定邏輯。
+    if (tier === 'green') {
+      var greenNote = document.createElement('div');
+      greenNote.className = 'fis-anim';
+      greenNote.style.cssText = 'padding:8px 18px 12px;background:' + bg + ';border-bottom:1px solid rgba(0,120,200,0.1);font-size:10px;line-height:1.6;color:rgba(253,245,229,0.55);animation-delay:' + (0.12 + idx * 0.06) + 's';
+      greenNote.textContent = 'ℹ︎ 🟢 靜態達標；動態功能（肩胛活動、單腳穩定）留待影片版確認。';   // 純靜態文字（textContent，無 XSS sink）
+      card.appendChild(greenNote);
+    }
   });
 
   /* ── 三個建議框 ── */
