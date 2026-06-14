@@ -1872,7 +1872,7 @@ async function runFisStep3() {
     var bg    = idx % 2 === 0 ? 'rgba(0,60,140,0.12)' : 'rgba(0,40,100,0.06)';
 
     // 進度條：待加強35% / 發展中65% / 過渡78% / 良好90%
-    var barPct   = tier === 'red' ? '35%' : tier === 'mid' ? '65%' : tier === 'transition' ? '78%' : '90%';
+    var barPct   = tier === 'red' ? '15%' : tier === 'mid' ? '30%' : tier === 'transition' ? '50%' : '70%';
     var barColor = tier === 'red'
       ? 'linear-gradient(90deg,#ff4444,#ff8844)'
       : tier === 'mid'
@@ -1945,7 +1945,7 @@ async function runFisStep3() {
       var greenNote = document.createElement('div');
       greenNote.className = 'fis-anim';
       greenNote.style.cssText = 'padding:8px 18px 12px;background:' + bg + ';border-bottom:1px solid rgba(0,120,200,0.1);font-size:10px;line-height:1.6;color:rgba(253,245,229,0.55);animation-delay:' + (0.12 + idx * 0.06) + 's';
-      greenNote.textContent = 'ℹ︎ 🟢 靜態達標；動態功能（肩胛活動、單腳穩定）留待影片版確認。';   // 純靜態文字（textContent，無 XSS sink）
+      greenNote.textContent = 'ℹ︎ 🟢 靜態達標；動態功能留待影片版確認。';   // 純靜態文字（textContent，無 XSS sink）
       card.appendChild(greenNote);
     }
   });
