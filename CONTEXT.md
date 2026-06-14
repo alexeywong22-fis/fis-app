@@ -1,43 +1,32 @@
 # FIS PWA — 專案上下文 CONTEXT
 
 > ⚠️ **每次開新 session，請先讀取本檔案再開始工作。**
-> 本檔案記錄專案架構、進度、待辦。最後更新：**2026-06-14**
+> 本檔案記錄專案架構、進度、待辦。最後更新：**2026-06-15**
 
 ---
 
-## 0. 當前狀態 / 進度快照（2026-06-14）
+## 0. 當前狀態 / 進度快照（2026-06-15）
 
-### 本期已完成（commit）
-- Stage 1.5 XSS 硬化 + 二審補漏 + Gemini 503 graceful（`219cf5e`）
-- 私隱政策貼合實際（相不存、email 只作登入）（`faf605b`）
-- Email OTP 系統（無密碼登入 + 密碼重設）+ migration `0003_email_otps`（`3ae5361`，端到端 curl 實測通過）
-- App 報告卡 CTA → Skool 課程（`728f5dd`）
-- 課程權益系統（server `course_access` 旗標）+ migration `0004_course_access`（`98be1bd`）
-- 創始 allowlist（名單 email 註冊即自動授權）+ migration `0005_founding_grants`（`49c4069`）
-- 課程購買/授權/退款條款 13 節（`f78b846`）
-- 服務條款 §8 改為指向課程條款（`bae8603`）
-- 報告卡 🟢 線加「動態未驗證」框架註（`5674ebf`）
+### Launch 策略（重要）
+- 7/1 = MVP founding launch：8 位創始入 Skool + 第一個 module live + roadmap（唔使成個課程做完；創始買終身+持續更新）。
+- 公開 launch（Reels 帶陌生人）遲過 7/1，等內容夠厚。
+- 交貨俾 8 個（低門檻 7/1）vs 公開大賣（高門檻遲啲）= 兩件事解綁。
 
-### 商標策略（定案 2026-06-14）
-- 個人名義先 file，將來成立公司再轉讓。
-- 文字商標「**FIS 筋膜整合系統**」優先；Logo 留將來；純描述性名交代理判斷。
-- **Class 41 +（9 或 42）**，避開醫療 **Class 44**。
-- 市場：香港 → 台灣 → 新加坡／馬來西亞；**不做中國大陸**。
-- 搵代理（≈ HK$4,300 / 1 類、≈ HK$6,000 / 2 類）；™ 免註冊、® 須註冊。
-- 待辦：send 詢價 email → 搵代理 + clearance search。
+### 報告卡 polish（最新 commit）
+- 🟢線框架註（`5674ebf`）→ 改通用版 + 進度棒按 tier 填充 15/30/50/70（`83e3b69`）→ 註解修正（`030c578`）
 
-### 驗證 — 螺旋線靜態盲點（Peggy benchmark）
-- 系統判 🟢，但臨床最弱（前鋸肌／肩胛上迴旋／夾背）。**根因＝靜態相睇唔到動態功能**。
-- 影片版（Stage 2）優先捉：肩胛上迴旋／前鋸肌／單腳穩定。
-- **rubric 升級方向**：螺旋線／側線要有**動態證據先可畀 🟢**（見 §3 待辦）。
-- 已加 🟢 框架註（`5674ebf`）作即時緩解。
+### 決策定案
+- 兩類用戶模型：免費=只要使用數據（匿名 usr_、零摩擦、唔要名/email）；付費=名+email。砍掉 progressive profiling。
+- 身份綁定（grep 實）：註冊收 currentUserId → `user_accounts.primary_user_id`；教練後台認 usr_；跨裝置數據唔 auto-merge（Stage 2）→ 創始要用「做檢測嗰部機 + 唔清 app」註冊先綁到舊數據。WhatsApp 通知 message 已備。
+- 教練後台：單一 admin 用法堪用；完整教練系統（多教練 / invite code / $198 月）= Stage 2，非 7/1 blocker。
+- 模型 / Plan：留 Opus 4.8，唔轉 Fable 5（邊際幫助~零、API 2x 價、6/23 後移出計劃要 credits）；Max 5x 先睇撞頂再決定升 20x。
+- 剪片外判，4 日內交貨。
 
 ### 7/1 待辦（按緊急）
-- 🔴 **最重要**：創始 8 email → `founding_grants` + backfill（已註冊嘅用 `set-entitlement` 補）→ 7/1 Skool comp 邀請。
-- **必須**：拍片剪片 → Skool classroom 上傳（group 仲空）。
-- Reels 開拍剪（calendar 已交）。
-- 商標 send 詢價 email → 搵代理。
-- 公開。
+- 🔴 最重要：創始 8 email → `founding_grants` + backfill → Skool comp 邀請（WhatsApp 已備，待 send）
+- 必須：第一個 module 拍片（剪外判）→ Skool classroom 上傳；起 Skool 殼（趁等片）
+- Reels 開拍剪（calendar 已交）
+- 商標 send 詢價 email → 搵代理 + clearance
 
 ---
 
