@@ -1,7 +1,43 @@
 # FIS PWA — 專案上下文 CONTEXT
 
 > ⚠️ **每次開新 session，請先讀取本檔案再開始工作。**
-> 本檔案記錄專案架構、進度、待辦。最後更新：**2026-06-12**
+> 本檔案記錄專案架構、進度、待辦。最後更新：**2026-06-14**
+
+---
+
+## 0. 當前狀態 / 進度快照（2026-06-14）
+
+### 本期已完成（commit）
+- Stage 1.5 XSS 硬化 + 二審補漏 + Gemini 503 graceful（`219cf5e`）
+- 私隱政策貼合實際（相不存、email 只作登入）（`faf605b`）
+- Email OTP 系統（無密碼登入 + 密碼重設）+ migration `0003_email_otps`（`3ae5361`，端到端 curl 實測通過）
+- App 報告卡 CTA → Skool 課程（`728f5dd`）
+- 課程權益系統（server `course_access` 旗標）+ migration `0004_course_access`（`98be1bd`）
+- 創始 allowlist（名單 email 註冊即自動授權）+ migration `0005_founding_grants`（`49c4069`）
+- 課程購買/授權/退款條款 13 節（`f78b846`）
+- 服務條款 §8 改為指向課程條款（`bae8603`）
+- 報告卡 🟢 線加「動態未驗證」框架註（`5674ebf`）
+
+### 商標策略（定案 2026-06-14）
+- 個人名義先 file，將來成立公司再轉讓。
+- 文字商標「**FIS 筋膜整合系統**」優先；Logo 留將來；純描述性名交代理判斷。
+- **Class 41 +（9 或 42）**，避開醫療 **Class 44**。
+- 市場：香港 → 台灣 → 新加坡／馬來西亞；**不做中國大陸**。
+- 搵代理（≈ HK$4,300 / 1 類、≈ HK$6,000 / 2 類）；™ 免註冊、® 須註冊。
+- 待辦：send 詢價 email → 搵代理 + clearance search。
+
+### 驗證 — 螺旋線靜態盲點（Peggy benchmark）
+- 系統判 🟢，但臨床最弱（前鋸肌／肩胛上迴旋／夾背）。**根因＝靜態相睇唔到動態功能**。
+- 影片版（Stage 2）優先捉：肩胛上迴旋／前鋸肌／單腳穩定。
+- **rubric 升級方向**：螺旋線／側線要有**動態證據先可畀 🟢**（見 §3 待辦）。
+- 已加 🟢 框架註（`5674ebf`）作即時緩解。
+
+### 7/1 待辦（按緊急）
+- 🔴 **最重要**：創始 8 email → `founding_grants` + backfill（已註冊嘅用 `set-entitlement` 補）→ 7/1 Skool comp 邀請。
+- **必須**：拍片剪片 → Skool classroom 上傳（group 仲空）。
+- Reels 開拍剪（calendar 已交）。
+- 商標 send 詢價 email → 搵代理。
+- 公開。
 
 ---
 
@@ -173,6 +209,7 @@
 - [ ] 教練 auth 加強（按需）：admin 管理教練 UI、session 撤銷/列表、登入失敗 rate-limit；hash 升級 WASM argon2/bcrypt（已留 `hash_version`）。
 - [ ] **清 `handleFisStep3` 死碼（Stage 2，launch 前唔好掂 worker）**：`fis-worker.js:466-475` 個 handler + router `path === '/api/fis-step3'`（line 96-97）。前端 `runFisStep3()`（"生成視覺化圖片" 掣）係 client 自己 render 報告卡，從來冇 fetch `/api/fis-step3`，個 response `imageUrl` 寫死 `https://…github.io/fis-app/fis-bg.png`（全 repo 唯一寫死 `/fis-app/` 嘅實際 code）永遠冇人用 → 死碼。搬 root domain **零影響**，所以拖到 Stage 2 清，避免 launch 前重新部署 worker。
 - [ ] **[Phase 1.5/2 · 決策 2026-06-12] 體態相儲存（R2）—— 暫緩**，維持「相即送 Gemini 即棄、永不儲存」現狀（privacy by default）。將來要做必須同時具備：① 明示 consent ② privacy policy（覆蓋儲存+保留+刪除）③ 安全存取控制 ④ 年齡驗證 ⑤ 保留期。唔可以單獨 bolt R2 上去。法律組（6/7/14）優先，次序排喺 privacy 基建之後。
+- [ ] **螺旋線／側線 rubric 升級（Stage 2 影片版）**：靜態相睇唔到動態功能 → 螺旋線易被判 🟢 但臨床最弱（Peggy benchmark，見 §0 驗證）。影片版要捉肩胛上迴旋／前鋸肌／單腳穩定，並改 rubric：螺旋線／側線**要有動態證據先可畀 🟢**。即時緩解＝報告卡 🟢 框架註（`5674ebf`）。
 
 ### 部署資訊 / 慣例
 - **部署指令**：`export CLOUDFLARE_API_TOKEN=<token> && npm run deploy`（或 `npx wrangler deploy`）。
