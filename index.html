@@ -1871,7 +1871,7 @@ async function runFisStep3() {
     var dotBg = tier === 'transition' ? 'linear-gradient(135deg,#f0a93b,#44cc88)' : color;   // 過渡：狀態燈漸變🟡→🟢
     var bg    = idx % 2 === 0 ? 'rgba(0,60,140,0.12)' : 'rgba(0,40,100,0.06)';
 
-    // 進度條：待加強35% / 發展中65% / 過渡78% / 良好90%
+    // 進度條：優先關注15% / 發展中30% / 過渡50% / 良好70%
     var barPct   = tier === 'red' ? '15%' : tier === 'mid' ? '30%' : tier === 'transition' ? '50%' : '70%';
     var barColor = tier === 'red'
       ? 'linear-gradient(90deg,#ff4444,#ff8844)'
