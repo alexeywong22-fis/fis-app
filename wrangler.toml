@@ -17,6 +17,17 @@ database_name = "fis-db"
 database_id = "6bf1dc99-d448-4e1a-8267-64f7ed8198a4"
 
 # ─────────────────────────────────────────────────────────────
+# Durable Objects — Gemini geo relay（HKG 等地區封鎖時 fallback）
+# ─────────────────────────────────────────────────────────────
+[[durable_objects.bindings]]
+name = "GEMINI_RELAY"
+class_name = "GeminiRelay"
+
+[[migrations]]
+tag = "v1"
+new_classes = ["GeminiRelay"]
+
+# ─────────────────────────────────────────────────────────────
 # Secrets（千祈唔好寫喺呢個檔，會 commit 上 GitHub 洩漏！）
 # 以下全部屬 secret，用 `npx wrangler secret put <NAME>` 設定。
 # Secret 一旦設定就會跨部署自動保留，wrangler deploy 唔會覆蓋佢哋。

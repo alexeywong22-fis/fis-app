@@ -1,5 +1,32 @@
 // fis-worker.js — Cloudflare Worker for FIS App
 // Accepts FormData (files) from frontend, converts to base64, sends to Gemini
+import { DurableObject } from 'cloudflare:workers';
+
+export class GeminiRelay extends DurableObject {
+async fetch(request) {
+if (request.method !== 'POST') {
+return new Response('Method not allowed', { status: 405 });
+}
+const apiKey = this.env.GEMINI_API_KEY;
+if (!apiKey) {
+return Response.json({ error: 'GEMINI_API_KEY not configured' }, { status: 500 });
+}
+let body;
+try {
+body = await request.json();
+} catch (err) {
+return Response.json({ error: 'Invalid JSON: ' + err.message }, { status: 400 });
+}
+const { parts, timeoutMs } = body;
+if (!parts || !Array.isArray(parts)) {
+return Response.json({ error: 'Missing parts' }, { status: 400 });
+}
+const result = await relayGeminiFetch(parts, apiKey, timeoutMs || 30000);
+console.log('[gemini]', { via: 'do-relay', ok: !result.error, cfg: result.cfg || null });
+return Response.json(result);
+}
+}
+
 export default {
 async fetch(request, env) {
 // ── CORS preflight ──────────────────────────────────────────────────────
@@ -217,7 +244,7 @@ imageCount++;
 if (imageCount === 0) {
 return jsonResponse({ error: '請上載最少一張圖片（jpg/png）進行分析' }, 400);
 }
-const geminiResult = await callGemini(parts, GEMINI_API_KEY, 60000);
+const geminiResult = await callGemini(parts, env, 60000);
 if (geminiResult.error) {
 // 同一 model retry（503/429/網絡，唔換 model 保 temp:0+seed 一致性）全失敗 → 乾淨 JSON，唔白屏
 const busy = geminiResult.retryable || geminiResult.status === 503 || geminiResult.status === 429 || geminiResult.timedOut;
@@ -280,7 +307,7 @@ ${step1Result}
 }
 只輸出 JSON。`
 }];
-const geminiResult = await callGemini(parts, GEMINI_API_KEY, 30000);
+const geminiResult = await callGemini(parts, env, 30000);
 if (geminiResult.error) {
 // 同一 model retry（503/429/網絡，唔換 model 保 temp:0+seed 一致性）全失敗 → 乾淨 JSON，唔白屏
 const busy = geminiResult.retryable || geminiResult.status === 503 || geminiResult.status === 429 || geminiResult.timedOut;
@@ -332,7 +359,7 @@ const parts = [{
 **3. 本次訓練整體力學評估**
 對以上數據作純粹力學狀態總結，評估今日激活效率與張力建立速度係咪匹配。`
 }];
-const geminiResult = await callGemini(parts, GEMINI_API_KEY, 30000);
+const geminiResult = await callGemini(parts, env, 30000);
 if (geminiResult.error) {
 // 同一 model retry（503/429/網絡，唔換 model 保 temp:0+seed 一致性）全失敗 → 乾淨 JSON，唔白屏
 const busy = geminiResult.retryable || geminiResult.status === 503 || geminiResult.status === 429 || geminiResult.timedOut;
@@ -361,7 +388,7 @@ const parts = [{
 [重要聲明：以下分析屬教育性參考，並非醫療診斷。如有持續疼痛請咨詢醫生。]
 用繁體中文，條理清晰。`
 }];
-const geminiResult = await callGemini(parts, GEMINI_API_KEY, 30000);
+const geminiResult = await callGemini(parts, env, 30000);
 if (geminiResult.error) {
 // 同一 model retry（503/429/網絡，唔換 model 保 temp:0+seed 一致性）全失敗 → 乾淨 JSON，唔白屏
 const busy = geminiResult.retryable || geminiResult.status === 503 || geminiResult.status === 429 || geminiResult.timedOut;
@@ -381,16 +408,11 @@ return jsonResponse({
 return jsonResponse({ result: geminiResult.text });
 }
 
-// 解析後快取嘅 Gemini 策略（endpoint 版本 + 有冇 thinkingConfig）。null = 未解析。
-let GEMINI_CFG = null;
-
-// 單次 Gemini 呼叫。prompt / parts / 圖片 / temperature 0 + seed 42（求 determinism，根治 step1 視覺→文字飄移令側線/淺前線跳色）/ maxOutputTokens 8192。
-// ⚠️ 共用：step1 / step2 / pain / progress 全部行呢個 config。eval 基線實錘跳色 100% 嚟自 step1（step2 分級清白）。
-// 新增 thinkingConfig:{thinkingBudget:0}（關思考減延遲），並自動 capability fallback：
-//   v1+thinking → v1beta+thinking → v1beta 去 thinkingConfig（只喺 400 唔識該欄位時先 fallback）。
-// timeoutMs：每次 fetch 嘅 AbortController 上限；abort（timeout）標記 timedOut。
-async function callGeminiOnce(parts, apiKey, timeoutMs) {
-const candidates = GEMINI_CFG ? [GEMINI_CFG] : [
+// 解析後快取嘅 Gemini 策略（endpoint 版本 + 有冇 thinkingConfig）。每 isolate 各一份。
+function createGeminiFetcher() {
+let lockedCfg = null;
+return async function geminiFetchOnce(parts, apiKey, timeoutMs) {
+const candidates = lockedCfg ? [lockedCfg] : [
 { ver: 'v1',     thinking: true },
 { ver: 'v1beta', thinking: true },
 { ver: 'v1beta', thinking: false }
@@ -413,7 +435,7 @@ geminiRes = await fetch(endpoint, {
 });
 } catch (err) {
 clearTimeout(timer);
-const aborted = ctrl.signal.aborted;   // 我哋自己 abort 嘅 → 確定係 timeout（比靠 err.name 可靠）
+const aborted = ctrl.signal.aborted;
 return { error: 'Failed to reach Gemini API: ' + err.message, retryable: true, timedOut: aborted };
 }
 clearTimeout(timer);
@@ -421,9 +443,17 @@ if (!geminiRes.ok) {
 const errText = await geminiRes.text();
 let errDetail;
 try { errDetail = JSON.parse(errText); } catch { errDetail = { raw: errText }; }
-// 400 + 提及 thinking / 未知欄位 → 試下一個 candidate（capability fallback，未鎖定策略時先做）
+if (geminiRes.status === 400 && isGeminiGeoBlockDetail(errDetail)) {
+return {
+      error: 'Gemini API error 400',
+      status: 400,
+      detail: errDetail,
+      retryable: false,
+      geoBlock: true
+};
+}
 const msg = ((errDetail && errDetail.error && errDetail.error.message) || errText || '').toLowerCase();
-if (geminiRes.status === 400 && !GEMINI_CFG &&
+if (geminiRes.status === 400 && !lockedCfg &&
 (msg.includes('thinking') || msg.includes('unknown name') || msg.includes('unknown field') || msg.includes('invalid json payload'))) {
 fieldErr = { error: 'Gemini API error 400', status: 400, detail: errDetail };
 continue;
@@ -443,31 +473,99 @@ const text = data?.candidates?.[0]?.content?.parts
 if (!text) {
 return { error: 'Gemini returned no text', rawResponse: data };
 }
-if (!GEMINI_CFG) GEMINI_CFG = cand;   // 鎖定首個成功策略，之後直接重用
+if (!lockedCfg) lockedCfg = cand;
 return { text, cfg: cand.ver + (cand.thinking ? '+thinkingBudget0' : '-noThinkingConfig') };
 }
 return fieldErr || { error: 'Gemini API error 400', status: 400 };
+};
+}
+
+const workerGeminiFetch = createGeminiFetcher();
+const relayGeminiFetch = createGeminiFetcher();
+
+function isGeminiGeoBlockDetail(detail) {
+const err = detail && detail.error;
+if (!err) return false;
+const msg = (err.message || '').toLowerCase();
+const geminiStatus = (err.status || '').toUpperCase();
+return msg.includes('user location is not supported')
+|| (geminiStatus === 'FAILED_PRECONDITION' && msg.includes('location'));
+}
+
+function isGeminiGeoBlock(result) {
+return !!(result && (result.geoBlock || (result.status === 400 && isGeminiGeoBlockDetail(result.detail))));
+}
+
+async function relayGeminiViaDO(parts, timeoutMs, env) {
+if (!env.GEMINI_RELAY) {
+return { error: 'GEMINI_RELAY binding not configured', status: 500, retryable: false };
+}
+const id = env.GEMINI_RELAY.idFromName('gemini-relay');
+const stub = env.GEMINI_RELAY.get(id, { locationHint: 'wnam' });
+let doRes;
+try {
+doRes = await stub.fetch('https://gemini-relay/internal', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ parts, timeoutMs })
+});
+} catch (err) {
+return { error: 'Failed to reach Gemini relay: ' + err.message, retryable: true };
+}
+let result;
+try {
+result = await doRes.json();
+} catch (err) {
+return { error: 'Invalid relay response: ' + err.message, status: doRes.status, retryable: false };
+}
+if (!doRes.ok && result && !result.error) {
+return { error: 'Gemini relay error ' + doRes.status, status: doRes.status, retryable: false };
+}
+return result;
+}
+
+// 單次 Gemini 呼叫。先直連；地區封鎖（400 geo）→ DO relay（wnam）重試。
+async function callGeminiOnce(parts, apiKey, timeoutMs, env) {
+const directRes = await workerGeminiFetch(parts, apiKey, timeoutMs);
+if (!directRes.error) {
+console.log('[gemini]', { via: 'direct', cfg: directRes.cfg });
+return directRes;
+}
+if (isGeminiGeoBlock(directRes) && env) {
+console.log('[gemini]', { via: 'do-relay', trigger: 'geo-block', directStatus: directRes.status });
+const relayRes = await relayGeminiViaDO(parts, timeoutMs, env);
+if (!relayRes.error) {
+console.log('[gemini]', { via: 'do-relay', ok: true, cfg: relayRes.cfg || null });
+}
+return relayRes;
+}
+console.log('[gemini]', { via: 'direct', error: directRes.error, status: directRes.status || null });
+return directRes;
 }
 
 // Silent retry wrapper。timeoutMs 由 handler 傳（圖片 60s / 純文字 30s）。
 // 重試分類：503/429/網絡 → 最多 3 次；timeout(abort) → 最多 2 次（即再試 1 次）。
 // 退避 ~600ms→1.2s→2.4s（+jitter）。TOTAL_BUDGET 按 timeoutMs 動態計，防 hang。
-async function callGemini(parts, apiKey, timeoutMs) {
+async function callGemini(parts, env, timeoutMs) {
+const apiKey = env.GEMINI_API_KEY;
+if (!apiKey) {
+return { error: 'GEMINI_API_KEY not configured', status: 500, retryable: false };
+}
 const MAX_ATTEMPTS = 3;
-const BASE_DELAY = 600;                               // ms
-const PER_FETCH_TIMEOUT = timeoutMs || 30000;        // 每次呼叫上限（handler 指定）
-let backoffSum = 0;                                   // 退避總和（含 jitter 上限 1.2）
+const BASE_DELAY = 600;
+const PER_FETCH_TIMEOUT = timeoutMs || 30000;
+let backoffSum = 0;
 for (let i = 1; i < MAX_ATTEMPTS; i++) backoffSum += BASE_DELAY * Math.pow(2, i - 1) * 1.2;
 const BUFFER = 2000;
 const TOTAL_BUDGET = PER_FETCH_TIMEOUT * MAX_ATTEMPTS + backoffSum + BUFFER;
 const start = Date.now();
 let last = null;
 for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-const res = await callGeminiOnce(parts, apiKey, PER_FETCH_TIMEOUT);
+const res = await callGeminiOnce(parts, apiKey, PER_FETCH_TIMEOUT, env);
 if (!res.error) return res;
 last = res;
-if (!res.retryable) break;                           // 400/401/403/no-text → 唔重試
-const cap = res.timedOut ? 2 : MAX_ATTEMPTS;         // timeout 最多 2 次；503/429/網絡最多 3 次
+if (!res.retryable) break;
+const cap = res.timedOut ? 2 : MAX_ATTEMPTS;
 if (attempt >= cap) break;
 const delay = Math.round(BASE_DELAY * Math.pow(2, attempt - 1) * (0.8 + Math.random() * 0.4));
 if (Date.now() - start + delay > TOTAL_BUDGET) break;
