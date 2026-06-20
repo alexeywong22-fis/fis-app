@@ -80,6 +80,9 @@ return jsonResponse({
           keys: Object.keys(env)
 });
 }
+if (path === '/api/debug/cf' && request.method === 'GET') {
+return handleDebugCf(request);
+}
 if (path === '/api/coach/user-summary') {
 return handleCoachUserSummary(request, env);
 }
@@ -362,7 +365,18 @@ const geminiResult = await callGemini(parts, GEMINI_API_KEY, 30000);
 if (geminiResult.error) {
 // 同一 model retry（503/429/網絡，唔換 model 保 temp:0+seed 一致性）全失敗 → 乾淨 JSON，唔白屏
 const busy = geminiResult.retryable || geminiResult.status === 503 || geminiResult.status === 429 || geminiResult.timedOut;
-return jsonResponse({ success: false, error: busy ? 'AI_BUSY' : 'AI_ERROR', message: 'AI 暫時繁忙，請稍後再試' }, busy ? 503 : 502);
+const cf = cfMeta(request);
+console.log('[pain/cf]', cf, { geminiStatus: geminiResult.status, geminiError: geminiResult.error });
+return jsonResponse({
+      success: false,
+      error: busy ? 'AI_BUSY' : 'AI_ERROR',
+      message: 'AI 暫時繁忙，請稍後再試',
+      _debug: {
+        ...cf,
+        geminiStatus: geminiResult.status || null,
+        geminiMessage: (geminiResult.detail && geminiResult.detail.error && geminiResult.detail.error.message) || geminiResult.error || null
+      }
+}, busy ? 503 : 502);
 }
 return jsonResponse({ result: geminiResult.text });
 }
@@ -470,6 +484,23 @@ const chunk = uint8Array.subarray(i, i + chunkSize);
 binary += String.fromCharCode.apply(null, chunk);
 }
 return btoa(binary);
+}
+
+function cfMeta(request) {
+const cf = request.cf || {};
+return {
+colo: cf.colo || null,
+country: cf.country || null,
+region: cf.region || null,
+timezone: cf.timezone || null,
+ray: request.headers.get('cf-ray') || null
+};
+}
+
+function handleDebugCf(request) {
+const meta = cfMeta(request);
+console.log('[debug/cf]', meta);
+return jsonResponse({ ok: true, phase: 'geo-verify', ...meta });
 }
 
 function corsHeaders() {
