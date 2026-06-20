@@ -25,7 +25,7 @@ class_name = "GeminiRelay"
 
 [[migrations]]
 tag = "v1"
-new_classes = ["GeminiRelay"]
+new_sqlite_classes = ["GeminiRelay"]
 
 # ─────────────────────────────────────────────────────────────
 # Secrets（千祈唔好寫喺呢個檔，會 commit 上 GitHub 洩漏！）
