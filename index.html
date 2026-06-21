@@ -1945,7 +1945,7 @@ async function runFisStep3() {
       var greenNote = document.createElement('div');
       greenNote.className = 'fis-anim';
       greenNote.style.cssText = 'padding:8px 18px 12px;background:' + bg + ';border-bottom:1px solid rgba(0,120,200,0.1);font-size:10px;line-height:1.6;color:rgba(253,245,229,0.55);animation-delay:' + (0.12 + idx * 0.06) + 's';
-      greenNote.textContent = 'ℹ︎ 🟢 靜態達標；動態功能留待影片版確認。';   // 純靜態文字（textContent，無 XSS sink）
+      greenNote.textContent = 'ℹ︎ 🟢 靜態對稱達標,但真實力要動態（影片版）先測得準 — 唔少人靜態靚、動態仲鬆。';   // 純靜態文字（textContent，無 XSS sink）
       card.appendChild(greenNote);
     }
   });
