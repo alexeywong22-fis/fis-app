@@ -1761,6 +1761,14 @@ var FIS_TRANSITION_COPY = {
   '淺前線': '前鏈由發展過渡緊去良好,腹部中段線條差少少就維持得住。'
 };
 
+var FIS_POSSIBILITY_COPY = {
+  '深前線': '小腹收極都收唔實、單腳企唔穩、腰特別容易arch。',
+  '側線':   '臀大肌／上臀寬度點練都出唔到、單腳企唔穩、行路或深蹲盆會向一邊掉。',
+  '螺旋線': '馬甲線／纖腰練極都唔明顯、膊頭唔橫唔立體、肩胛唔穩。',
+  '淺背線': '後腿(hamstring)操極都唔大、操腹 feel 唔到腹、條頸容易攰。',
+  '淺前線': '大腿前側成日搶晒力、腹直肌收唔實／feel 唔到、骨盆控制差。'
+};
+
 async function runFisStep3() {
   if (!fisStep2Result) { alert('Please complete step 3 report card generation first'); return; }
 
@@ -1935,7 +1943,9 @@ async function runFisStep3() {
         var copyRow = document.createElement('div');
         copyRow.className = 'fis-anim';
         copyRow.style.cssText = 'padding:9px 18px 13px;background:' + bg + ';border-bottom:1px solid rgba(0,120,200,0.1);font-size:11px;line-height:1.75;animation-delay:' + (0.11 + idx * 0.06) + 's';
-        copyRow.innerHTML = '<span style="color:#cfe3ff">' + ct + '</span> <span style="color:#ffc845;font-weight:700">' + cta + '</span>';
+        var possTxt = (tier !== 'green' && typeof FIS_POSSIBILITY_COPY !== 'undefined') ? (FIS_POSSIBILITY_COPY[lk.name] || '') : '';
+        copyRow.innerHTML = '<span style="color:#cfe3ff">' + ct + '</span> <span style="color:#ffc845;font-weight:700">' + cta + '</span>'
+          + (possTxt ? '<div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(0,150,255,0.12);color:#bcd9ff;font-size:10.5px;line-height:1.65">💡 你可能已經感受到：' + possTxt + '</div>' : '');
         card.appendChild(copyRow);
       }
     }
@@ -2027,7 +2037,22 @@ async function runFisStep3() {
   // 報告卡下面加「想知解決方法？」CTA → SKool 課程（開關開咗先顯示）
   var oldCta = document.getElementById('fis-skool-cta');
   if (oldCta) oldCta.remove();
+  var oldBridge = document.getElementById('fis-skool-bridge');
+  if (oldBridge) oldBridge.remove();
   if (SKOOL_ENABLED) {
+    // 痛點 bridge：只對未持有課程者出（已買唔再 hard-sell）；喺 card 外 → 唔影入分享 PNG
+    if (!window.FIS_COURSE_ACCESS) {
+      var bridge = document.createElement('div');
+      bridge.id = 'fis-skool-bridge';
+      bridge.style.cssText = 'margin-top:16px;padding:16px 18px;border-radius:14px;background:linear-gradient(135deg,#13233f,#1b2f52);border:1px solid rgba(255,200,69,0.28);box-shadow:0 0 24px rgba(0,80,200,0.12)';
+      bridge.innerHTML =
+        '<div style="font-size:13px;line-height:1.7;color:#eaf2ff">你係咪一直覺得：操極都唔大、操腹 feel 唔到腹、臀點練都出唔到、小腹收極都收唔實、條頸又特別易攰？</div>' +
+        '<div style="font-size:13px;line-height:1.7;color:#ffc845;font-weight:700;margin-top:10px">唔係你唔夠勤力。</div>' +
+        '<div style="font-size:13px;line-height:1.7;color:#dbe8fb;margin-top:4px">係你嘅筋膜線連結未打通 —— 連結一日唔通,你流嘅汗就會「漏走」,同一個動作練極都上唔到身。</div>' +
+        '<div style="font-size:13px;line-height:1.7;color:#dbe8fb;margin-top:10px">一旦逐條筋膜線打通,<span style="color:#ffc845;font-weight:700">同一份努力,效果完全唔同。</span></div>' +
+        '<div style="font-size:13px;line-height:1.7;color:#dbe8fb;margin-top:10px">FIS 課程由淺入深,逐線、逐個 Stage 幫你打通呢啲連結,等你練嘅嘢真係練到上身。</div>';
+      imageResult.appendChild(bridge);
+    }
     var cta = document.createElement('button');
     cta.id = 'fis-skool-cta';
     cta.className = 'btn-gold';
