@@ -331,7 +331,7 @@ function showDailyUserDetail(dayIdx,userIdx){
 }
 
 function renderActionDetail(a){
-  let h='<div style="border-top:1px solid var(--border);padding:8px 0 4px"><div style="font-size:12px;font-weight:700;color:var(--cream);margin-bottom:6px">'+esc(a.type)+' \u00d7 '+a.count+' <span style="color:var(--dim);font-weight:400">'+esc(a.latestAt||'')+'</span></div>';
+  let h='<div style="border-top:1px solid var(--border);padding:8px 0 4px"><div style="font-size:12px;font-weight:700;color:var(--cream);margin-bottom:6px">'+esc(a.type)+' \u00d7 '+a.count+' <span style="color:var(--dim);font-weight:400">'+esc(a.latestAt||'')+'</span>'+(a.gender?' <span style="color:var(--gold)">· '+esc(a.gender)+'</span>':'')+'</div>';
   if(a.type==='筋膜自測' && a.latestDetail){
     try{
       const p=JSON.parse(a.latestDetail);
@@ -349,6 +349,7 @@ function renderActionDetail(a){
       if(r.breathing)h+='<div style="font-size:11px;color:var(--cream);margin:2px 0"><span style="color:var(--dim)">呼吸：</span>'+esc(r.breathing)+'</div>';
       if(r.trainingPlan)h+='<div style="font-size:11px;color:var(--cream);margin:2px 0"><span style="color:var(--dim)">計劃：</span>'+esc(r.trainingPlan)+'</div>';
       if(r.startingPoint)h+='<div style="font-size:11px;color:var(--cream);margin:2px 0"><span style="color:var(--dim)">起點：</span>'+esc(r.startingPoint)+'</div>';
+      if(a.step1){h+='<details style="margin-top:8px"><summary style="font-size:11px;color:var(--gold);cursor:pointer">▸ 睇 Prompt 1 體態分析原文</summary><div style="font-size:11px;color:var(--cream);white-space:pre-wrap;margin-top:6px;padding:8px;background:var(--bg3,#16223f);border-radius:8px;max-height:300px;overflow-y:auto">'+esc(a.step1)+'</div></details>';}
     }catch(e){h+='<div style="font-size:11px;color:var(--dim)">（報告卡解析失敗）</div>';}
   }else if(a.latestDetail){
     h+='<div style="font-size:11px;color:var(--cream)">'+esc(a.latestDetail)+'</div>';

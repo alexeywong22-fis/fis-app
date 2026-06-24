@@ -965,7 +965,7 @@ const validPassword = env[username];
 if (!username || !password || !validPassword || password !== validPassword) {
 return jsonResponse({ error: 'Forbidden: Invalid username or password' }, 403);
 }
-const fascia = await env.DB.prepare("SELECT ft.user_id, u.name, ft.created_at AS at, '筋膜自測' AS type, ft.ai_parsed AS detail FROM fascia_tests ft LEFT JOIN users u ON u.id = ft.user_id ORDER BY ft.created_at DESC LIMIT 2000").all();
+const fascia = await env.DB.prepare("SELECT ft.user_id, u.name, ft.created_at AS at, '筋膜自測' AS type, ft.ai_parsed AS detail, ft.gender AS gender, ft.ai_analysis AS step1 FROM fascia_tests ft LEFT JOIN users u ON u.id = ft.user_id ORDER BY ft.created_at DESC LIMIT 2000").all();
 const logs = await env.DB.prepare("SELECT pl.user_id, u.name, pl.created_at AS at, '訓練日誌' AS type, pl.training_type AS detail FROM progress_logs pl LEFT JOIN users u ON u.id = pl.user_id ORDER BY pl.created_at DESC LIMIT 2000").all();
 const pains = await env.DB.prepare("SELECT pd.user_id, u.name, pd.created_at AS at, '痛點診斷' AS type, pd.body_part AS detail FROM pain_diagnoses pd LEFT JOIN users u ON u.id = pd.user_id ORDER BY pd.created_at DESC LIMIT 2000").all();
 const rows = [...(fascia.results || []), ...(logs.results || []), ...(pains.results || [])];
@@ -978,7 +978,7 @@ if (!days[day]) days[day] = { date: day, users: {} };
 const uid = r.user_id || 'unknown';
 if (!days[day].users[uid]) days[day].users[uid] = { userId: uid, name: r.name || '未命名', actions: {} };
 const acts = days[day].users[uid].actions;
-if (!acts[r.type]) acts[r.type] = { type: r.type, count: 0, latestAt: time, latestDetail: r.detail || null };
+if (!acts[r.type]) acts[r.type] = { type: r.type, count: 0, latestAt: time, latestDetail: r.detail || null, gender: r.gender || null, step1: r.step1 || null };
 acts[r.type].count += 1;
 }
 const out = Object.values(days).sort((a, b) => b.date.localeCompare(a.date)).map(d => {
