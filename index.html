@@ -2087,7 +2087,9 @@ async function runFisStep3() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         userId: window.FIS_USER_ID,
-        parsed: fisParsedData
+        parsed: fisParsedData,
+        gender: fisGender,
+        step1Result: fisStep1Result
       })
     }).then(function(r) { return r.json(); })
       .then(function(d) {

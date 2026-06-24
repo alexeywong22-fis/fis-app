@@ -635,6 +635,8 @@ try {
 const body = await request.json();
 const userId = body.userId || null;
 const parsed = body.parsed || {};
+const gender = body.gender || null;
+const step1Raw = body.step1Result || null;
 const lines = parsed.fascialLines || {};
 const recs = parsed.recommendations || {};
 if (!userId) return jsonResponse({ error: 'Missing userId' }, 400);
@@ -654,13 +656,13 @@ await env.DB.prepare(`
         id, user_id,
         deep_front_line, lateral_line, spiral_line,
         superficial_back_line, superficial_front_line,
-        ai_parsed, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+        ai_parsed, gender, ai_analysis, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
     `).bind(
 id, userId,
 stageNum(dl.stage), stageNum(ll.stage), stageNum(sl.stage),
 stageNum(sbl.stage), stageNum(sfl.stage),
-JSON.stringify(parsed)
+JSON.stringify(parsed), gender, step1Raw
     ).run();
 return jsonResponse({ success: true, testId: id });
 } catch (e) {
