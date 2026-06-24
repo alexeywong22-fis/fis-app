@@ -137,7 +137,7 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Serif TC','Hiragin
 <button id="vtDaily" onclick="switchView('daily')" style="flex:1;padding:7px;font-size:11px;font-weight:700;border:none;border-radius:7px;cursor:pointer;font-family:inherit;background:var(--bg2);color:var(--cream);border:1px solid var(--border)">日期視角</button>
 </div>
 <div class="user-list-label" id="listLabel">學 員 列 表</div>
-    <label class="reg-filter"><input type="checkbox" id="regOnly" onchange="toggleRegOnly()"> 只睇已註冊</label>
+    <label class="reg-filter" id="regFilterLabel"><input type="checkbox" id="regOnly" onchange="toggleRegOnly()"> 只睇已註冊</label>
     <div class="user-list" id="userList">
       <div style="padding:12px;font-size:12px;color:var(--dim);text-align:center">請先輸入密鑰登入</div>
     </div>
@@ -240,6 +240,8 @@ async function loadStudent(userId,userName){
 // ══ 日期視角（純新增，唔影響學員視角）══════════════════════
 let coachView='student';      // 'student' | 'daily'
 let dailyData=[];             // /api/coach/daily 攞到嘅 days array
+let dailyExpandedDay=-1;
+let dailyExpandedUser='';
 
 function switchView(v){
   coachView=v;
@@ -248,11 +250,13 @@ function switchView(v){
     bS.style.background='var(--gold)';bS.style.color='#16223f';bS.style.border='none';
     bD.style.background='var(--bg2)';bD.style.color='var(--cream)';bD.style.border='1px solid var(--border)';
     document.getElementById('listLabel').textContent='學 員 列 表';
+    var rf=document.getElementById('regFilterLabel');if(rf)rf.style.display='';
     renderUserList();
   }else{
     bD.style.background='var(--gold)';bD.style.color='#16223f';bD.style.border='none';
     bS.style.background='var(--bg2)';bS.style.color='var(--cream)';bS.style.border='1px solid var(--border)';
     document.getElementById('listLabel').textContent='日 期 列 表';
+    var rf=document.getElementById('regFilterLabel');if(rf)rf.style.display='none';
     loadDaily();
   }
 }
@@ -278,43 +282,88 @@ function renderDailyList(){
   if(!dailyData.length){list.innerHTML='<div style="padding:12px;font-size:12px;color:var(--dim);text-align:center">暫無數據</div>';return;}
   list.innerHTML=dailyData.map((d,i)=>{
     const md=d.date.substring(5).replace('-','月')+'日';
-    return `<div class="user-item" data-day="${i}" style="cursor:pointer">
-      <div class="user-avatar">${d.date.substring(8)}</div>
-      <div style="flex:1;min-width:0">
-        <div class="user-item-name">${md}</div>
-        <div class="user-item-meta">${d.userCount} 人 · ${d.totalActions} 次活動</div>
+    const open=(i===dailyExpandedDay);
+    let inner='';
+    if(open){inner='<div style="padding:4px 0 10px">'+d.users.map((u,ui)=>renderDayUser(i,ui,u)).join('')+'</div>';}
+    return `<div>
+      <div class="user-item" data-day="${i}" style="cursor:pointer;${open?'border-color:var(--gold)':''}">
+        <div class="user-avatar"${open?' style="background:var(--gold);color:#16223f"':''}>${d.date.substring(8)}</div>
+        <div style="flex:1;min-width:0">
+          <div class="user-item-name">${md} ${open?'\u25be':'\u25b8'}</div>
+          <div class="user-item-meta">${d.userCount} 人 · ${d.totalActions} 次活動</div>
+        </div>
       </div>
+      ${inner}
     </div>`;
   }).join('');
 }
 
-// 日期 click（事件委派，唔同學員 click 撞）
-document.addEventListener('click',function(e){
-  if(coachView!=='daily')return;
-  var it=e.target.closest&&e.target.closest('.user-item[data-day]');
-  if(it)renderDailyDetail(parseInt(it.getAttribute('data-day'),10));
-});
+function renderDayUser(dayIdx,userIdx,u){
+  const key=dayIdx+'_'+userIdx;
+  const active=(key===dailyExpandedUser);
+  return `<div class="day-user-head" data-duser="${key}" data-day="${dayIdx}" data-uidx="${userIdx}" style="cursor:pointer;display:flex;align-items:center;gap:8px;margin:4px 6px;padding:10px 12px;background:var(--bg2);border:1px solid ${active?'var(--gold)':'var(--border)'};border-radius:10px">
+    <div style="flex:1;min-width:0">
+      <div style="font-size:13px;font-weight:700;color:#fff">${esc(u.name)}</div>
+      <div style="font-size:10px;color:var(--dim)">${esc(u.userId.substring(0,16))}</div>
+    </div>
+    <div style="font-size:11px;color:var(--gold)">${u.actions.length} 項 \u203a</div>
+  </div>`;
+}
 
-function renderDailyDetail(idx){
-  const d=dailyData[idx];if(!d)return;
-  document.querySelectorAll('.user-item').forEach(el=>el.classList.remove('active'));
-  const el=document.querySelector('.user-item[data-day="'+idx+'"]');if(el)el.classList.add('active');
+// 右邊大畫面 render 一個用戶嗰日嘅完整報告
+function showDailyUserDetail(dayIdx,userIdx){
+  const d=dailyData[dayIdx];if(!d)return;
+  const u=d.users[userIdx];if(!u)return;
+  dailyExpandedUser=dayIdx+'_'+userIdx;
+  renderDailyList();
   const md=d.date.substring(5).replace('-','月')+'日';
-  let html='<div style="padding:28px 32px"><div style="font-size:9px;letter-spacing:3px;color:var(--gold);font-family:DM Mono,monospace;margin-bottom:6px">DAILY VIEW · 日期視角</div>';
-  html+='<div style="font-size:24px;font-weight:900;color:#fff;margin-bottom:4px">'+md+'</div>';
-  html+='<div style="font-size:12px;color:var(--cream);opacity:.72;margin-bottom:20px">'+d.userCount+' 位用戶 · 共 '+d.totalActions+' 次活動</div>';
-  d.users.forEach(u=>{
-    html+='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:10px">';
-    html+='<div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:8px">'+esc(u.name)+' <span style="font-size:10px;color:var(--dim);font-weight:400">'+esc(u.userId.substring(0,16))+'</span></div>';
-    u.actions.forEach(a=>{
-      html+='<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--cream);padding:4px 0;border-top:1px solid var(--border)">';
-      html+='<span>'+esc(a.type)+' × '+a.count+'</span><span style="color:var(--dim)">'+esc(a.latestAt||'')+'</span></div>';
-    });
+  let html='<div style="padding:28px 32px">';
+  html+='<div style="font-size:9px;letter-spacing:3px;color:var(--gold);font-family:DM Mono,monospace;margin-bottom:6px">DAILY VIEW · '+md+'</div>';
+  html+='<div style="font-size:24px;font-weight:900;color:#fff;margin-bottom:4px">'+esc(u.name)+'</div>';
+  html+='<div style="font-size:11px;color:var(--dim);margin-bottom:20px">'+esc(u.userId)+'</div>';
+  u.actions.forEach(a=>{
+    html+='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:12px">';
+    html+=renderActionDetail(a);
     html+='</div>';
   });
   html+='</div>';
   document.getElementById('mainPanel').innerHTML=html;
 }
+
+function renderActionDetail(a){
+  let h='<div style="border-top:1px solid var(--border);padding:8px 0 4px"><div style="font-size:12px;font-weight:700;color:var(--cream);margin-bottom:6px">'+esc(a.type)+' \u00d7 '+a.count+' <span style="color:var(--dim);font-weight:400">'+esc(a.latestAt||'')+'</span></div>';
+  if(a.type==='筋膜自測' && a.latestDetail){
+    try{
+      const p=JSON.parse(a.latestDetail);
+      const fl=p.fascialLines||{};
+      const names={deepFrontLine:'深前線',lateralLine:'側線',spiralLine:'螺旋線',superficialBackLine:'淺背線',superficialFrontLine:'淺前線'};
+      h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:6px">';
+      for(const k in names){
+        const v=fl[k]||{};
+        const st=v.status||'—';
+        const color=st==='優先關注'?'#ff6b6b':st==='發展中'?'var(--gold)':st==='過渡'?'#ffd98a':st==='狀態良好'?'#6bd88a':'var(--dim)';
+        h+='<div style="font-size:11px;color:var(--cream)"><span style="color:var(--dim)">'+names[k]+'：</span><span style="color:'+color+'">'+esc(st)+'</span> <span style="color:var(--dim);font-size:10px">'+esc(v.stage||'')+'</span></div>';
+      }
+      h+='</div>';
+      const r=p.recommendations||{};
+      if(r.breathing)h+='<div style="font-size:11px;color:var(--cream);margin:2px 0"><span style="color:var(--dim)">呼吸：</span>'+esc(r.breathing)+'</div>';
+      if(r.trainingPlan)h+='<div style="font-size:11px;color:var(--cream);margin:2px 0"><span style="color:var(--dim)">計劃：</span>'+esc(r.trainingPlan)+'</div>';
+      if(r.startingPoint)h+='<div style="font-size:11px;color:var(--cream);margin:2px 0"><span style="color:var(--dim)">起點：</span>'+esc(r.startingPoint)+'</div>';
+    }catch(e){h+='<div style="font-size:11px;color:var(--dim)">（報告卡解析失敗）</div>';}
+  }else if(a.latestDetail){
+    h+='<div style="font-size:11px;color:var(--cream)">'+esc(a.latestDetail)+'</div>';
+  }
+  h+='</div>';
+  return h;
+}
+
+document.addEventListener('click',function(e){
+  if(coachView!=='daily')return;
+  var du=e.target.closest&&e.target.closest('.day-user-head[data-duser]');
+  if(du){showDailyUserDetail(parseInt(du.getAttribute('data-day'),10),parseInt(du.getAttribute('data-uidx'),10));return;}
+  var it=e.target.closest&&e.target.closest('.user-item[data-day]');
+  if(it){var di=parseInt(it.getAttribute('data-day'),10);if(dailyExpandedDay===di){dailyExpandedDay=-1;dailyExpandedUser='';}else{dailyExpandedDay=di;dailyExpandedUser='';}renderDailyList();return;}
+});
 
 function renderStudent(d){
   const u=d.user||{};
