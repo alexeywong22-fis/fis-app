@@ -31,3 +31,4 @@
 - [ ] 商標 class 41/42/44
 - [ ] 真律師掃 privacy
 - [ ] 螺旋上升進度視覺（前置：先用 loop2 re-assessment 數據驗證「逐圈深」成立；trigger：launch 後 8–12 週首批用戶行到第二 loop；純前端，唔改 enum/schema）
+- [ ] 能力指標系統（逐步搵問題 decision-tree）— 見 docs/post-launch/能力指標系統_master_spec.md｜Phase A=填動作矩陣(零code)，Phase B+=post-launch 純前端，守 §7 claim 紅線
