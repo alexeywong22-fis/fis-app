@@ -132,7 +132,11 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Serif TC','Hiragin
       <div class="auth-status" id="authStatus"></div>
     </div>
 
-    <div class="user-list-label">學 員 列 表</div>
+    <div class="view-toggle" style="display:flex;gap:6px;padding:8px 8px 0">
+<button id="vtStudent" onclick="switchView('student')" style="flex:1;padding:7px;font-size:11px;font-weight:700;border:none;border-radius:7px;cursor:pointer;font-family:inherit;background:var(--gold);color:#16223f">學員視角</button>
+<button id="vtDaily" onclick="switchView('daily')" style="flex:1;padding:7px;font-size:11px;font-weight:700;border:none;border-radius:7px;cursor:pointer;font-family:inherit;background:var(--bg2);color:var(--cream);border:1px solid var(--border)">日期視角</button>
+</div>
+<div class="user-list-label" id="listLabel">學 員 列 表</div>
     <label class="reg-filter"><input type="checkbox" id="regOnly" onchange="toggleRegOnly()"> 只睇已註冊</label>
     <div class="user-list" id="userList">
       <div style="padding:12px;font-size:12px;color:var(--dim);text-align:center">請先輸入密鑰登入</div>
@@ -231,6 +235,85 @@ async function loadStudent(userId,userName){
     const d=await r.json();
     renderStudent(d);
   }catch(e){document.getElementById('mainPanel').innerHTML='<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-text">載入失敗，請重試</div></div>';}
+}
+
+// ══ 日期視角（純新增，唔影響學員視角）══════════════════════
+let coachView='student';      // 'student' | 'daily'
+let dailyData=[];             // /api/coach/daily 攞到嘅 days array
+
+function switchView(v){
+  coachView=v;
+  const bS=document.getElementById('vtStudent'),bD=document.getElementById('vtDaily');
+  if(v==='student'){
+    bS.style.background='var(--gold)';bS.style.color='#16223f';bS.style.border='none';
+    bD.style.background='var(--bg2)';bD.style.color='var(--cream)';bD.style.border='1px solid var(--border)';
+    document.getElementById('listLabel').textContent='學 員 列 表';
+    renderUserList();
+  }else{
+    bD.style.background='var(--gold)';bD.style.color='#16223f';bD.style.border='none';
+    bS.style.background='var(--bg2)';bS.style.color='var(--cream)';bS.style.border='1px solid var(--border)';
+    document.getElementById('listLabel').textContent='日 期 列 表';
+    loadDaily();
+  }
+}
+
+async function loadDaily(){
+  if(!coachKey){showToast&&showToast('請先登入');return;}
+  const list=document.getElementById('userList');
+  list.innerHTML='<div style="padding:12px;font-size:12px;color:var(--dim);text-align:center">載入中...</div>';
+  try{
+    const r=await fetch(API+'/api/coach/daily',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({username:'alexeywong22',password:coachKey})
+    });
+    const d=await r.json();
+    if(!d.success){list.innerHTML='<div style="padding:12px;font-size:12px;color:var(--dim);text-align:center">載入失敗</div>';return;}
+    dailyData=d.days||[];
+    renderDailyList();
+  }catch(e){list.innerHTML='<div style="padding:12px;font-size:12px;color:var(--dim);text-align:center">連線失敗</div>';}
+}
+
+function renderDailyList(){
+  const list=document.getElementById('userList');
+  if(!dailyData.length){list.innerHTML='<div style="padding:12px;font-size:12px;color:var(--dim);text-align:center">暫無數據</div>';return;}
+  list.innerHTML=dailyData.map((d,i)=>{
+    const md=d.date.substring(5).replace('-','月')+'日';
+    return `<div class="user-item" data-day="${i}" style="cursor:pointer">
+      <div class="user-avatar">${d.date.substring(8)}</div>
+      <div style="flex:1;min-width:0">
+        <div class="user-item-name">${md}</div>
+        <div class="user-item-meta">${d.userCount} 人 · ${d.totalActions} 次活動</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// 日期 click（事件委派，唔同學員 click 撞）
+document.addEventListener('click',function(e){
+  if(coachView!=='daily')return;
+  var it=e.target.closest&&e.target.closest('.user-item[data-day]');
+  if(it)renderDailyDetail(parseInt(it.getAttribute('data-day'),10));
+});
+
+function renderDailyDetail(idx){
+  const d=dailyData[idx];if(!d)return;
+  document.querySelectorAll('.user-item').forEach(el=>el.classList.remove('active'));
+  const el=document.querySelector('.user-item[data-day="'+idx+'"]');if(el)el.classList.add('active');
+  const md=d.date.substring(5).replace('-','月')+'日';
+  let html='<div style="padding:28px 32px"><div style="font-size:9px;letter-spacing:3px;color:var(--gold);font-family:DM Mono,monospace;margin-bottom:6px">DAILY VIEW · 日期視角</div>';
+  html+='<div style="font-size:24px;font-weight:900;color:#fff;margin-bottom:4px">'+md+'</div>';
+  html+='<div style="font-size:12px;color:var(--cream);opacity:.72;margin-bottom:20px">'+d.userCount+' 位用戶 · 共 '+d.totalActions+' 次活動</div>';
+  d.users.forEach(u=>{
+    html+='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:10px">';
+    html+='<div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:8px">'+esc(u.name)+' <span style="font-size:10px;color:var(--dim);font-weight:400">'+esc(u.userId.substring(0,16))+'</span></div>';
+    u.actions.forEach(a=>{
+      html+='<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--cream);padding:4px 0;border-top:1px solid var(--border)">';
+      html+='<span>'+esc(a.type)+' × '+a.count+'</span><span style="color:var(--dim)">'+esc(a.latestAt||'')+'</span></div>';
+    });
+    html+='</div>';
+  });
+  html+='</div>';
+  document.getElementById('mainPanel').innerHTML=html;
 }
 
 function renderStudent(d){

@@ -140,6 +140,9 @@ return await handleFisStep3(request, env);
 if (path === '/api/coach/user-summary-v2' && request.method === 'POST') {
 return handleCoachUserSummaryV2(request, env);
 }
+if (path === '/api/coach/daily' && request.method === 'POST') {
+return handleCoachDaily(request, env);
+}
 if (path === '/api/user/check-progress' && request.method === 'GET') {
 return handleCheckProgress(request, env);
 }
@@ -946,6 +949,43 @@ const users = await env.DB.prepare(`
     `).all();
 return jsonResponse({ success: true, users: users.results || [] });
 } catch(e) {
+return jsonResponse({ error: e.message }, 500);
+}
+}
+
+// ── 日期視角：按日 group 所有功能使用，coach_key gated（純新增，唔影響現有 API）──
+async function handleCoachDaily(request, env) {
+if (!env.DB) return jsonResponse({ error: 'DB not configured' }, 500);
+try {
+const body = await request.json();
+const { username, password } = body;
+const validPassword = env[username];
+if (!username || !password || !validPassword || password !== validPassword) {
+return jsonResponse({ error: 'Forbidden: Invalid username or password' }, 403);
+}
+const fascia = await env.DB.prepare("SELECT ft.user_id, u.name, ft.created_at AS at, '筋膜自測' AS type, ft.ai_parsed AS detail FROM fascia_tests ft LEFT JOIN users u ON u.id = ft.user_id ORDER BY ft.created_at DESC LIMIT 2000").all();
+const logs = await env.DB.prepare("SELECT pl.user_id, u.name, pl.created_at AS at, '訓練日誌' AS type, pl.training_type AS detail FROM progress_logs pl LEFT JOIN users u ON u.id = pl.user_id ORDER BY pl.created_at DESC LIMIT 2000").all();
+const pains = await env.DB.prepare("SELECT pd.user_id, u.name, pd.created_at AS at, '痛點診斷' AS type, pd.body_part AS detail FROM pain_diagnoses pd LEFT JOIN users u ON u.id = pd.user_id ORDER BY pd.created_at DESC LIMIT 2000").all();
+const rows = [...(fascia.results || []), ...(logs.results || []), ...(pains.results || [])];
+const days = {};
+for (const r of rows) {
+if (!r.at) continue;
+const day = String(r.at).substring(0, 10);
+const time = String(r.at).substring(11, 16);
+if (!days[day]) days[day] = { date: day, users: {} };
+const uid = r.user_id || 'unknown';
+if (!days[day].users[uid]) days[day].users[uid] = { userId: uid, name: r.name || '未命名', actions: {} };
+const acts = days[day].users[uid].actions;
+if (!acts[r.type]) acts[r.type] = { type: r.type, count: 0, latestAt: time, latestDetail: r.detail || null };
+acts[r.type].count += 1;
+}
+const out = Object.values(days).sort((a, b) => b.date.localeCompare(a.date)).map(d => {
+const users = Object.values(d.users).map(u => ({ userId: u.userId, name: u.name, actions: Object.values(u.actions) }));
+const totalActions = users.reduce((acc, u) => acc + u.actions.reduce((x, a) => x + a.count, 0), 0);
+return { date: d.date, userCount: users.length, totalActions, users };
+});
+return jsonResponse({ success: true, days: out });
+} catch (e) {
 return jsonResponse({ error: e.message }, 500);
 }
 }
