@@ -327,7 +327,10 @@ function showDailyUserDetail(dayIdx,userIdx){
     html+='</div>';
   });
   html+='</div>';
-  document.getElementById('mainPanel').innerHTML=html;
+  var mp=document.getElementById('mainPanel');
+  mp.innerHTML=html;
+  // 手機（窄螢幕）：撳人名後自動 scroll 去 result
+  if(window.innerWidth<=768){setTimeout(function(){mp.scrollIntoView({behavior:'smooth',block:'start'});},100);}
 }
 
 function renderActionDetail(a){
