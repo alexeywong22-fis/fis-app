@@ -152,33 +152,45 @@
 
 ## B0. D1 新 table（Claude Code, wrangler）
 
+> **雙軌設計 = 結構化評分(1-5) + 文字補充 並存**。Signal1 = 學生主觀 feel;Signal2 = 教練客觀觀察。re-test 對住 baseline **同一 `target_action`** 比。
+> 落地 = `migrations/0006_fis_assessments.sql`,`CREATE TABLE IF NOT EXISTS`,絕不 DROP/ALTER 現有表。**先 local sandbox 驗,remote 零改動**:`wrangler d1 migrations apply fis-db --local`。
+
 ```sql
--- 一次完整評估
-CREATE TABLE fis_assessments (
-  id TEXT PRIMARY KEY,              -- asm_xxx
-  student_id TEXT NOT NULL,         -- → users.id
+-- 一次完整評估(baseline)
+CREATE TABLE IF NOT EXISTS fis_assessments (
+  id TEXT PRIMARY KEY,                  -- asm_xxx
+  student_id TEXT NOT NULL,             -- → users.id
   coach_id TEXT NOT NULL,
-  appearance_ids TEXT NOT NULL,     -- JSON array
-  active_cause_ids TEXT NOT NULL,   -- JSON array(剔除後成立成因 = ③Layer3 結果)
-  segment_scores TEXT NOT NULL,     -- JSON(15段加總)
-  training_order TEXT NOT NULL,     -- JSON
-  baseline_student TEXT,            -- ⑤ 學生主觀 feel(文字)
-  baseline_coach TEXT,              -- ⑤ 教練客觀觀察(文字)
+  appearance_ids TEXT NOT NULL,         -- JSON array
+  active_cause_ids TEXT NOT NULL,       -- JSON array(剔除後成立成因 = ③Layer3 結果)
+  segment_scores TEXT NOT NULL,         -- JSON(15段加總)
+  training_order TEXT NOT NULL,         -- JSON
+  target_action TEXT,                   -- 對應動作(高位下拉/推類/RDL/自訂),可 NULL
+  baseline_student_score INTEGER,       -- ⑤ Signal1 學生主觀 1-5,可 NULL
+  baseline_student_note TEXT,           -- ⑤ Signal1 文字補充,可 NULL
+  baseline_coach_score INTEGER,         -- ⑤ Signal2 教練客觀 1-5,可 NULL
+  baseline_coach_note TEXT,             -- ⑤ Signal2 文字補充,可 NULL
   created_at INTEGER NOT NULL
 );
 
--- re-test(一個 assessment 對多次)
-CREATE TABLE fis_retests (
-  id TEXT PRIMARY KEY,              -- rt_xxx
-  assessment_id TEXT NOT NULL,      -- → fis_assessments.id
-  retest_student TEXT,              -- ⑥ 學生主觀:對應動作順咗? feel 到改善?
-  retest_coach TEXT,                -- ⑥ 教練客觀:動作軌跡/代償/外觀
-  verdict TEXT,                     -- 兩軌改善 / 教練睇到學生feel唔到 / 兩軌都冇
-  note TEXT,
+-- re-test(一個 assessment 對多次;對住 baseline 同一 target_action 比)
+CREATE TABLE IF NOT EXISTS fis_retests (
+  id TEXT PRIMARY KEY,                  -- rt_xxx
+  assessment_id TEXT NOT NULL,          -- → fis_assessments.id
+  retest_student_score INTEGER,         -- ⑥ Signal1 學生主觀 1-5
+  retest_student_note TEXT,             -- ⑥ Signal1 文字補充
+  retest_coach_score INTEGER,           -- ⑥ Signal2 教練客觀 1-5
+  retest_coach_note TEXT,               -- ⑥ Signal2 文字補充
+  verdict TEXT,                         -- 兩軌改善 / 教練睇到學生feel唔到(仍進步) / 兩軌都冇(重判成因)
   created_at INTEGER NOT NULL
 );
+
+-- 查詢索引(B1 用:按學員列評估、按評估列 re-test 時序)
+CREATE INDEX IF NOT EXISTS idx_fis_assessments_student ON fis_assessments (student_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_fis_retests_assessment  ON fis_retests (assessment_id, created_at);
 ```
-- [ ] 寫 migration,`pwd` 確認 fis-app 後 `wrangler d1` 執行。
+- [x] 寫 migration `migrations/0006_fis_assessments.sql`(`CREATE TABLE IF NOT EXISTS` + 2 index)。
+- [x] **local sandbox apply 驗通**(`--local`,remote 零改動);remote apply 等驗咗先。
 - [ ] 確認唔污染現有 users/fascia_tests/progress_logs 等 table。
 
 ## B1. Worker API — 記錄(Claude Code)

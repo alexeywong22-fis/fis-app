@@ -143,6 +143,19 @@ return await handleFisStep3(request, env);
 if (path === '/api/fis/assess' && request.method === 'POST') {
 return handleFisAssess(request, env);
 }
+// ── 階段 B · B1：FIS 記錄追蹤（用現有 env.DB binding）──
+if (path === '/api/fis/assessment/save' && request.method === 'POST') {
+return handleFisAssessmentSave(request, env);
+}
+if (path === '/api/fis/assessment/list' && request.method === 'GET') {
+return handleFisAssessmentList(request, env);
+}
+if (path === '/api/fis/retest/save' && request.method === 'POST') {
+return handleFisRetestSave(request, env);
+}
+if (path === '/api/fis/retest/list' && request.method === 'GET') {
+return handleFisRetestList(request, env);
+}
 if (path === '/api/coach/user-summary-v2' && request.method === 'POST') {
 return handleCoachUserSummaryV2(request, env);
 }
@@ -732,6 +745,124 @@ t_notes: tNotes,
 safety_flags: safetyFlags,
 disclaimer: FIS_DISCLAIMER
 });
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// 階段 B · B1 — FIS 記錄追蹤 API（用現有 env.DB binding + 現有錯誤處理風格）
+// 唔掂現有 table；唔做 users 存在檢查（base table 喺 remote、local sandbox 冇，
+// 且 student_id 由教練已認證列表揀，故只驗 required 欄位 + 評分範圍）。
+// ════════════════════════════════════════════════════════════════════════
+
+// JSON 欄位：accept array/object（自動 stringify）或已 stringify 嘅 string
+function fisToJsonText(v) { return typeof v === 'string' ? v : JSON.stringify(v); }
+// 評分：未填(null/undefined)放行；一旦填就必須係 1-5 整數
+function fisScoreOk(v) { return v === undefined || v === null || (Number.isInteger(v) && v >= 1 && v <= 5); }
+
+async function handleFisAssessmentSave(request, env) {
+if (!env.DB) return jsonResponse({ error: 'DB not configured' }, 500);
+try {
+const body = await request.json();
+const {
+student_id, coach_id, appearance_ids, active_cause_ids,
+segment_scores, training_order, target_action,
+baseline_student_score, baseline_student_note,
+baseline_coach_score, baseline_coach_note
+} = body;
+// required（對應 schema NOT NULL）
+if (!student_id || !coach_id) {
+return jsonResponse({ error: 'Missing required fields: student_id / coach_id' }, 400);
+}
+if (appearance_ids == null || active_cause_ids == null || segment_scores == null || training_order == null) {
+return jsonResponse({ error: 'Missing required fields: appearance_ids / active_cause_ids / segment_scores / training_order' }, 400);
+}
+if (!fisScoreOk(baseline_student_score) || !fisScoreOk(baseline_coach_score)) {
+return jsonResponse({ error: '評分必須係 1-5 整數' }, 400);
+}
+const id = 'asm_' + crypto.randomUUID().replace(/-/g, '').substring(0, 16);
+await env.DB.prepare(`
+      INSERT INTO fis_assessments (
+        id, student_id, coach_id, appearance_ids, active_cause_ids,
+        segment_scores, training_order, target_action,
+        baseline_student_score, baseline_student_note,
+        baseline_coach_score, baseline_coach_note, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+id, student_id, coach_id,
+fisToJsonText(appearance_ids), fisToJsonText(active_cause_ids),
+fisToJsonText(segment_scores), fisToJsonText(training_order),
+target_action || null,
+baseline_student_score ?? null, baseline_student_note || null,
+baseline_coach_score ?? null, baseline_coach_note || null,
+Date.now()
+).run();
+return jsonResponse({ success: true, assessmentId: id });
+} catch (e) {
+return jsonResponse({ error: e.message }, 500);
+}
+}
+
+async function handleFisAssessmentList(request, env) {
+if (!env.DB) return jsonResponse({ error: 'DB not configured' }, 500);
+try {
+const url = new URL(request.url);
+const studentId = url.searchParams.get('student_id');
+if (!studentId) return jsonResponse({ error: 'Missing student_id' }, 400);
+const results = await env.DB.prepare(
+'SELECT * FROM fis_assessments WHERE student_id = ? ORDER BY created_at DESC LIMIT 200'
+    ).bind(studentId).all();
+return jsonResponse({ records: results.results || [] });
+} catch (e) {
+return jsonResponse({ error: e.message }, 500);
+}
+}
+
+async function handleFisRetestSave(request, env) {
+if (!env.DB) return jsonResponse({ error: 'DB not configured' }, 500);
+try {
+const body = await request.json();
+const {
+assessment_id, retest_student_score, retest_student_note,
+retest_coach_score, retest_coach_note, verdict
+} = body;
+if (!assessment_id) return jsonResponse({ error: 'Missing assessment_id' }, 400);
+if (!fisScoreOk(retest_student_score) || !fisScoreOk(retest_coach_score)) {
+return jsonResponse({ error: '評分必須係 1-5 整數' }, 400);
+}
+// re-test 對住 baseline，先確認母評估存在
+const parent = await env.DB.prepare('SELECT id FROM fis_assessments WHERE id = ?').bind(assessment_id).first();
+if (!parent) return jsonResponse({ error: 'Assessment not found' }, 404);
+const id = 'rt_' + crypto.randomUUID().replace(/-/g, '').substring(0, 16);
+await env.DB.prepare(`
+      INSERT INTO fis_retests (
+        id, assessment_id, retest_student_score, retest_student_note,
+        retest_coach_score, retest_coach_note, verdict, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+id, assessment_id,
+retest_student_score ?? null, retest_student_note || null,
+retest_coach_score ?? null, retest_coach_note || null,
+verdict || null, Date.now()
+).run();
+return jsonResponse({ success: true, retestId: id });
+} catch (e) {
+return jsonResponse({ error: e.message }, 500);
+}
+}
+
+async function handleFisRetestList(request, env) {
+if (!env.DB) return jsonResponse({ error: 'DB not configured' }, 500);
+try {
+const url = new URL(request.url);
+const assessmentId = url.searchParams.get('assessment_id');
+if (!assessmentId) return jsonResponse({ error: 'Missing assessment_id' }, 400);
+// 時序 = 由舊到新（睇 baseline → 進度）
+const results = await env.DB.prepare(
+'SELECT * FROM fis_retests WHERE assessment_id = ? ORDER BY created_at ASC LIMIT 200'
+    ).bind(assessmentId).all();
+return jsonResponse({ records: results.results || [] });
+} catch (e) {
+return jsonResponse({ error: e.message }, 500);
+}
 }
 
 async function handleFisStep3(request, env) {

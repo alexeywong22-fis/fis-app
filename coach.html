@@ -145,6 +145,32 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Serif TC','Hiragin
 .fis-safety .ex{color:var(--red);font-weight:900;margin-right:6px}
 .fis-tnote{font-size:11.5px;color:var(--cream);opacity:.82;line-height:1.65;margin-bottom:3px}
 .fis-disclaimer{font-size:11px;color:var(--dim);border-top:1px solid var(--border);margin-top:20px;padding-top:13px;line-height:1.55}
+/* ── 階段 B · 記錄追蹤表單 + 進度追蹤 ─────────────────── */
+.fis-mode-bar{display:flex;gap:8px;margin-bottom:16px}
+.fis-mode-btn{flex:0 0 auto;padding:7px 14px;font-size:12px;font-weight:700;border-radius:8px;cursor:pointer;font-family:inherit;background:var(--bg2);color:var(--cream);border:1px solid var(--border)}
+.fis-mode-btn.on{background:var(--gold);color:#16223f;border:none}
+.fis-form{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;margin-top:14px}
+.fis-form-row{margin-bottom:13px}
+.fis-label{display:block;font-size:11px;letter-spacing:1px;color:var(--gold);margin-bottom:6px;font-family:'DM Mono',monospace}
+.fis-input,.fis-textarea,.fis-select{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:9px 11px;font-size:13px;color:var(--text);font-family:inherit;box-sizing:border-box}
+.fis-textarea{min-height:54px;resize:vertical}
+.fis-select{cursor:pointer}
+.fis-input:focus,.fis-textarea:focus,.fis-select:focus{border-color:var(--gold);outline:none}
+.fis-score-sel{width:96px}
+.fis-ok{background:rgba(34,211,160,0.1);border:1px solid var(--green);border-radius:10px;padding:11px 14px;font-size:12.5px;color:var(--green);margin-top:12px;line-height:1.55}
+.fis-track{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 15px;margin-bottom:8px}
+.fis-track-lbl{font-size:12px;color:var(--cream);min-width:120px}
+.fis-prog{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.fis-num{font-size:22px;font-weight:900;font-family:'DM Mono',monospace;color:var(--gold)}
+.fis-num.dim{color:var(--dim);font-size:18px}
+.fis-arrow{font-size:15px;font-weight:900;color:var(--dim);font-family:'DM Mono',monospace}
+.fis-hist-item{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:11px 14px;margin-bottom:8px;cursor:pointer}
+.fis-hist-item:hover{border-color:var(--gold)}
+.fis-hist-meta{font-size:11px;color:var(--dim);margin-top:3px}
+.fis-note-item{border-left:2px solid var(--border);padding:5px 0 5px 13px;margin-bottom:11px}
+.fis-note-when{font-size:10px;color:var(--gold);font-family:'DM Mono',monospace;margin-bottom:3px}
+.fis-note-txt{font-size:12px;color:var(--cream);line-height:1.55}
+.fis-verdict{display:inline-block;font-size:10px;font-weight:700;border-radius:5px;padding:1px 7px;margin-top:3px;border:1px solid var(--border);color:var(--gold)}
 </style>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 </head>
@@ -682,11 +708,22 @@ const FIS_APPEARANCES=[
   {id:14,name:'外觀 14'},{id:15,name:'外觀 15'},{id:16,name:'外觀 16'},{id:17,name:'外觀 17'},
   {id:18,name:'外觀 18'},{id:19,name:'外觀 19'}
 ];
+// ⚠️ coach_id placeholder：coach.html 仲用緊舊單一密鑰登入（未接 coach auth Stage 2），
+// 暫用登入 username 做 coach_id，日後接 /api/coach/auth 後改成真 coach_id。
+const FIS_COACH_ID='alexeywong22';
 let fisStudentId=null,fisStudentName='';
 let fisSelApps=[];               // 揀咗嘅外觀 id
 let fisCandidates=[];            // 第一次 assess 攞到嘅候選成因
 let fisExcluded={};              // {causeId:true} 教練剔走嘅
+let fisLastPlan=null;            // 最近一次出方案嘅 assess result（baseline save 用）
+let fisHistory=[];               // 進度追蹤：該學員歷史評估 list
+let fisCurAsm=null;              // 進度追蹤：當前入緊嗰個評估 row
 const fisMain=()=>document.getElementById('mainPanel');
+function fisDate(ms){if(!ms)return '';const d=new Date(Number(ms));const p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes());}
+// 1-5 評分揀單（空 = 未評 = NULL）
+function fisScoreSelect(id,val){let o='<option value="">未評</option>';for(let n=1;n<=5;n++)o+=`<option value="${n}"${String(val)===String(n)?' selected':''}>${n}</option>`;return `<select id="${id}" class="fis-select fis-score-sel">${o}</select>`;}
+function fisGetScore(id){const v=document.getElementById(id).value;return v===''?null:parseInt(v,10);}
+function fisGetVal(id){const el=document.getElementById(id);return el?el.value.trim():'';}
 
 function fisShowIntro(){
   const logged=coachUsers&&coachUsers.length;
@@ -721,6 +758,10 @@ function fisRenderAppearances(){
       <span>${esc(a.name)}</span><span class="fis-soon">即將開放</span></label>`;
   }).join('');
   fisMain().innerHTML=`<div class="fis-wrap">
+    <div class="fis-mode-bar">
+      <button class="fis-mode-btn on">＋ 新評估</button>
+      <button class="fis-mode-btn" onclick="fisOpenProgress()">📊 進度追蹤</button>
+    </div>
     <div class="fis-step-tag">STEP 1 · 揀外觀</div>
     <div class="fis-h">${esc(fisStudentName)}</div>
     <div class="fis-sub">揀學員身上見到嘅外觀（可多選）。目前只有「頭前引」engine data 上線，其餘陸續補。</div>
@@ -800,6 +841,7 @@ function fisVids(arr){
 }
 
 function fisRenderPlan(d){
+  fisLastPlan=d;   // 畀 baseline save 用（appearance_ids/active_causes/segment_scores/training_order）
   const to=d.training_order||[],ep=d.exception_path||[],tn=d.t_notes||[],sf=d.safety_flags||[];
   const active=(d.active_causes||[]).length,cand=(d.candidate_causes||[]).length;
   const toHtml=to.length?to.map((s,i)=>`<div class="fis-seg">
@@ -828,11 +870,217 @@ function fisRenderPlan(d){
     ${epHtml}
     ${tnHtml}
     <div class="fis-disclaimer">${esc(d.disclaimer||'[!] 以下屬教育性參考，並非醫療診斷。如有疼痛請先諮詢醫生。')}</div>
+
+    <div class="fis-region-title">記低呢次評估（baseline）</div>
+    <div class="fis-form" id="fisBaselineForm">
+      <div class="fis-form-row">
+        <label class="fis-label">對應動作（之後 re-test 對住同一個動作比）</label>
+        <select class="fis-select" id="fisTargetSel" onchange="fisToggleCustomAction()">
+          <option value="高位下拉">高位下拉</option>
+          <option value="推類">推類</option>
+          <option value="RDL">RDL</option>
+          <option value="__custom">自訂…</option>
+        </select>
+        <input class="fis-input" id="fisTargetCustom" placeholder="自訂動作名稱" style="display:none;margin-top:8px">
+      </div>
+      <div class="fis-form-row">
+        <label class="fis-label">Signal 1 · 學生主觀發力感（1-5）</label>
+        ${fisScoreSelect('fisBsScore','')}
+        <textarea class="fis-textarea" id="fisBsNote" placeholder="學生主觀文字補充（feel 到邊度、順唔順）" style="margin-top:8px"></textarea>
+      </div>
+      <div class="fis-form-row">
+        <label class="fis-label">Signal 2 · 教練客觀觀察（1-5）</label>
+        ${fisScoreSelect('fisBcScore','')}
+        <textarea class="fis-textarea" id="fisBcNote" placeholder="教練客觀文字補充（動作軌跡、代償、體態）" style="margin-top:8px"></textarea>
+      </div>
+      <button class="fis-btn" onclick="fisSaveBaseline()">儲存評估</button>
+      <div id="fisBaselineResult"></div>
+    </div>
+
     <div style="display:flex;gap:10px;margin-top:18px">
       <button class="fis-btn-ghost" onclick="fisRenderCandidates()">← 改剔除</button>
       <button class="fis-btn-ghost" onclick="fisRenderAppearances()">↻ 重揀外觀</button>
     </div>
   </div>`;
+}
+
+function fisToggleCustomAction(){
+  const sel=document.getElementById('fisTargetSel'),inp=document.getElementById('fisTargetCustom');
+  if(!sel||!inp)return;
+  inp.style.display=(sel.value==='__custom')?'block':'none';
+}
+
+async function fisSaveBaseline(){
+  if(!fisLastPlan){showToast('未有方案資料');return;}
+  if(!fisStudentId){showToast('未揀學員');return;}
+  const sel=document.getElementById('fisTargetSel').value;
+  const target=(sel==='__custom')?fisGetVal('fisTargetCustom'):sel;
+  const payload={
+    student_id:fisStudentId,
+    coach_id:FIS_COACH_ID,
+    appearance_ids:fisLastPlan.appearance_ids||fisSelApps,
+    active_cause_ids:(fisLastPlan.active_causes||[]).map(c=>c.id),
+    segment_scores:fisLastPlan.segment_scores||{},
+    training_order:fisLastPlan.training_order||[],
+    target_action:target||null,
+    baseline_student_score:fisGetScore('fisBsScore'),
+    baseline_student_note:fisGetVal('fisBsNote')||null,
+    baseline_coach_score:fisGetScore('fisBcScore'),
+    baseline_coach_note:fisGetVal('fisBcNote')||null
+  };
+  const box=document.getElementById('fisBaselineResult');
+  box.innerHTML='<div class="fis-tnote" style="margin-top:12px"><span class="spinner" style="width:14px;height:14px"></span> 儲存中...</div>';
+  try{
+    const r=await fetch(FIS_API_BASE+'/api/fis/assessment/save',{
+      method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)
+    });
+    const d=await r.json();
+    if(!r.ok||!d.success)throw new Error(d.error||('儲存失敗 '+r.status));
+    box.innerHTML=`<div class="fis-ok">✅ 評估已儲存　<span style="font-family:'DM Mono',monospace">${esc(d.assessmentId)}</span><br>
+      <span style="cursor:pointer;text-decoration:underline" onclick="fisOpenProgress()">→ 去進度追蹤睇</span></div>`;
+  }catch(e){
+    box.innerHTML='<div class="fis-safety" style="margin-top:12px"><span class="ex">[!]</span>'+esc(e.message)+'</div>';
+  }
+}
+
+// ══ 進度追蹤 ══════════════════════════════════════════════
+async function fisOpenProgress(){
+  if(!fisStudentId){fisShowIntro();return;}
+  fisMain().innerHTML='<div class="loading"><span class="spinner"></span>載入歷史評估...</div>';
+  try{
+    const r=await fetch(FIS_API_BASE+'/api/fis/assessment/list?student_id='+encodeURIComponent(fisStudentId));
+    const d=await r.json();
+    if(!r.ok)throw new Error(d.error||('載入失敗 '+r.status));
+    fisHistory=d.records||[];
+    fisRenderHistory();
+  }catch(e){
+    fisMain().innerHTML='<div class="fis-wrap"><div class="fis-safety"><span class="ex">[!]</span>'+esc(e.message)+'</div><button class="fis-btn-ghost" onclick="fisRenderAppearances()">← 返回</button></div>';
+  }
+}
+
+function fisRenderHistory(){
+  const rows=fisHistory.map((a,i)=>{
+    const bs=a.baseline_student_score==null?'—':a.baseline_student_score;
+    const bc=a.baseline_coach_score==null?'—':a.baseline_coach_score;
+    return `<div class="fis-hist-item" onclick="fisOpenAssessment(${i})">
+      <div style="font-size:13px;font-weight:700;color:var(--text)">${esc(a.target_action||'（未填對應動作）')}</div>
+      <div class="fis-hist-meta">${esc(fisDate(a.created_at))} · baseline 學生 ${esc(bs)} / 教練 ${esc(bc)}</div>
+    </div>`;
+  }).join('');
+  fisMain().innerHTML=`<div class="fis-wrap">
+    <div class="fis-mode-bar">
+      <button class="fis-mode-btn" onclick="fisRenderAppearances()">＋ 新評估</button>
+      <button class="fis-mode-btn on">📊 進度追蹤</button>
+    </div>
+    <div class="fis-step-tag">進度追蹤 · 歷史評估</div>
+    <div class="fis-h">${esc(fisStudentName)}</div>
+    <div class="fis-sub">揀一個評估入去睇 baseline → re-test 進度。</div>
+    ${rows||'<div class="fis-cause">呢個學員未有評估記錄。撳「＋ 新評估」開始。</div>'}
+  </div>`;
+}
+
+async function fisOpenAssessment(i){
+  const a=fisHistory[i];if(!a)return;
+  fisCurAsm=a;
+  fisMain().innerHTML='<div class="loading"><span class="spinner"></span>載入 re-test...</div>';
+  try{
+    const r=await fetch(FIS_API_BASE+'/api/fis/retest/list?assessment_id='+encodeURIComponent(a.id));
+    const d=await r.json();
+    if(!r.ok)throw new Error(d.error||('載入失敗 '+r.status));
+    fisRenderAssessment(a,d.records||[]);
+  }catch(e){
+    fisMain().innerHTML='<div class="fis-wrap"><div class="fis-safety"><span class="ex">[!]</span>'+esc(e.message)+'</div><button class="fis-btn-ghost" onclick="fisOpenProgress()">← 返回</button></div>';
+  }
+}
+
+function fisNum(v){return v==null||v===''?'<span class="fis-num dim">—</span>':`<span class="fis-num">${esc(v)}</span>`;}
+
+function fisRenderAssessment(a,retests){
+  // ③ 進度儀表板：兩軌 baseline → 各 re-test，並排數字
+  const stuSeq=[a.baseline_student_score].concat(retests.map(r=>r.retest_student_score));
+  const coaSeq=[a.baseline_coach_score].concat(retests.map(r=>r.retest_coach_score));
+  const seqHtml=seq=>seq.map((v,i)=>`${i?'<span class="fis-arrow">→</span>':''}${fisNum(v)}`).join('');
+  // ④ 筆記簿：baseline note + 各 re-test note，按時序
+  const notes=[];
+  if(a.baseline_student_note||a.baseline_coach_note){
+    notes.push(`<div class="fis-note-item"><div class="fis-note-when">BASELINE · ${esc(fisDate(a.created_at))}</div>
+      ${a.baseline_student_note?`<div class="fis-note-txt"><b style="color:var(--gold)">學生：</b>${esc(a.baseline_student_note)}</div>`:''}
+      ${a.baseline_coach_note?`<div class="fis-note-txt"><b style="color:var(--gold)">教練：</b>${esc(a.baseline_coach_note)}</div>`:''}</div>`);
+  }
+  retests.forEach((r,n)=>{
+    notes.push(`<div class="fis-note-item"><div class="fis-note-when">RE-TEST ${n+1} · ${esc(fisDate(r.created_at))}</div>
+      ${r.retest_student_note?`<div class="fis-note-txt"><b style="color:var(--gold)">學生：</b>${esc(r.retest_student_note)}</div>`:''}
+      ${r.retest_coach_note?`<div class="fis-note-txt"><b style="color:var(--gold)">教練：</b>${esc(r.retest_coach_note)}</div>`:''}
+      ${r.verdict?`<span class="fis-verdict">${esc(r.verdict)}</span>`:''}</div>`);
+  });
+  fisMain().innerHTML=`<div class="fis-wrap">
+    <div class="fis-mode-bar">
+      <button class="fis-mode-btn" onclick="fisRenderAppearances()">＋ 新評估</button>
+      <button class="fis-mode-btn" onclick="fisOpenProgress()">📊 進度追蹤</button>
+    </div>
+    <div class="fis-step-tag">進度 · ${esc(a.target_action||'評估')}</div>
+    <div class="fis-h">${esc(fisStudentName)}</div>
+    <div class="fis-sub">${esc(fisDate(a.created_at))} 開始 · 共 ${retests.length} 次 re-test（對住同一動作比）。</div>
+
+    <div class="fis-region-title">③ 進度儀表板</div>
+    <div class="fis-track"><div class="fis-track-lbl">Signal 1 · 學生主觀</div><div class="fis-prog">${seqHtml(stuSeq)}</div></div>
+    <div class="fis-track"><div class="fis-track-lbl">Signal 2 · 教練客觀</div><div class="fis-prog">${seqHtml(coaSeq)}</div></div>
+
+    <div class="fis-region-title">④ 筆記簿（時序）</div>
+    ${notes.join('')||'<div class="fis-tnote">未有文字筆記。</div>'}
+
+    <div class="fis-region-title">加一次 re-test</div>
+    <div class="fis-form">
+      <div class="fis-form-row">
+        <label class="fis-label">Signal 1 · 學生主觀發力感（1-5）</label>
+        ${fisScoreSelect('fisRsScore','')}
+        <textarea class="fis-textarea" id="fisRsNote" placeholder="對應動作順咗？feel 到改善？" style="margin-top:8px"></textarea>
+      </div>
+      <div class="fis-form-row">
+        <label class="fis-label">Signal 2 · 教練客觀觀察（1-5）</label>
+        ${fisScoreSelect('fisRcScore','')}
+        <textarea class="fis-textarea" id="fisRcNote" placeholder="動作軌跡 / 代償 / 體態" style="margin-top:8px"></textarea>
+      </div>
+      <div class="fis-form-row">
+        <label class="fis-label">判斷</label>
+        <select class="fis-select" id="fisVerdict">
+          <option value="">（揀一個）</option>
+          <option value="兩軌改善">兩軌改善</option>
+          <option value="教練睇到學生feel唔到(仍進步)">教練睇到學生 feel 唔到（仍算進步）</option>
+          <option value="兩軌都冇(重判成因)">兩軌都冇（重判成因）</option>
+        </select>
+      </div>
+      <button class="fis-btn" onclick="fisAddRetest()">加 re-test</button>
+      <div id="fisRetestResult"></div>
+    </div>
+    <div class="fis-disclaimer">[!] 以下屬教育性參考，並非醫療診斷。如有疼痛請先諮詢醫生。</div>
+  </div>`;
+}
+
+async function fisAddRetest(){
+  if(!fisCurAsm){showToast('未揀評估');return;}
+  const payload={
+    assessment_id:fisCurAsm.id,
+    retest_student_score:fisGetScore('fisRsScore'),
+    retest_student_note:fisGetVal('fisRsNote')||null,
+    retest_coach_score:fisGetScore('fisRcScore'),
+    retest_coach_note:fisGetVal('fisRcNote')||null,
+    verdict:fisGetVal('fisVerdict')||null
+  };
+  const box=document.getElementById('fisRetestResult');
+  box.innerHTML='<div class="fis-tnote" style="margin-top:12px"><span class="spinner" style="width:14px;height:14px"></span> 儲存中...</div>';
+  try{
+    const r=await fetch(FIS_API_BASE+'/api/fis/retest/save',{
+      method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)
+    });
+    const d=await r.json();
+    if(!r.ok||!d.success)throw new Error(d.error||('儲存失敗 '+r.status));
+    // 重新載入呢個評估（即時見到新 re-test 入儀表板/筆記簿）
+    const idx=fisHistory.findIndex(x=>x.id===fisCurAsm.id);
+    fisOpenAssessment(idx>=0?idx:0);
+  }catch(e){
+    box.innerHTML='<div class="fis-safety" style="margin-top:12px"><span class="ex">[!]</span>'+esc(e.message)+'</div>';
+  }
 }
 </script>
 </body>
