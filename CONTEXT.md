@@ -152,11 +152,17 @@
 
 ---
 
-## 2g. 階段 A — 能力評估判斷引擎 A1（2026-06-26）
+## 2g. FIS 能力評估系統 — 階段 A + B 全上線（2026-06-26，commit `c1167b8`）
 
-| 內容 |
-|---|
-| **階段 A-A1 能力評估判斷引擎 API（`POST /api/fis/assess`，含 routing 例外路徑、頭前引 8 成因 engine data）— 2026-06-26 local 測通**。純計算 in-memory，唔掂 D1、唔改 coach.html 或其他現有 API。`fis-worker.js` 頂部 `import engine from './fis_engine.json'`（engine data bundle 入 Worker，IP 留後端）；新 `handleFisAssess()` 跟 BUILD_SPEC A1 六步：①收候選成因 ②減 excluded → active ③逐段加總（T 代號 string 跳過、入 `t_notes`）④**routing：抽走 `engine.routing.exception_path_segments`（DFL上/SFL上/SBL上/LL上）放 `exception_path` 區、標 trigger「五線行過 + re-test 仍見殘留先用」、唔參與主次序排名** ⑤剩低五線可練段高→低 → `training_order`（查 `video_map` 填 videos）⑥外觀中 `safety_net.trigger_appearances` → `safety_flags`。輸出底加 `disclaimer`（§合規）。`node --check`（ESM）+ JSON parse 過；local 模擬驗證 **DFL上(頸深屈)14 分最高都被 routing 抽走、主次序由 DFL中(9) 領頭** = 對齊缺口1第三版 / §0 A7。⚠️ **未部署 worker**（A2 UI 由 Cursor 接） |
+> **狀態：階段 A（A1 引擎 + A2 UI）+ 階段 B（B0 schema + B1 API + B2 UI）已完成並上 production。** 教練後台 `fis.alexeywong.com/coach.html` 「能力評估」tab 可揀外觀出方案 + 存 baseline + 進度追蹤 + re-test。前後端 + remote D1 全鏈打通（read-only 驗過，production 資料表乾淨係空）。
+
+| 階段 | 內容 |
+|---|---|
+| **A1 引擎** | `POST /api/fis/assess`（純計算，唔掂 D1）。`fis-worker.js` 頂 `import engine from './fis_engine.json'`（engine IP 留後端）；六步：收候選 → 減 excluded → 逐段加總（T 代號入 `t_notes`）→ **routing 抽走 `exception_path_segments`(DFL上/SFL上/SBL上/LL上) 入例外路徑、唔參與主次序** → 五線可練段高→低 `training_order`(查 video_map) → `safety_flags` + `disclaimer`。驗證：**DFL上(頸深屈)14 分最高都被 routing 抽走、主次序由 DFL中(9) 領頭** = 對齊缺口1第三版 / §0 A7 |
+| **A2 UI** | coach.html 新 tab「能力評估」（view-toggle 第三粒），共用教練登入 + 學員列表。揀學員 → 揀外觀（只「頭前引」enabled，其餘 18 標即將開放）→ 分析 → 剔除候選成因(Layer3) → 三區方案（主次序 / 例外路徑淺色區 / 安全網 [!] 紅框 + disclaimer）。純前端，esc() 防 XSS |
+| **B0 schema** | `migrations/0006_fis_assessments.sql`：`fis_assessments`(14 欄, 雙軌 baseline 評分1-5 + 文字 + target_action) + `fis_retests`(8 欄, 雙軌 retest + verdict) + 2 查詢 index。**remote 用 `wrangler d1 execute --file=0006 --remote` 建**（繞過 `migrations apply` 撞 0004 陷阱，下詳）。IF NOT EXISTS、零掂現有 16 表 |
+| **B1 API** | 4 個 endpoint（用現有 `env.DB` binding）：`POST /api/fis/assessment/save`、`GET /api/fis/assessment/list?student_id=`、`POST /api/fis/retest/save`、`GET /api/fis/retest/list?assessment_id=`。save 驗 required + 評分 1-5、retest 驗母評估存在(404)。`coach_id` 暫用登入 username placeholder（未接 coach auth Stage 2） |
+| **B2 UI** | coach.html 進度追蹤：STEP3 方案下 baseline 表單（對應動作 + Signal1 學生/Signal2 教練 各 1-5 + 文字）→ save；「📊 進度追蹤」mode → 歷史評估列表 → 入評估睇 **③ 進度儀表板（兩軌 baseline→retest 數字 2→4）+ ④ 筆記簿（時序）** + 加 re-test（雙軌評分 + verdict 三選） |
 
 - `.github/workflows/deploy.yml`（**經 GitHub 網頁建立**，commit `9aa53f3`）：push 到 `main` → `cloudflare/wrangler-action@v3` 自動部署 fis-app worker。✅ 已驗證綠剔（Deploy Worker #6）。
 - GitHub repo secrets：`CLOUDFLARE_API_TOKEN`、`CLOUDFLARE_ACCOUNT_ID`（已設）。
@@ -194,10 +200,13 @@
 - [x] 確認 secrets 全部係 Secret（`alexeywong22`、`GEMINI_API_KEY`、`FAL/OPENAI/OPENROUTER_API_KEY`），跨部署自動保留。
 
 ### 🚧 FIS 能力評估系統（BUILD_SPEC 階段 A/B）
-- [x] **階段 A-A1**：判斷引擎 API `POST /api/fis/assess`（routing 例外路徑 + 頭前引 8 成因 engine data）—— 2026-06-26 local 測通（見 §2g）。
-- [ ] **階段 A-A2**：coach.html 新增「能力評估」tab UI（揀學員 → 揀外觀 → call assess 顯示候選成因 + Layer3 → 剔除 → 出方案 15 段次序 + V 片 + 安全網）。**由 Cursor 做**。
-- [ ] **階段 A-A3**：批量補其餘 18 外觀（2-19）嘅 causes JSON 入 `fis_engine.json`（chat 逐外觀依「第三版 + routing rule」哲學對齊，唔直接搬 full_merged 舊數據 —— 見 BUILD_SPEC §0 第 7 條）。
-- [ ] **階段 B**：D1 記錄追蹤（`fis_assessments` + `fis_retests` migration、`/api/fis/assessment/*` + `/api/fis/retest/*` endpoint、coach.html 雙軌 baseline + re-test UI）。**階段 A 測通先起**。
+- [x] **階段 A-A1**：判斷引擎 API `POST /api/fis/assess`（routing 例外路徑 + 頭前引 8 成因 engine data）—— 上 production（見 §2g）。
+- [x] **階段 A-A2**：coach.html「能力評估」tab UI（揀外觀 → 候選成因 Layer3 → 剔除 → 三區方案）—— 上 production。
+- [x] **階段 B-B0/B1/B2**：D1 schema（fis_assessments + fis_retests 雙軌評分+文字）+ 4 個記錄 API + coach.html baseline/進度追蹤 UI（儀表板+筆記簿）—— 上 production（commit `c1167b8`）。
+- [ ] **階段 A-A3（未做）**：批量補其餘 18 外觀（2-19）嘅**真名 + causes JSON** 入 `fis_engine.json`（chat 逐外觀依「第三版 + routing rule」哲學對齊，唔直接搬 full_merged 舊數據 —— 見 BUILD_SPEC §0 第 7 條）。A2 UI 嗰 18 個外觀而家係編號 placeholder + 「即將開放」，補真名要連 `FIS_APPEARANCES`（coach.html）一齊更新。
+- [ ] **B polish（未做）**：進度儀表板而家係數字並排（2→4），未有趨勢線圖表（沿用現有 coach.html 柱狀圖風格）。
+- [ ] **散段 vs 整條線 UI 呈現（未做）**：方案而家逐「段」顯示（DFL中/SFL下…），未表達「成條線」概念（A1 引擎哲學係成條線受益、末端非孤立練）；UI 呈現要諗點由散段歸納返成條線。
+- [ ] **遺留技術債：`d1_migrations` 追蹤表 out-of-sync** —— remote 啲表（coaches/user_accounts…）當初唔經 migrations 建，追蹤表空 → `wrangler d1 migrations apply --remote` 會由 0001 跑起、**撞 `0004_course_access.sql`（`ALTER ADD COLUMN` 無 IF NOT EXISTS）duplicate column 報錯**，連帶後面 apply 唔到。所以 0006 改用 `execute --file --remote` 繞過。**Post-launch 修**：補返 d1_migrations 記錄（INSERT 0001-0006 already-applied），令將來 `migrations apply` 行得返。
 
 ### 💡 未來可考慮
 - [x] AI 容錯 retry：前端 `runFisStep2`/`analyzePain`/`analyzeProgress` 各 1 次重試；**後端 `callGemini` 亦加 silent retry（503/429/網絡，3 次指數退避+timeout）覆蓋 fis-step1/2+pain+progress**（`527c7f2`）。
