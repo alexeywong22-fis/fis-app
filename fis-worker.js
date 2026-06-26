@@ -1,6 +1,8 @@
 // fis-worker.js — Cloudflare Worker for FIS App
 // Accepts FormData (files) from frontend, converts to base64, sends to Gemini
 import { DurableObject } from 'cloudflare:workers';
+// 階段 A · A1：FIS 判斷引擎 engine data（bundle 入 Worker，唔放前端保護 IP）
+import engine from './fis_engine.json';
 
 export class GeminiRelay extends DurableObject {
 async fetch(request) {
@@ -136,6 +138,10 @@ return await handlePain(request, env);
 }
 if (path === '/api/fis-step3') {
 return await handleFisStep3(request, env);
+}
+// ── 階段 A · A1：FIS 判斷引擎（純計算，唔掂 D1）──
+if (path === '/api/fis/assess' && request.method === 'POST') {
+return handleFisAssess(request, env);
 }
 if (path === '/api/coach/user-summary-v2' && request.method === 'POST') {
 return handleCoachUserSummaryV2(request, env);
@@ -588,6 +594,143 @@ status,
 'Content-Type': 'application/json; charset=utf-8',
 ...corsHeaders()
 }
+});
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// 階段 A · A1 — FIS 判斷引擎（POST /api/fis/assess）
+// 純計算 in-memory，唔掂 D1、唔改其他 API。engine data 由 fis_engine.json bundle。
+// ════════════════════════════════════════════════════════════════════════
+
+// 權重 array 各位置對應嘅段名（DFL 3 / SFL 2 / SBL 4 / SPR 3 / LL 3 = 15 段）
+const FIS_LINE_SEGMENTS = {
+DFL: ['DFL上', 'DFL中', 'DFL下'],
+SFL: ['SFL上', 'SFL下'],
+SBL: ['SBL上', 'SBL胸', 'SBL腰', 'SBL下'],
+SPR: ['SPR上', 'SPR中', 'SPR下'],
+LL: ['LL上', 'LL中', 'LL下']
+};
+const FIS_DISCLAIMER = '[!] 以下屬教育性參考，並非醫療診斷。如有疼痛請先諮詢醫生。';
+const FIS_EXCEPTION_TRIGGER = '五線行過 + re-test 仍見殘留先用';
+
+// 對外只暴露成因嘅判斷資訊（畀教練睇住剔），唔送內部欄位多餘嘢
+function fisPublicCause(c) {
+return {
+id: c.id,
+name: c.name,
+plane: c.plane || null,
+reasoning: c.reasoning || null,
+layer3: c.layer3 || null,
+app_plain: c.app_plain || null
+};
+}
+
+async function handleFisAssess(request, env) {
+let body;
+try {
+body = await request.json();
+} catch (err) {
+return jsonResponse({ error: 'Failed to parse JSON: ' + err.message }, 400);
+}
+const appearanceIds = Array.isArray(body.appearance_ids) ? body.appearance_ids : [];
+const excludedIds = Array.isArray(body.excluded_cause_ids) ? body.excluded_cause_ids : [];
+if (appearanceIds.length === 0) {
+return jsonResponse({ error: '請提供最少一個 appearance_ids（揀外觀）' }, 400);
+}
+const appSet = new Set(appearanceIds);
+const apps = (engine.appearances || []).filter(a => appSet.has(a.id));
+if (apps.length === 0) {
+return jsonResponse({ error: '搵唔到對應外觀：' + JSON.stringify(appearanceIds) }, 400);
+}
+
+// ── Step 1：由 appearance_ids 收集所有候選成因 ──
+const candidateIds = [];
+apps.forEach(a => (a.cause_ids || []).forEach(id => {
+if (!candidateIds.includes(id)) candidateIds.push(id);
+}));
+const causeById = {};
+(engine.causes || []).forEach(c => { causeById[c.id] = c; });
+const candidateCauses = candidateIds.map(id => causeById[id]).filter(Boolean);
+
+// ── Step 2：減去教練 Layer3 剔除咗嘅成因 → active_causes ──
+const excludedSet = new Set(excludedIds);
+const activeCauses = candidateCauses.filter(c => !excludedSet.has(c.id));
+
+// ── Step 3：active_causes 逐段加總（數字）；T 代號 string 跳過加總，收集入 t_notes ──
+const segmentScores = {};
+(engine.segments || []).forEach(s => { segmentScores[s] = 0; });
+const tNotes = [];
+activeCauses.forEach(c => {
+const w = c.weights || {};
+Object.keys(FIS_LINE_SEGMENTS).forEach(line => {
+const segs = FIS_LINE_SEGMENTS[line];
+const arr = Array.isArray(w[line]) ? w[line] : [];
+arr.forEach((val, idx) => {
+const seg = segs[idx];
+if (seg === undefined) return;
+if (typeof val === 'number') {
+if (segmentScores[seg] === undefined) segmentScores[seg] = 0;
+segmentScores[seg] += val;
+} else if (typeof val === 'string' && val.trim() !== '') {
+// 「太緊」代號 redirect（如 "T2→DFL上"）：唔當正權重，改做 note
+const parts = val.split(/→|->/);
+const tcode = (parts[0] || '').trim();
+const target = (parts[1] || val).trim();
+tNotes.push(`${seg}：${tcode} 代償，指向 ${target}，唔直接練（成因 ${c.id}）`);
+}
+});
+});
+});
+
+// ── Step 4：routing — 抽走例外路徑段（DFL上/SFL上/SBL上/LL上），唔參與主次序排名 ──
+const routing = engine.routing || {};
+const exceptionSegs = Array.isArray(routing.exception_path_segments) ? routing.exception_path_segments : [];
+const exceptionSet = new Set(exceptionSegs);
+const videoMap = engine.video_map || {};
+const exceptionPath = exceptionSegs
+.map(seg => ({
+segment: seg,
+score: segmentScores[seg] || 0,
+trigger: FIS_EXCEPTION_TRIGGER,
+videos: videoMap[seg] || []
+}))
+.filter(e => e.score > 0)
+.sort((a, b) => b.score - a.score);
+
+// ── Step 5：剩低五線可練段，高→低排序 → training_order（每段查 video_map）──
+const trainingOrder = (engine.segments || [])
+.filter(seg => !exceptionSet.has(seg))
+.map(seg => ({
+segment: seg,
+score: segmentScores[seg] || 0,
+videos: videoMap[seg] || []
+}))
+.filter(e => e.score > 0)
+.sort((a, b) => b.score - a.score);
+
+// ── Step 6：safety net flags（任一外觀 ∈ trigger_appearances 即加）──
+const safetyFlags = [];
+const safetyNet = engine.safety_net || {};
+Object.keys(safetyNet).forEach(key => {
+const sn = safetyNet[key];
+const triggers = Array.isArray(sn.trigger_appearances) ? sn.trigger_appearances : [];
+if (!triggers.some(id => appSet.has(id))) return;
+const names = apps.filter(a => triggers.includes(a.id)).map(a => a.name);
+const sym = Array.isArray(sn.symptoms) ? sn.symptoms.join(' / ') : '';
+safetyFlags.push(`外觀含${names.join('、')} → ${sn.label || '安全網'}：若學生有 ${sym} 等徵狀，即停 + ${sn.action || '轉介真人'}`);
+});
+
+return jsonResponse({
+appearance_ids: appearanceIds,
+excluded_cause_ids: excludedIds,
+candidate_causes: candidateCauses.map(fisPublicCause),
+active_causes: activeCauses.map(fisPublicCause),
+segment_scores: segmentScores,
+training_order: trainingOrder,
+exception_path: exceptionPath,
+t_notes: tNotes,
+safety_flags: safetyFlags,
+disclaimer: FIS_DISCLAIMER
 });
 }
 

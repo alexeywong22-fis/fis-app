@@ -1,7 +1,7 @@
 # FIS PWA — 專案上下文 CONTEXT
 
 > ⚠️ **每次開新 session，請先讀取本檔案再開始工作。**
-> 本檔案記錄專案架構、進度、待辦。最後更新：**2026-06-15**
+> 本檔案記錄專案架構、進度、待辦。最後更新：**2026-06-26**
 
 ---
 
@@ -152,7 +152,11 @@
 
 ---
 
-## 2b. GitHub Actions 自動部署（2026-06-06 設定完成）
+## 2g. 階段 A — 能力評估判斷引擎 A1（2026-06-26）
+
+| 內容 |
+|---|
+| **階段 A-A1 能力評估判斷引擎 API（`POST /api/fis/assess`，含 routing 例外路徑、頭前引 8 成因 engine data）— 2026-06-26 local 測通**。純計算 in-memory，唔掂 D1、唔改 coach.html 或其他現有 API。`fis-worker.js` 頂部 `import engine from './fis_engine.json'`（engine data bundle 入 Worker，IP 留後端）；新 `handleFisAssess()` 跟 BUILD_SPEC A1 六步：①收候選成因 ②減 excluded → active ③逐段加總（T 代號 string 跳過、入 `t_notes`）④**routing：抽走 `engine.routing.exception_path_segments`（DFL上/SFL上/SBL上/LL上）放 `exception_path` 區、標 trigger「五線行過 + re-test 仍見殘留先用」、唔參與主次序排名** ⑤剩低五線可練段高→低 → `training_order`（查 `video_map` 填 videos）⑥外觀中 `safety_net.trigger_appearances` → `safety_flags`。輸出底加 `disclaimer`（§合規）。`node --check`（ESM）+ JSON parse 過；local 模擬驗證 **DFL上(頸深屈)14 分最高都被 routing 抽走、主次序由 DFL中(9) 領頭** = 對齊缺口1第三版 / §0 A7。⚠️ **未部署 worker**（A2 UI 由 Cursor 接） |
 
 - `.github/workflows/deploy.yml`（**經 GitHub 網頁建立**，commit `9aa53f3`）：push 到 `main` → `cloudflare/wrangler-action@v3` 自動部署 fis-app worker。✅ 已驗證綠剔（Deploy Worker #6）。
 - GitHub repo secrets：`CLOUDFLARE_API_TOKEN`、`CLOUDFLARE_ACCOUNT_ID`（已設）。
@@ -188,6 +192,12 @@
 - [x] 部署 `fis-worker.js` 到 Cloudflare（init 回傳 name 已上線）。
 - [x] 填 `wrangler.toml` D1 binding（account_id + `fis-db` / `6bf1dc99-...`）。
 - [x] 確認 secrets 全部係 Secret（`alexeywong22`、`GEMINI_API_KEY`、`FAL/OPENAI/OPENROUTER_API_KEY`），跨部署自動保留。
+
+### 🚧 FIS 能力評估系統（BUILD_SPEC 階段 A/B）
+- [x] **階段 A-A1**：判斷引擎 API `POST /api/fis/assess`（routing 例外路徑 + 頭前引 8 成因 engine data）—— 2026-06-26 local 測通（見 §2g）。
+- [ ] **階段 A-A2**：coach.html 新增「能力評估」tab UI（揀學員 → 揀外觀 → call assess 顯示候選成因 + Layer3 → 剔除 → 出方案 15 段次序 + V 片 + 安全網）。**由 Cursor 做**。
+- [ ] **階段 A-A3**：批量補其餘 18 外觀（2-19）嘅 causes JSON 入 `fis_engine.json`（chat 逐外觀依「第三版 + routing rule」哲學對齊，唔直接搬 full_merged 舊數據 —— 見 BUILD_SPEC §0 第 7 條）。
+- [ ] **階段 B**：D1 記錄追蹤（`fis_assessments` + `fis_retests` migration、`/api/fis/assessment/*` + `/api/fis/retest/*` endpoint、coach.html 雙軌 baseline + re-test UI）。**階段 A 測通先起**。
 
 ### 💡 未來可考慮
 - [x] AI 容錯 retry：前端 `runFisStep2`/`analyzePain`/`analyzeProgress` 各 1 次重試；**後端 `callGemini` 亦加 silent retry（503/429/網絡，3 次指數退避+timeout）覆蓋 fis-step1/2+pain+progress**（`527c7f2`）。
