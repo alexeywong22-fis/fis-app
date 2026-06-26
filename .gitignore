@@ -8,3 +8,10 @@ backup-*.sql
 # eval：私人身體測試相唔好 commit（保留 .gitkeep）
 eval/photos/*
 !eval/photos/.gitkeep
+
+.claude/
+eval/baseline*.json
+
+# 手動備份檔（*.bak / *.bak2 / *.bak6 …）唔好污染 git
+*.bak
+*.bak*
