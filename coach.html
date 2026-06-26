@@ -110,6 +110,41 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Serif TC','Hiragin
 ::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:rgba(255,200,69,0.2);border-radius:2px}
+/* ── 能力評估（FIS 判斷引擎 A2 · 純前端）──────────────── */
+.fis-wrap{max-width:780px}
+.fis-step-tag{font-size:10px;letter-spacing:3px;color:var(--gold);font-family:'DM Mono',monospace;margin-bottom:7px}
+.fis-h{font-size:21px;font-weight:900;color:var(--gold);margin-bottom:4px;line-height:1.2}
+.fis-sub{font-size:12px;color:var(--cream);opacity:.82;margin-bottom:18px;line-height:1.5}
+.fis-app-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin-bottom:18px}
+.fis-app-item{display:flex;align-items:center;gap:9px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:11px 13px;font-size:13px;color:var(--text);cursor:pointer;user-select:none}
+.fis-app-item.sel{border-color:var(--gold);background:rgba(255,200,69,0.1)}
+.fis-app-item.disabled{opacity:.42;cursor:not-allowed}
+.fis-app-item input{accent-color:var(--gold);cursor:inherit}
+.fis-soon{font-size:9px;color:var(--dim);margin-left:auto;border:1px solid var(--border);border-radius:5px;padding:1px 6px;letter-spacing:1px;white-space:nowrap}
+.fis-btn{background:var(--gold);color:#16223f;border:none;border-radius:9px;padding:11px 24px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}
+.fis-btn:disabled{opacity:.4;cursor:not-allowed}
+.fis-btn-ghost{background:var(--bg2);color:var(--cream);border:1px solid var(--border);border-radius:9px;padding:9px 17px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
+.fis-cause{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:13px 15px;margin-bottom:9px}
+.fis-cause.excl{opacity:.5;border-style:dashed}
+.fis-cause-name{font-size:14px;font-weight:700;color:var(--text);margin-bottom:5px}
+.fis-cause-l3{font-size:12px;color:var(--cream);opacity:.84;line-height:1.55}
+.fis-cause-l3 b{color:var(--gold);font-weight:500}
+.fis-cause-excl{display:inline-flex;align-items:center;gap:7px;margin-top:10px;font-size:12px;color:var(--red);cursor:pointer;user-select:none}
+.fis-cause-excl input{accent-color:var(--red);cursor:pointer}
+.fis-region-title{font-size:11px;letter-spacing:2.5px;color:var(--gold);font-family:'DM Mono',monospace;margin:24px 0 12px;padding-bottom:7px;border-bottom:1px solid var(--border)}
+.fis-seg{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:11px 14px;margin-bottom:8px}
+.fis-seg-rank{font-size:12px;font-weight:900;color:#16223f;background:var(--gold);width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.fis-seg-name{font-size:14px;font-weight:700;color:var(--text)}
+.fis-seg-score{font-size:11px;color:var(--gold);font-family:'DM Mono',monospace;margin-left:6px}
+.fis-seg-vids{font-size:11px;color:var(--cream);opacity:.72;margin-top:3px}
+.fis-seg-vids .v{display:inline-block;background:rgba(255,200,69,0.12);color:var(--gold);border-radius:5px;padding:0 6px;margin:1px 4px 1px 0;font-family:'DM Mono',monospace;font-size:10.5px}
+.fis-exc{background:rgba(147,164,196,0.07);border:1px dashed var(--border);border-radius:12px;padding:11px 14px;margin-bottom:8px}
+.fis-exc-name{font-size:13.5px;font-weight:700;color:var(--cream)}
+.fis-exc-trig{font-size:11px;color:var(--dim);margin-top:4px;line-height:1.5}
+.fis-safety{background:rgba(245,101,101,0.1);border:1.5px solid var(--red);border-radius:12px;padding:13px 15px;margin:14px 0;color:#ffd6d6;font-size:12.5px;line-height:1.62}
+.fis-safety .ex{color:var(--red);font-weight:900;margin-right:6px}
+.fis-tnote{font-size:11.5px;color:var(--cream);opacity:.82;line-height:1.65;margin-bottom:3px}
+.fis-disclaimer{font-size:11px;color:var(--dim);border-top:1px solid var(--border);margin-top:20px;padding-top:13px;line-height:1.55}
 </style>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 </head>
@@ -135,6 +170,7 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Serif TC','Hiragin
     <div class="view-toggle" style="display:flex;gap:6px;padding:8px 8px 0">
 <button id="vtStudent" onclick="switchView('student')" style="flex:1;padding:7px;font-size:11px;font-weight:700;border:none;border-radius:7px;cursor:pointer;font-family:inherit;background:var(--gold);color:#16223f">學員視角</button>
 <button id="vtDaily" onclick="switchView('daily')" style="flex:1;padding:7px;font-size:11px;font-weight:700;border:none;border-radius:7px;cursor:pointer;font-family:inherit;background:var(--bg2);color:var(--cream);border:1px solid var(--border)">日期視角</button>
+<button id="vtFis" onclick="switchView('fis')" style="flex:1;padding:7px;font-size:11px;font-weight:700;border:none;border-radius:7px;cursor:pointer;font-family:inherit;background:var(--bg2);color:var(--cream);border:1px solid var(--border)">能力評估</button>
 </div>
 <div class="user-list-label" id="listLabel">學 員 列 表</div>
     <label class="reg-filter" id="regFilterLabel"><input type="checkbox" id="regOnly" onchange="toggleRegOnly()"> 只睇已註冊</label>
@@ -190,7 +226,7 @@ let coachRegOnly=false;     // 「只睇已註冊」篩選狀態
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function toggleRegOnly(){coachRegOnly=document.getElementById('regOnly').checked;renderUserList();}
 // 學員列表用事件委派（取代 inline onclick，避免學員名插入 JS 字串 = stored XSS）
-document.addEventListener('click',function(e){var it=e.target.closest&&e.target.closest('.user-item[data-uid]');if(it)loadStudent(it.getAttribute('data-uid'));});
+document.addEventListener('click',function(e){var it=e.target.closest&&e.target.closest('.user-item[data-uid]');if(it){if(coachView==='fis'){fisPickStudent(it.getAttribute('data-uid'));}else{loadStudent(it.getAttribute('data-uid'));}}});
 
 function renderUserList(){
   const list=document.getElementById('userList');
@@ -245,19 +281,25 @@ let dailyExpandedUser='';
 
 function switchView(v){
   coachView=v;
-  const bS=document.getElementById('vtStudent'),bD=document.getElementById('vtDaily');
+  const bS=document.getElementById('vtStudent'),bD=document.getElementById('vtDaily'),bF=document.getElementById('vtFis');
+  // 先全部重設做未選狀態，再 highlight 當前
+  [bS,bD,bF].forEach(b=>{if(b){b.style.background='var(--bg2)';b.style.color='var(--cream)';b.style.border='1px solid var(--border)';}});
+  const act=v==='student'?bS:(v==='daily'?bD:bF);
+  if(act){act.style.background='var(--gold)';act.style.color='#16223f';act.style.border='none';}
+  const rf=document.getElementById('regFilterLabel');
   if(v==='student'){
-    bS.style.background='var(--gold)';bS.style.color='#16223f';bS.style.border='none';
-    bD.style.background='var(--bg2)';bD.style.color='var(--cream)';bD.style.border='1px solid var(--border)';
     document.getElementById('listLabel').textContent='學 員 列 表';
-    var rf=document.getElementById('regFilterLabel');if(rf)rf.style.display='';
+    if(rf)rf.style.display='';
     renderUserList();
-  }else{
-    bD.style.background='var(--gold)';bD.style.color='#16223f';bD.style.border='none';
-    bS.style.background='var(--bg2)';bS.style.color='var(--cream)';bS.style.border='1px solid var(--border)';
+  }else if(v==='daily'){
     document.getElementById('listLabel').textContent='日 期 列 表';
-    var rf=document.getElementById('regFilterLabel');if(rf)rf.style.display='none';
+    if(rf)rf.style.display='none';
     loadDaily();
+  }else{ // fis · 能力評估：複用學員列表揀人
+    document.getElementById('listLabel').textContent='揀 學 員 評 估';
+    if(rf)rf.style.display='';
+    renderUserList();
+    fisShowIntro();
   }
 }
 
@@ -624,6 +666,174 @@ function metricRow(label,before,after,unit){
 
 let toastTimer;
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2500);}
+
+// ════════════════════════════════════════════════════════════════════════
+// 能力評估 · FIS 判斷引擎前端（階段 A · A2，純前端，只 call POST /api/fis/assess）
+// 共用現有教練登入（coachKey）+ 現有學員列表（coachUsers）。唔掂任何現有 API/tab。
+// ════════════════════════════════════════════════════════════════════════
+const FIS_API_BASE='https://fis-app.alexeywong22.workers.dev';
+// 19 個外觀：目前只有「頭前引」(id 1) engine data 上線，其餘 18 標「即將開放」。
+// ⚠️ 外觀 2-19 真名屬臨床 IP、未入 fis_engine.json → 先用編號 placeholder，日後補真名。
+const FIS_APPEARANCES=[
+  {id:1,name:'頭前引',enabled:true},
+  {id:2,name:'外觀 2'},{id:3,name:'外觀 3'},{id:4,name:'外觀 4'},{id:5,name:'外觀 5'},
+  {id:6,name:'外觀 6'},{id:7,name:'外觀 7'},{id:8,name:'外觀 8'},{id:9,name:'外觀 9'},
+  {id:10,name:'外觀 10'},{id:11,name:'外觀 11'},{id:12,name:'外觀 12'},{id:13,name:'外觀 13'},
+  {id:14,name:'外觀 14'},{id:15,name:'外觀 15'},{id:16,name:'外觀 16'},{id:17,name:'外觀 17'},
+  {id:18,name:'外觀 18'},{id:19,name:'外觀 19'}
+];
+let fisStudentId=null,fisStudentName='';
+let fisSelApps=[];               // 揀咗嘅外觀 id
+let fisCandidates=[];            // 第一次 assess 攞到嘅候選成因
+let fisExcluded={};              // {causeId:true} 教練剔走嘅
+const fisMain=()=>document.getElementById('mainPanel');
+
+function fisShowIntro(){
+  const logged=coachUsers&&coachUsers.length;
+  fisMain().innerHTML=`<div class="fis-wrap">
+    <div class="fis-step-tag">FIS · 能力評估</div>
+    <div class="fis-h">能力評估判斷引擎</div>
+    <div class="fis-sub">揀外觀 → 交叉排除 → 即時出訓練方案（線 + 次序 + V片 + 安全網）。全程 in-memory，唔存記錄。</div>
+    <div class="fis-cause" style="text-align:center;color:var(--cream);opacity:.82">${logged?'← 喺左邊揀一個學員開始評估':'請先喺左上輸入教練密鑰登入，再揀學員'}</div>
+  </div>`;
+}
+
+function fisPickStudent(uid){
+  const u=(coachUsers||[]).find(x=>x.id===uid);
+  fisStudentId=uid;
+  fisStudentName=u?(u.name||u.id.substring(0,12)):uid;
+  document.querySelectorAll('.user-item').forEach(el=>el.classList.remove('active'));
+  const el=document.getElementById('ui-'+uid);if(el)el.classList.add('active');
+  fisSelApps=[];fisCandidates=[];fisExcluded={};
+  fisRenderAppearances();
+}
+
+function fisRenderAppearances(){
+  const grid=FIS_APPEARANCES.map(a=>{
+    if(a.enabled){
+      const sel=fisSelApps.includes(a.id);
+      return `<label class="fis-app-item${sel?' sel':''}">
+        <input type="checkbox" ${sel?'checked':''} onchange="fisToggleApp(${a.id},this.checked)">
+        <span>${esc(a.name)}</span></label>`;
+    }
+    return `<label class="fis-app-item disabled">
+      <input type="checkbox" disabled>
+      <span>${esc(a.name)}</span><span class="fis-soon">即將開放</span></label>`;
+  }).join('');
+  fisMain().innerHTML=`<div class="fis-wrap">
+    <div class="fis-step-tag">STEP 1 · 揀外觀</div>
+    <div class="fis-h">${esc(fisStudentName)}</div>
+    <div class="fis-sub">揀學員身上見到嘅外觀（可多選）。目前只有「頭前引」engine data 上線，其餘陸續補。</div>
+    <div class="fis-app-grid">${grid}</div>
+    <button class="fis-btn" id="fisAnalyzeBtn" ${fisSelApps.length?'':'disabled'} onclick="fisAnalyze()">分析 →</button>
+  </div>`;
+}
+
+function fisToggleApp(id,on){
+  if(on){if(!fisSelApps.includes(id))fisSelApps.push(id);}
+  else{fisSelApps=fisSelApps.filter(x=>x!==id);}
+  fisRenderAppearances();
+}
+
+async function fisAssessFetch(excluded){
+  const r=await fetch(FIS_API_BASE+'/api/fis/assess',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({appearance_ids:fisSelApps,excluded_cause_ids:excluded||[]})
+  });
+  if(!r.ok){let msg='分析失敗 ('+r.status+')';try{const e=await r.json();if(e&&e.error)msg=e.error;}catch(_){}throw new Error(msg);}
+  return r.json();
+}
+
+async function fisAnalyze(){
+  if(!fisSelApps.length){showToast('請先揀外觀');return;}
+  fisMain().innerHTML='<div class="loading"><span class="spinner"></span>分析緊...</div>';
+  try{
+    const d=await fisAssessFetch([]);
+    fisCandidates=d.candidate_causes||[];
+    fisExcluded={};
+    fisRenderCandidates();
+  }catch(e){
+    fisMain().innerHTML='<div class="fis-wrap"><div class="fis-safety"><span class="ex">[!]</span>'+esc(e.message)+'</div><button class="fis-btn-ghost" onclick="fisRenderAppearances()">← 返回揀外觀</button></div>';
+  }
+}
+
+function fisRenderCandidates(){
+  const cards=fisCandidates.map((c,i)=>{
+    const ex=!!fisExcluded[c.id];
+    return `<div class="fis-cause${ex?' excl':''}" id="fisc-${i}">
+      <div class="fis-cause-name">${esc(c.name||c.id)}</div>
+      <div class="fis-cause-l3"><b>Layer3：</b>${esc(c.layer3||'—')}</div>
+      <label class="fis-cause-excl"><input type="checkbox" ${ex?'checked':''} onchange="fisToggleExcl(${i},this.checked)"> 呢個唔成立（剔走）</label>
+    </div>`;
+  }).join('');
+  fisMain().innerHTML=`<div class="fis-wrap">
+    <div class="fis-step-tag">STEP 2 · 交叉排除</div>
+    <div class="fis-h">候選成因（${fisCandidates.length}）</div>
+    <div class="fis-sub">${esc(fisStudentName)} · 睇每個成因嘅 Layer3 測試，剔走唔成立嗰啲，再出方案。</div>
+    ${cards||'<div class="fis-cause">冇候選成因</div>'}
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="fis-btn" onclick="fisGeneratePlan()">出方案 →</button>
+      <button class="fis-btn-ghost" onclick="fisRenderAppearances()">← 重揀外觀</button>
+    </div>
+  </div>`;
+}
+
+function fisToggleExcl(i,on){
+  const c=fisCandidates[i];if(!c)return;
+  if(on)fisExcluded[c.id]=true;else delete fisExcluded[c.id];
+  const card=document.getElementById('fisc-'+i);if(card)card.classList.toggle('excl',on);
+}
+
+async function fisGeneratePlan(){
+  fisMain().innerHTML='<div class="loading"><span class="spinner"></span>計算方案...</div>';
+  try{
+    const d=await fisAssessFetch(Object.keys(fisExcluded));
+    fisRenderPlan(d);
+  }catch(e){
+    fisMain().innerHTML='<div class="fis-wrap"><div class="fis-safety"><span class="ex">[!]</span>'+esc(e.message)+'</div><button class="fis-btn-ghost" onclick="fisRenderCandidates()">← 返回</button></div>';
+  }
+}
+
+function fisVids(arr){
+  if(!arr||!arr.length)return '<span style="opacity:.6">（暫無對應 V片）</span>';
+  return arr.map(v=>`<span class="v">${esc(v)}</span>`).join('');
+}
+
+function fisRenderPlan(d){
+  const to=d.training_order||[],ep=d.exception_path||[],tn=d.t_notes||[],sf=d.safety_flags||[];
+  const active=(d.active_causes||[]).length,cand=(d.candidate_causes||[]).length;
+  const toHtml=to.length?to.map((s,i)=>`<div class="fis-seg">
+      <div class="fis-seg-rank">${i+1}</div>
+      <div style="flex:1">
+        <div><span class="fis-seg-name">${esc(s.segment)}</span><span class="fis-seg-score">權重 ${esc(s.score)}</span></div>
+        <div class="fis-seg-vids">${fisVids(s.videos)}</div>
+      </div></div>`).join('')
+    :'<div class="fis-cause">剔除後冇五線可練段。</div>';
+  const epHtml=ep.length?ep.map(s=>`<div class="fis-exc">
+      <div><span class="fis-exc-name">${esc(s.segment)}</span><span class="fis-seg-score">權重 ${esc(s.score)}</span></div>
+      <div class="fis-exc-trig">⚠ 觸發條件：${esc(s.trigger||'五線行過 + re-test 仍見殘留先用')}</div>
+      <div class="fis-seg-vids">${fisVids(s.videos)}</div>
+    </div>`).join('')
+    :'<div style="font-size:11.5px;color:var(--dim)">今次冇例外路徑段。</div>';
+  const tnHtml=tn.length?('<div class="fis-region-title">T 代號提示（代償，唔直接練）</div>'+tn.map(t=>`<div class="fis-tnote">• ${esc(t)}</div>`).join('')):'';
+  const sfHtml=sf.length?sf.map(f=>`<div class="fis-safety"><span class="ex">[!]</span>${esc(f)}</div>`).join(''):'';
+  fisMain().innerHTML=`<div class="fis-wrap">
+    <div class="fis-step-tag">STEP 3 · 訓練方案</div>
+    <div class="fis-h">${esc(fisStudentName)} 的方案</div>
+    <div class="fis-sub">成立成因 ${active} / 候選 ${cand}。以下為主訓練次序 + 例外路徑 + 安全提示。</div>
+    ${sfHtml}
+    <div class="fis-region-title">主訓練次序（五線可練段 · 高→低）</div>
+    ${toHtml}
+    <div class="fis-region-title">例外路徑（次要 · 五線行過後先考慮）</div>
+    ${epHtml}
+    ${tnHtml}
+    <div class="fis-disclaimer">${esc(d.disclaimer||'[!] 以下屬教育性參考，並非醫療診斷。如有疼痛請先諮詢醫生。')}</div>
+    <div style="display:flex;gap:10px;margin-top:18px">
+      <button class="fis-btn-ghost" onclick="fisRenderCandidates()">← 改剔除</button>
+      <button class="fis-btn-ghost" onclick="fisRenderAppearances()">↻ 重揀外觀</button>
+    </div>
+  </div>`;
+}
 </script>
 </body>
 </html>
