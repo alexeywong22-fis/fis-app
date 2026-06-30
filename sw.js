@@ -1,13 +1,9 @@
 // FIS Service Worker
 // 策略：HTML = network-first（線上永遠攞最新，唔會鎖喺舊版）；靜態 = cache-first。
 // 全部相對路徑（唔寫死 /fis-app/），方便日後搬去 root domain。
-// 更新：唔自動 skipWaiting；等前端用家撳「更新」掣先 skipWaiting + reload。
-// ⚠️ Kill switch：萬一要強制清走，ship 一個 sw.js body 改成
-//    self.addEventListener('install',()=>self.skipWaiting());
-//    self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(ks=>Promise.all(ks.map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
-//    （即清晒 cache、唔再 precache），push 後用家下次開即解鎖。
+// 更新：install 即 skipWaiting + activate claim，新版 SW 即刻接管並清舊 cache。
 
-const CACHE = 'fis-v4';
+const CACHE = 'fis-v5';
 const PRECACHE = [
   './',
   './index.html',
@@ -19,7 +15,7 @@ const PRECACHE = [
 ];
 
 self.addEventListener('install', function (e) {
-  // 唔 skipWaiting：新版喺背景安裝、等用家撳「更新」先接管（防中途換版）
+  self.skipWaiting();
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(PRECACHE); }).catch(function () {}));
 });
 

@@ -185,6 +185,37 @@ textarea.sym { width: 100%; background: var(--bg3); border: 1px solid rgba(255,2
 .history-item { background: var(--bg3); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; }
 .history-date { font-size: 10px; color: var(--gold-dim); margin-bottom: 6px; }
 .history-scores { display: flex; gap: 8px; flex-wrap: wrap; font-size: 12px; color: var(--text-dim); }
+/* proof 段排版 */
+.fis-proof-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+  align-items: start;
+  margin: 20px 0;
+}
+@media (min-width: 768px) {
+  .fis-proof-grid { grid-template-columns: 1fr 1fr; }
+}
+.fis-proof-item {
+  background: #1e2f52;
+  border-radius: 14px;
+  padding: 12px 12px 0;
+  font-size: 0;
+}
+.fis-proof-item img {
+  width: 100%;
+  height: auto;
+  display: block;
+  vertical-align: bottom;
+  border-radius: 10px;
+}
+.fis-proof-cap {
+  margin-top: 10px;
+  padding-bottom: 12px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #aab8d4;
+}
 </style>
 </head>
 <body>
@@ -1769,7 +1800,218 @@ var FIS_POSSIBILITY_COPY = {
   '淺前線': '大腿前側成日搶晒力、腹直肌收唔實／feel 唔到、骨盆控制差。'
 };
 
+var FIS_HERO_COPY = {
+  '螺旋線': {
+    '男': {
+      symptoms: ['背闊練極都唔闊、好難加寬', '膊頭唔夠立體，撐唔起個 V／W 型身形', '一邊高一邊低、肩胛唔穩、左右唔對稱'],
+      mechanism: '唔係你拉得唔夠。係你嘅「螺旋線」連結未打通：前鋸肌帶動唔到肩胛，背闊肌就算操極都借唔到力，所以練極都唔上身。'
+    },
+    '女': {
+      symptoms: ['馬甲線／纖腰練極都唔明顯', '左右高低膊、體態唔對稱', '上半身轉唔夠、腰側線條練唔出'],
+      mechanism: '唔係你做唔夠捲腹。係你嘅「螺旋線」聯動未接通：腹斜肌同前鋸肌帶動唔到，腰線就算操極都出唔到形。'
+    }
+  },
+  '淺背線': {
+    '男': {
+      symptoms: ['後腿（hamstring）操極都唔大', '硬拉發力差、腰先攰過腿', '背線唔夠挺拔、容易圓背'],
+      mechanism: '唔係你練得唔夠。係你嘅「淺背線」後鏈未夠強：發力傳導唔上去，你想練後腿，最後變晒腰同下背頂硬上。'
+    },
+    '女': {
+      symptoms: ['下臀唔夠出、臀部扁平下垂', '練極臀型都唔對、冇彈起嗰個弧度', '或者腰特別容易凸／arch、企蹲嗰陣腰先攰'],
+      mechanism: '唔係你練得唔夠。係你嘅「淺背線」後鏈未建立：傳導唔上去，你想托起臀型，最後變晒腰同下背頂硬上。'
+    }
+  },
+  '淺前線': {
+    '男': {
+      symptoms: ['六塊腹肌練極都唔出、線條唔明顯', '大腿前側中段唔夠分離／拋、唔夠飽滿', '操腹成日 feel 唔到下腹、變晒髖屈肌出力'],
+      mechanism: '唔係你練腹唔夠。係你嘅「淺前線」未均衡：前鏈發力分配唔均，你做緊嘅動作，目標肌肉根本冇完整參與。'
+    },
+    '女': {
+      symptoms: ['平坦小腹維持唔到、腹中線鬆散', '操腹成日 feel 唔到腹', '大腿前側成日搶晒力'],
+      mechanism: '唔係你食得唔夠 clean。係你嘅「淺前線」未收緊：前鏈發力分配唔均，你做緊嘅動作，目標肌肉根本冇完整參與。'
+    }
+  },
+  '深前線': {
+    '男': {
+      symptoms: ['練極腰腹都唔夠緊、核心唔穩', '大重量發力總係借唔到力根基', '條腰唔夠幼'],
+      mechanism: '唔係你唔夠勤。係你嘅「深前線」深層核心未啟動：冇咗呢個地基，你練上面幾多都好，力都會喺中間漏走。'
+    },
+    '女': {
+      symptoms: ['小腹收極都收唔實、成日凸', '腰特別容易攰、企唔穩', '核心發力唔到、骨盆控制差'],
+      mechanism: '唔係你做唔夠 plank。係你嘅「深前線」深層核心未啟動：冇咗呢個地基，你練上面幾多都好，力都會喺中間漏走。'
+    }
+  },
+  '側線': {
+    '男': {
+      symptoms: ['上臀／側臀練極都唔立體', '深蹲膝頭內扣、骨盆唔穩易歪', '做單腿動作比其他人特別辛苦'],
+      mechanism: '唔係你蹲得唔夠重。係你嘅「側線」臀中肌未發力：骨盆穩定唔到，你想練臀，最後變晒大腿同腰代償。'
+    },
+    '女': {
+      symptoms: ['翹臀練極都唔起、上臀寬度出唔到', '臀側凹陷（hip dip）點填都填唔返', '深蹲膝頭內扣、單腳企唔穩'],
+      mechanism: '唔係你練得唔夠。係你嘅「側線」臀中肌未啟動：骨盆穩定唔到，你想練上臀，最後力都走晒去大腿同腰。'
+    }
+  }
+};
+var FIS_HERO_GREEN = {
+  title: '🎯 你嘅五大筋膜線連結狀態理想',
+  body: '你已經有好底子 —— 下一步係將呢個連結，轉化成實際嘅訓練成效。'
+};
+var FIS_PROOF_ITEMS = [
+  { src: 'assets/proof/M上臀.png', caption: '佢一直練上臀都揾唔到feel，連結打通之後第一次feel到上臀酸。' },
+  { src: 'assets/proof/C肩胛.png', caption: '平時自己操開、玩重慣咗，今次只玩多兩格已經酸過平時，feel返晒上身。' },
+  { src: 'assets/proof/P身形.png', caption: '佢嘅得着，佢話遠遠超過比賽成績。練啱發力，身形自然行返出嚟。' },
+  { src: 'assets/proof/M中背.png', caption: '練咗咁耐背，第一次feel到中背真係夾埋，唔再靠手臂硬拉。' }
+];
+
+function buildFisProofBlock() {
+  console.log('[FIS proof] buildFisProofBlock() called');
+  var proof = document.createElement('div');
+  proof.id = 'fis-proof-block';
+  proof.className = 'fis-anim';
+  proof.style.cssText =
+    'margin-top:16px;padding:18px 16px;border-radius:12px;background:#2a3d63;' +
+    'border:1px solid rgba(255,200,69,0.18);';
+
+  var title = document.createElement('div');
+  title.style.cssText = 'font-size:15px;font-weight:800;color:#ffc845;margin-bottom:6px;letter-spacing:0.3px';
+  title.textContent = '真實學生成果';
+  proof.appendChild(title);
+
+  var grid = document.createElement('div');
+  grid.className = 'fis-proof-grid';
+  FIS_PROOF_ITEMS.forEach(function(item) {
+    var card = document.createElement('div');
+    card.className = 'fis-proof-item';
+
+    var img = document.createElement('img');
+    img.src = item.src;
+    img.alt = '學員訓練反饋截圖';
+    img.loading = 'lazy';
+    card.appendChild(img);
+
+    var cap = document.createElement('div');
+    cap.className = 'fis-proof-cap';
+    cap.textContent = item.caption;
+    card.appendChild(cap);
+    grid.appendChild(card);
+  });
+  proof.appendChild(grid);
+
+  var close = document.createElement('div');
+  close.style.cssText = 'font-size:13px;line-height:1.7;color:#fff;margin-top:4px;margin-bottom:12px';
+  close.textContent = '呢啲唔係天賦，係筋膜線連結打通之後，發力感真正返到該去嘅肌肉。';
+  proof.appendChild(close);
+
+  var disc = document.createElement('div');
+  disc.style.cssText = 'font-size:10px;line-height:1.55;color:rgba(255,255,255,0.55)';
+  disc.textContent = '[!] 以上為學員個人訓練反饋（已獲同意分享），個人感受因人而異，並非療效保證。';
+  proof.appendChild(disc);
+  console.log('[FIS proof] buildFisProofBlock() done, id=', proof.id, 'childCount=', proof.childNodes.length);
+  return proof;
+}
+var FIS_CARE_RANK = {
+  '男': ['螺旋線', '淺背線', '淺前線', '深前線', '側線'],
+  '女': ['側線', '螺旋線', '淺背線', '淺前線', '深前線']
+};
+
+function fisLineTier(status) {
+  return status === '優先關注' ? 'red' : status === '發展中' ? 'mid' : status === '過渡' ? 'transition' : 'green';
+}
+function fisTierRank(tier) {
+  return tier === 'red' ? 1 : tier === 'mid' ? 2 : tier === 'transition' ? 3 : 4;
+}
+function fisCareIndex(lineName, gender) {
+  var rank = FIS_CARE_RANK[gender] || FIS_CARE_RANK['男'];
+  var i = rank.indexOf(lineName);
+  return i >= 0 ? i : 99;
+}
+function pickBestFromPool(pool, gender) {
+  if (!pool.length) return null;
+  var best = pool[0];
+  for (var i = 1; i < pool.length; i++) {
+    var c = pool[i];
+    if (c.rank < best.rank) { best = c; continue; }
+    if (c.rank > best.rank) continue;
+    if (fisCareIndex(c.name, gender) < fisCareIndex(best.name, gender)) { best = c; }
+  }
+  return best;
+}
+function pickWorstFasciaLine(lineKeys, lines, gender) {
+  gender = gender || '男';
+  var entries = lineKeys.map(function(lk) {
+    var tier = fisLineTier((lines[lk.key] || {}).status);
+    return { name: lk.name, tier: tier, rank: fisTierRank(tier) };
+  });
+  if (entries.every(function(e) { return e.tier === 'green'; })) return { allGreen: true };
+
+  var top2 = (FIS_CARE_RANK[gender] || FIS_CARE_RANK['男']).slice(0, 2);
+  var pool1 = entries.filter(function(e) { return top2.indexOf(e.name) >= 0 && e.tier !== 'green'; });
+  var picked = pool1.length ? pickBestFromPool(pool1, gender) : null;
+
+  if (!picked) {
+    var pool2 = entries.filter(function(e) { return top2.indexOf(e.name) < 0 && e.tier !== 'green'; });
+    picked = pickBestFromPool(pool2, gender);
+  }
+
+  // Guard：揂到 green（或無非 green 可揀）→ 正面 hero
+  if (!picked || picked.tier === 'green') return { allGreen: true };
+  return { allGreen: false, name: picked.name, tier: picked.tier };
+}
+function buildFisHeroBlock(pick, gender) {
+  var hero = document.createElement('div');
+  hero.id = 'fis-hero-block';
+  hero.className = 'fis-anim';
+  hero.style.cssText =
+    'background:linear-gradient(135deg,#0a1830 0%,#0d2545 60%,#091a35 100%);' +
+    'padding:18px 20px;border-bottom:1px solid rgba(0,200,255,0.2);';
+
+  var title = document.createElement('div');
+  title.style.cssText =
+    'font-size:13px;font-weight:800;color:#ffc845;letter-spacing:0.5px;margin-bottom:12px;' +
+    'text-shadow:0 0 10px rgba(255,200,69,0.4)';
+
+  if (pick.allGreen) {
+    title.textContent = FIS_HERO_GREEN.title;
+    hero.appendChild(title);
+    var body = document.createElement('div');
+    body.style.cssText = 'font-size:13px;line-height:1.7;color:#fff';
+    body.textContent = FIS_HERO_GREEN.body;
+    hero.appendChild(body);
+    return hero;
+  }
+
+  title.textContent = '🎯 你嘅身體而家點影響緊你訓練';
+  hero.appendChild(title);
+
+  var copy = (FIS_HERO_COPY[pick.name] || {})[gender];
+  if (!copy || !copy.symptoms || !copy.symptoms.length || !copy.mechanism) return null;
+
+  var introEl = document.createElement('div');
+  introEl.style.cssText = 'font-size:14px;line-height:1.7;color:#fff;margin-bottom:8px';
+  introEl.textContent = '你係咪一直遇到？';
+  hero.appendChild(introEl);
+
+  copy.symptoms.forEach(function(s) {
+    var row = document.createElement('div');
+    row.style.cssText = 'font-size:14px;line-height:1.7;color:#fff;padding-left:2px';
+    row.textContent = '✓ ' + s;
+    hero.appendChild(row);
+  });
+
+  var transEl = document.createElement('div');
+  transEl.style.cssText = 'font-size:12px;line-height:1.7;color:rgba(253,245,229,0.75);margin-top:10px';
+  transEl.textContent = '如果你中咗任何一個 ——';
+  hero.appendChild(transEl);
+
+  var mechEl = document.createElement('div');
+  mechEl.style.cssText = 'font-size:12px;line-height:1.7;color:rgba(253,245,229,0.75);margin-top:4px';
+  mechEl.textContent = copy.mechanism;
+  hero.appendChild(mechEl);
+  return hero;
+}
+
 async function runFisStep3() {
+  console.log('[FIS proof] runFisStep3 start (proof-debug-v1)');
   if (!fisStep2Result) { alert('Please complete step 3 report card generation first'); return; }
 
   var imageResult = document.getElementById('fisImageResult');
@@ -1821,6 +2063,11 @@ async function runFisStep3() {
     'backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);' +
     'box-shadow:0 0 40px rgba(0,100,255,0.12),0 0 0 1px rgba(0,180,255,0.08);' +
     'font-family:"Inter","Noto Sans HK",sans-serif';
+
+  /* ── Hero 痛點 / 全綠正面 block（card 最頂，header 之前）── */
+  var heroGender = fisGender || '男';
+  var heroBlock = buildFisHeroBlock(pickWorstFasciaLine(lineKeys, lines, heroGender), heroGender);
+  if (heroBlock) card.appendChild(heroBlock);
 
   /* ── 頂部 Header（預留 Logo 位）── */
   var header = document.createElement('div');
@@ -2035,13 +2282,26 @@ async function runFisStep3() {
   setTimeout(fisRenderReportImage, 1200);
 
   // 報告卡下面加「想知解決方法？」CTA → SKool 課程（開關開咗先顯示）
+  console.log('[FIS proof] runFisStep3 skool section', {
+    SKOOL_ENABLED: SKOOL_ENABLED,
+    FIS_COURSE_ACCESS: window.FIS_COURSE_ACCESS,
+    hasBuildFisProofBlock: typeof buildFisProofBlock === 'function',
+    imageResultId: imageResult ? imageResult.id : null
+  });
   var oldCta = document.getElementById('fis-skool-cta');
   if (oldCta) oldCta.remove();
   var oldBridge = document.getElementById('fis-skool-bridge');
   if (oldBridge) oldBridge.remove();
+  var oldProof = document.getElementById('fis-proof-block');
+  if (oldProof) {
+    console.log('[FIS proof] removing old #fis-proof-block');
+    oldProof.remove();
+  }
   if (SKOOL_ENABLED) {
+    console.log('[FIS proof] SKOOL_ENABLED=true, entering block');
     // 痛點 bridge：只對未持有課程者出（已買唔再 hard-sell）；喺 card 外 → 唔影入分享 PNG
     if (!window.FIS_COURSE_ACCESS) {
+      console.log('[FIS proof] appending #fis-skool-bridge');
       var bridge = document.createElement('div');
       bridge.id = 'fis-skool-bridge';
       bridge.style.cssText = 'margin-top:16px;padding:16px 18px;border-radius:14px;background:linear-gradient(135deg,#13233f,#1b2f52);border:1px solid rgba(255,200,69,0.28);box-shadow:0 0 24px rgba(0,80,200,0.12)';
@@ -2052,6 +2312,22 @@ async function runFisStep3() {
         '<div style="font-size:13px;line-height:1.7;color:#dbe8fb;margin-top:10px">一旦逐條筋膜線打通,<span style="color:#ffc845;font-weight:700">同一份努力,效果完全唔同。</span></div>' +
         '<div style="font-size:13px;line-height:1.7;color:#dbe8fb;margin-top:10px">FIS 課程由淺入深,逐線、逐個 Stage 幫你打通呢啲連結,等你練嘅嘢真係練到上身。</div>';
       imageResult.appendChild(bridge);
+    } else {
+      console.log('[FIS proof] skip bridge (FIS_COURSE_ACCESS=true)');
+    }
+    try {
+      var proofEl = buildFisProofBlock();
+      console.log('[FIS proof] appendChild proof', proofEl);
+      imageResult.appendChild(proofEl);
+      var proofInDom = document.getElementById('fis-proof-block');
+      console.log('[FIS proof] after append', {
+        inDom: !!proofInDom,
+        parent: proofInDom ? proofInDom.parentElement && proofInDom.parentElement.id : null,
+        imageResultChildren: imageResult ? imageResult.children.length : 0,
+        childIds: imageResult ? Array.prototype.map.call(imageResult.children, function(c) { return c.id || c.tagName; }) : []
+      });
+    } catch (proofErr) {
+      console.error('[FIS proof] append FAILED', proofErr);
     }
     var cta = document.createElement('button');
     cta.id = 'fis-skool-cta';
@@ -2060,6 +2336,9 @@ async function runFisStep3() {
     cta.textContent = window.FIS_COURSE_ACCESS ? '🎓 進入完整課程' : '🎓 報名完整 FIS 筋膜整合課程';
     cta.addEventListener('click', openSkool);
     imageResult.appendChild(cta);
+    console.log('[FIS proof] CTA appended');
+  } else {
+    console.warn('[FIS proof] SKOOL_ENABLED=false — proof block skipped');
   }
 
   // 報告卡後：未登入先彈「保存」卡（登入咗唔再彈）
